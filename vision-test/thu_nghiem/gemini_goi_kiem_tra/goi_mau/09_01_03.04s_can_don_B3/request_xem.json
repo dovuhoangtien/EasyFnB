@@ -1,0 +1,90 @@
+{
+ "contents": [
+  {
+   "role": "user",
+   "parts": [
+    {
+     "text": "Kiểm tra cảnh báo \"bàn cần dọn\" từ camera quán ăn. Ảnh 1: 4 khung trong 1,5 giây cắt quanh bàn B3. Ảnh 2: toàn cảnh, khung đỏ là bàn đó. Chỉ xét bàn trong khung đỏ.\nCAN_DON: không ai ngồi, còn chén đĩa, ly đã dùng, thức ăn thừa, giấy bẩn.\nSACH: không còn đồ đã dùng. Đồ của quán không tính: lọ gia vị, hộp giấy ăn, ống đũa, menu, ly úp sẵn.\npersonal_belongings_present: túi, điện thoại, áo khoác, ví của khách còn trên bàn hoặc ghế.\nKHONG_CHAC: ảnh không đủ rõ. Không đoán.\nĐiền checklist trước, rồi verdict. reason: tiếng Việt, tối đa 12 chữ."
+    },
+    {
+     "inline_data": {
+      "mime_type": "image/jpeg",
+      "data": "<JPEG 54309 byte, base64>"
+     },
+     "mediaResolution": {
+      "level": "MEDIA_RESOLUTION_MEDIUM"
+     }
+    },
+    {
+     "inline_data": {
+      "mime_type": "image/jpeg",
+      "data": "<JPEG 41433 byte, base64>"
+     },
+     "mediaResolution": {
+      "level": "MEDIA_RESOLUTION_LOW"
+     }
+    }
+   ]
+  }
+ ],
+ "generationConfig": {
+  "responseMimeType": "application/json",
+  "responseJsonSchema": {
+   "type": "object",
+   "properties": {
+    "checklist": {
+     "type": "object",
+     "properties": {
+      "used_items_left": {
+       "type": "boolean"
+      },
+      "people_at_table": {
+       "type": "boolean"
+      },
+      "differs_from_clean_ref": {
+       "type": "boolean"
+      }
+     },
+     "required": [
+      "used_items_left",
+      "people_at_table"
+     ]
+    },
+    "personal_belongings_present": {
+     "type": "boolean"
+    },
+    "image_quality": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "toi",
+      "mo",
+      "bi_che",
+      "qua_nho"
+     ]
+    },
+    "verdict": {
+     "type": "string",
+     "enum": [
+      "CAN_DON",
+      "SACH",
+      "KHONG_CHAC"
+     ]
+    },
+    "reason": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "checklist",
+    "personal_belongings_present",
+    "image_quality",
+    "verdict",
+    "reason"
+   ]
+  },
+  "thinkingConfig": {
+   "thinkingLevel": "MINIMAL"
+  }
+ }
+}

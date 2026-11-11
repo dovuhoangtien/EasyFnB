@@ -1,0 +1,355 @@
+--- a/easy-fnb/server/gemini.py
++++ b/easy-fnb/server/gemini.py
+@@ -18,30 +18,61 @@
+ 
+ URL = 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent'
+ 
++# Mỗi request xác minh gồm nhiều ảnh, mỗi ảnh một vai trò và một mức phân giải riêng:
++#   strip     dải 2x2 bốn khung quanh sự kiện (crop người hoặc bàn)   MEDIUM (~560 token)
++#   overview  toàn cảnh thu nhỏ, khung đỏ quanh người/bàn cần xét       LOW    (~280 token)
++#   clean_ref (chỉ "cần dọn") cùng bàn lúc sạch                         LOW    (~280 token)
++ROLE_RES = {'strip': 'MEDIUM', 'overview': 'LOW', 'clean_ref': 'LOW'}
++LOAI_TRU_GOI = ('vươn vai, vuốt hoặc chỉnh tóc, gãi đầu, chỉnh kính hoặc mũ, uống hoặc ăn, nâng ly chúc, '
++                'nghe hoặc chụp điện thoại, chỉ tay khi nói chuyện, chống cằm, vẫy chào bạn cùng bàn, '
++                'nhân viên (đồng phục, bưng khay)')
++DO_CUA_QUAN = 'lọ gia vị, hộp giấy ăn, ống đũa, menu, ly úp sẵn'
+ VERIFY_PROMPT = {
+     'call': (
+-        'Ảnh cắt từ camera trong một quán ăn, người cần xét ở giữa ảnh. '
+-        'Người này có đang GIƠ TAY ĐỂ GỌI NHÂN VIÊN PHỤC VỤ không? '
+-        'Gọi phục vụ: tay đưa cao ngang hoặc trên đầu, hướng ra phía quán, giữ yên hoặc vẫy. '
+-        'KHÔNG phải gọi: vuốt tóc, gãi đầu, chỉnh kính hoặc mũ, uống nước, ăn, nghe điện thoại, '
+-        'chỉ tay, vươn vai, chống cằm, vẫy chào bạn, nhân viên đang bưng đồ. '
+-        'Nếu không chắc, trả lời calling=false với confidence thấp. '
+-        'Lý do: tiếng Việt, tối đa 12 chữ.'
++        'Kiểm tra cảnh báo từ camera quán ăn. Ảnh 1: 4 khung trong 1,5 giây (trái sang phải, trên xuống dưới), '
++        'cắt quanh MỘT người. Ảnh 2: toàn cảnh, khung đỏ là người đó. Chỉ xét người trong khung đỏ.\n'
++        'GOI: giơ tay ngang hoặc trên đầu, hướng ra quán để gọi nhân viên, giữ hoặc vẫy qua ít nhất 2 khung.\n'
++        f'KHONG_GOI nếu là: {LOAI_TRU_GOI}.\n'
++        'KHONG_CHAC: ảnh không đủ rõ để kết luận. Không đoán.\n'
++        'Điền checklist trước, rồi verdict. reason: tiếng Việt, tối đa 12 chữ.'
+     ),
+     'needs_clearing': (
+-        'Ảnh cắt một bàn trong quán ăn, chụp từ camera trên cao. Bàn này có CẦN DỌN không? '
+-        'Cần dọn: khách đã đi nhưng còn bát đĩa, ly đã dùng, thức ăn thừa, giấy ăn bẩn, rác. '
+-        'Không cần dọn: bàn trống sạch, chỉ có lọ gia vị, hộp giấy ăn, ly úp sẵn, menu; hoặc khách vẫn đang ngồi ăn. '
+-        'Lý do: tiếng Việt, tối đa 12 chữ.'
++        'Kiểm tra cảnh báo "bàn cần dọn" từ camera quán ăn. Ảnh 1: 4 khung trong 1,5 giây cắt quanh bàn {ban}. '
++        'Ảnh 2: toàn cảnh, khung đỏ là bàn đó.{ref} Chỉ xét bàn trong khung đỏ.\n'
++        'CAN_DON: không ai ngồi, còn chén đĩa, ly đã dùng, thức ăn thừa, giấy bẩn.\n'
++        f'SACH: không còn đồ đã dùng. Đồ của quán không tính: {DO_CUA_QUAN}.\n'
++        'personal_belongings_present: túi, điện thoại, áo khoác, ví của khách còn trên bàn hoặc ghế.\n'
++        'KHONG_CHAC: ảnh không đủ rõ. Không đoán.\n'
++        'Điền checklist trước, rồi verdict. reason: tiếng Việt, tối đa 12 chữ.'
+     ),
+ }
++REF_SENTENCE = ' Ảnh 3: cùng bàn lúc sạch; chỉ tính đồ KHÔNG có trong ảnh 3.'
++QUALITY = ['ok', 'toi', 'mo', 'bi_che', 'qua_nho']
++ALT_CALL = ['vuon_vai', 'chinh_toc', 'uong_an', 'nang_ly', 'dien_thoai', 'chi_tay', 'vay_ban', 'nhan_vien',
++            'khac', 'none']
+ VERIFY_SCHEMA = {
+     'call': {'type': 'object', 'properties': {
+-        'calling': {'type': 'boolean'}, 'confidence': {'type': 'number'}, 'reason': {'type': 'string'}},
+-        'required': ['calling', 'confidence', 'reason']},
++        'checklist': {'type': 'object', 'properties': {
++            'hand_above_head': {'type': 'boolean'},
++            'held_or_waved_across_frames': {'type': 'boolean'},
++            'wearing_staff_uniform': {'type': 'boolean'}},
++            'required': ['hand_above_head', 'held_or_waved_across_frames', 'wearing_staff_uniform']},
++        'alt': {'type': 'string', 'enum': ALT_CALL},
++        'image_quality': {'type': 'string', 'enum': QUALITY},
++        'verdict': {'type': 'string', 'enum': ['GOI', 'KHONG_GOI', 'KHONG_CHAC']},
++        'reason': {'type': 'string'}},
++        'required': ['checklist', 'alt', 'image_quality', 'verdict', 'reason']},
+     'needs_clearing': {'type': 'object', 'properties': {
+-        'needs_clearing': {'type': 'boolean'}, 'confidence': {'type': 'number'}, 'reason': {'type': 'string'}},
+-        'required': ['needs_clearing', 'confidence', 'reason']},
++        'checklist': {'type': 'object', 'properties': {
++            'used_items_left': {'type': 'boolean'},
++            'people_at_table': {'type': 'boolean'},
++            'differs_from_clean_ref': {'type': 'boolean'}},
++            'required': ['used_items_left', 'people_at_table']},
++        'personal_belongings_present': {'type': 'boolean'},
++        'image_quality': {'type': 'string', 'enum': QUALITY},
++        'verdict': {'type': 'string', 'enum': ['CAN_DON', 'SACH', 'KHONG_CHAC']},
++        'reason': {'type': 'string'}},
++        'required': ['checklist', 'personal_belongings_present', 'image_quality', 'verdict', 'reason']},
+ }
+ ANSWER_SCHEMA = {'type': 'object', 'properties': {
+     'answer': {'type': 'string'},
+@@ -71,8 +102,10 @@
+         if schema is not None:
+             gc['responseMimeType'] = 'application/json'
+             gc['responseSchema' if 'jsonSchema' in self.drop else 'responseJsonSchema'] = schema
+-        if image and 'mediaResolution' not in self.drop:
+-            gc['mediaResolution'] = 'MEDIA_RESOLUTION_LOW'
++        if image and 'mediaResolution' in self.drop:
++            # API không nhận mức phân giải theo từng ảnh: bỏ ở từng ảnh, đặt một mức chung
++            parts = [{k: v for k, v in p.items() if k != 'mediaResolution'} for p in parts]
++            gc['mediaResolution'] = 'MEDIA_RESOLUTION_MEDIUM'
+         if 'thinkingConfig' not in self.drop:
+             gc['thinkingConfig'] = {'thinkingLevel': 'MINIMAL'}
+         return {'contents': [{'role': 'user', 'parts': parts}], 'generationConfig': gc}
+@@ -106,16 +139,24 @@
+     async def json(self, parts, schema, image=False):
+         return _parse_json(await self.generate(parts, schema, image))
+ 
+-    async def verify(self, kind, jpeg):
++    async def verify(self, kind, images, table=None):
++        """images: list[dict(role, jpeg)] (strip, overview, clean_ref) hoặc bytes (một crop, kiểu cũ).
++        Trả JSON của Gemini (verdict, checklist, image_quality, ...) kèm ms. Quyết định nằm ở decide()."""
++        if isinstance(images, (bytes, bytearray)):
++            images = [{'role': 'strip', 'jpeg': bytes(images)}]
+         t0 = time.perf_counter()
+-        parts = [{'text': VERIFY_PROMPT[kind]},
+-                 {'inline_data': {'mime_type': 'image/jpeg', 'data': base64.b64encode(jpeg).decode()}}]
++        prompt = VERIFY_PROMPT[kind]
++        if kind == 'needs_clearing':
++            has_ref = any(im['role'] == 'clean_ref' for im in images)
++            prompt = prompt.format(ban=table or '', ref=REF_SENTENCE if has_ref else '')
++        parts = [{'text': prompt}]
++        for im in images:
++            parts.append({'inline_data': {'mime_type': 'image/jpeg', 'data': base64.b64encode(im['jpeg']).decode()},
++                          'mediaResolution': {'level': f"MEDIA_RESOLUTION_{ROLE_RES.get(im['role'], 'LOW')}"}})
+         d = await self.json(parts, VERIFY_SCHEMA[kind], image=True)
+-        ok = bool(d.get('calling' if kind == 'call' else 'needs_clearing'))
+-        conf = d.get('confidence')
+-        conf = None if conf is None else max(0.0, min(1.0, float(conf)))
+-        return dict(ok=ok, confidence=conf, reason=str(d.get('reason') or '')[:120],
+-                    ms=int((time.perf_counter() - t0) * 1000))
++        d['reason'] = str(d.get('reason') or '')[:120]
++        d['ms'] = int((time.perf_counter() - t0) * 1000)
++        return d
+ 
+     async def answer(self, question, context):
+         prompt = (
+@@ -135,6 +176,37 @@
+         return (await self.generate([{'text': prompt}])).strip()
+ 
+ 
++def decide(kind, d):
++    """Luật quyết định từ JSON của Gemini. Trả (action, path); action: confirm | reject | unverified.
++    Gọi phục vụ: chỉ rút khi KHONG_GOI + ảnh ok + checklist có lý do bác. Cần dọn: chỉ giao việc khi
++    CAN_DON + ảnh ok + còn đồ đã dùng + không người + không đồ cá nhân; chỉ huỷ khi SACH + ok + checklist khớp.
++    Không dùng confidence."""
++    v, q, c = d.get('verdict'), d.get('image_quality'), d.get('checklist') or {}
++    if kind == 'call':
++        if v == 'GOI':
++            return 'confirm', 'confirmed'
++        if v == 'KHONG_GOI':
++            if q != 'ok':
++                return 'unverified', 'poor_image'
++            why = (c.get('hand_above_head') is False or c.get('held_or_waved_across_frames') is False
++                   or c.get('wearing_staff_uniform') is True or d.get('alt') not in (None, 'none', 'khac'))
++            return ('reject', 'rejected') if why else ('unverified', 'inconsistent')
++        return 'unverified', 'uncertain'
++    if q != 'ok' and v in ('CAN_DON', 'SACH'):
++        return 'unverified', 'poor_image'
++    if v == 'CAN_DON':
++        if d.get('personal_belongings_present'):
++            return 'unverified', 'belongings'
++        if c.get('used_items_left') is True and c.get('people_at_table') is False:
++            return 'confirm', 'confirmed'
++        return 'unverified', 'inconsistent'
++    if v == 'SACH':
++        if c.get('used_items_left') is False and c.get('people_at_table') is False:
++            return 'reject', 'rejected'
++        return 'unverified', 'inconsistent'
++    return 'unverified', 'uncertain'
++
++
+ def _text(resp):
+     try:
+         parts = resp['candidates'][0]['content']['parts']
+@@ -167,7 +239,7 @@
+     if len(sys.argv) >= 2:
+         kind = sys.argv[2] if len(sys.argv) > 2 else 'call'
+         r = await g.verify(kind, open(sys.argv[1], 'rb').read())
+-        print(r)
++        print(r, decide(kind, r))
+     else:
+         print(await g.generate([{'text': 'Trả lời đúng một chữ: xin chào bằng tiếng Việt.'}]))
+     print('bỏ trường:', g.drop or 'không')
+--- a/easy-fnb/server/hub.py
++++ b/easy-fnb/server/hub.py
+@@ -11,6 +11,8 @@
+ from datetime import datetime, timedelta, timezone
+ from pathlib import Path
+ 
++from .gemini import decide
++
+ VN = timezone(timedelta(hours=7))
+ 
+ EDGE_KIND = {'goi_phuc_vu': 'call', 'can_don': 'needs_clearing', 'khach_moi': 'new_guest',
+@@ -30,6 +32,39 @@
+ ]
+ DEFAULT_SETTINGS = dict(verify_kinds=['call', 'needs_clearing'], hold_until_verified=['needs_clearing'],
+                         escalate_s=45, dedup_s=20)
++VERIFY_TIMEOUT_S = 2.5          # Gemini chậm hơn thế thì cảnh báo thành "Chưa xác minh"
++UNVERIFIED_VI = {'uncertain': 'Gemini không chắc', 'poor_image': 'ảnh kém', 'inconsistent': 'trả lời không khớp',
++                 'belongings': 'còn đồ cá nhân, có thể khách ra ngoài tạm', 'timeout': 'Gemini quá hạn',
++                 'error': 'Gemini lỗi', 'breaker_open': 'tạm ngừng gọi Gemini sau nhiều lỗi liên tiếp'}
++
++
++class CircuitBreaker:
++    """Sau `fails` lỗi liên tiếp (lỗi hoặc quá hạn) thì ngừng gọi trong `cooldown_s`, rồi cho thử đúng một lần."""
++
++    def __init__(self, fails=3, cooldown_s=60.0, clock=time.monotonic):
++        self.fails, self.cooldown_s, self.clock = fails, cooldown_s, clock
++        self.n, self.opened_at, self.trial = 0, None, False
++
++    @property
++    def state(self):
++        if self.opened_at is None:
++            return 'closed'
++        return 'half_open' if self.clock() - self.opened_at >= self.cooldown_s else 'open'
++
++    def allow(self):
++        st = self.state
++        if st == 'half_open' and not self.trial:
++            self.trial = True
++            return True
++        return st == 'closed'
++
++    def success(self):
++        self.n, self.opened_at, self.trial = 0, None, False
++
++    def failure(self):
++        self.n += 1
++        if self.trial or self.n >= self.fails:
++            self.opened_at, self.trial = self.clock(), False
+ 
+ 
+ def now_ms():
+@@ -63,6 +98,8 @@
+         self.tables = {}     # "cam/table" -> TableState
+         self.alerts = {}     # id -> Alert (giữ cả ca, theo thứ tự tạo)
+         self.crops = {}      # alert id -> jpeg bytes
++        self.media = {}      # alert id -> [dict(role, jpeg)] gửi cho Gemini (dải 2x2, toàn cảnh, bàn sạch)
++        self.breaker = CircuitBreaker()
+         self.log = deque(maxlen=500)
+         self.subs = set()
+         self.online = Counter()
+@@ -268,6 +305,7 @@
+         if crop:
+             self.crops[aid] = crop
+             (self.data / 'crops' / f'{aid}.jpg').write_bytes(crop)
++        self.media[aid] = list(ev.get('images') or []) or ([{'role': 'strip', 'jpeg': crop}] if crop else [])
+         check = self.gemini.enabled and kind in self.settings['verify_kinds'] and crop is not None
+         hold = check and kind in self.settings['hold_until_verified']
+         a = dict(id=aid, kind=kind, table=table, camera=cam, created_at=now_ms(), video_t=ev.get('video_t'),
+@@ -290,40 +328,52 @@
+             asyncio.get_running_loop().create_task(self._verify(aid))
+         return aid
+ 
++    def _unverified(self, a, path, detail=None):
++        """Không đủ căn cứ để rút hay xác nhận: giữ cảnh báo, gắn "Chưa xác minh"; việc đang giữ thì giao luôn."""
++        a['verify'].update(state='unverified', path=path, reason=detail or UNVERIFIED_VI.get(path, path))
++        if a['status'] == 'verifying':
++            a['status'] = 'open'
++            self._assign(a)
++        self.add_log('verify', f'Chưa xác minh {where_l(a["table"], a["camera"])} {KIND_VI[a["kind"]]}: '
++                               f'{UNVERIFIED_VI.get(path, path)}', a['table'], a['camera'], a['id'])
++        self._pub_alert(self._public(a))
++
+     async def _verify(self, aid):
+         a = self.alerts.get(aid)
+         if a is None:
+             return
++        if not self.breaker.allow():
++            return self._unverified(a, 'breaker_open')
+         try:
+-            r = await self.gemini.verify(a['kind'], self.crops[aid])
+-        except Exception as e:  # lỗi mạng hay lỗi API: không chặn việc, cứ báo cho nhân viên
+-            a['verify'].update(state='error', reason=str(e)[:160])
+-            if a['status'] == 'verifying':
+-                a['status'] = 'open'
+-                self._assign(a)
+-            self.add_log('verify', f'Gemini lỗi khi kiểm tra {where_l(a["table"], a["camera"])}: '
+-                                   f'{str(e)[:80]}', a['table'], a['camera'], aid)
+-            self._pub_alert(self._public(a))
+-            return
+-        a['verify'].update(state='confirmed' if r['ok'] else 'rejected', confidence=r['confidence'],
+-                           reason=r['reason'], ms=r['ms'])
+-        if r['ok']:
++            r = await asyncio.wait_for(self.gemini.verify(a['kind'], self.media[aid], a['table']), VERIFY_TIMEOUT_S)
++        except asyncio.TimeoutError:
++            self.breaker.failure()
++            return self._unverified(a, 'timeout', f'Gemini quá {VERIFY_TIMEOUT_S:g} giây')
++        except Exception as e:  # lỗi mạng, lỗi API, JSON hỏng: không chặn việc
++            self.breaker.failure()
++            return self._unverified(a, 'error', f'Gemini lỗi: {str(e)[:120]}')
++        self.breaker.success()
++        action, path = decide(a['kind'], r)
++        a['verify'].update(verdict=r.get('verdict'), image_quality=r.get('image_quality'),
++                           checklist=r.get('checklist'), reason=r.get('reason'), ms=r.get('ms'), path=path)
++        if action == 'unverified':
++            return self._unverified(a, path, r.get('reason'))
++        if action == 'confirm':
++            a['verify']['state'] = 'confirmed'
++            extra = ''
+             if a['status'] == 'verifying':
+                 a['status'] = 'open'
+                 s = self._assign(a)
+                 extra = f', giao cho {s["name"]}' if s else ''
+-            else:
+-                extra = ''
+             self.add_log('verify', f'Gemini xác nhận: {where_l(a["table"], a["camera"])} {KIND_VI[a["kind"]]}{extra}',
+                          a['table'], a['camera'], aid)
+-        elif (r['confidence'] or 0) >= 0.6 and a['status'] in ('verifying', 'open'):
+-            self._close(a, 'cancelled', 'gemini', f'Gemini: {r["reason"] or "báo nhầm"}', publish=False)
+         else:
+-            self.add_log('verify', f'Gemini nghi báo nhầm ({r["reason"]}), nhưng nhân viên đã nhận việc',
+-                         a['table'], a['camera'], aid)
+-            if a['status'] == 'verifying':
+-                a['status'] = 'open'
+-                self._assign(a)
++            a['verify']['state'] = 'rejected'
++            if a['status'] in ('verifying', 'open'):
++                self._close(a, 'cancelled', 'gemini', f'Gemini: {r.get("reason") or "báo nhầm"}', publish=False)
++            else:
++                self.add_log('verify', f'Gemini cho là báo nhầm ({r.get("reason")}), nhưng nhân viên đã nhận việc',
++                             a['table'], a['camera'], aid)
+         self._pub_alert(self._public(a))
+ 
+     # ------------------------------------------------------------ thao tác của nhân viên, quản lý
+@@ -418,6 +468,7 @@
+     def reset(self):
+         self.alerts.clear()
+         self.crops.clear()
++        self.media.clear()
+         self.tables.clear()
+         self.log.clear()
+         for f in (self.data / 'crops').glob('*.jpg'):
+@@ -492,6 +543,7 @@
+                     counts={k: sum(1 for a in al if a['kind'] == k) for k in TASK_KINDS},
+                     cancelled=sum(1 for a in al if a['status'] == 'cancelled'),
+                     rejected_by_gemini=sum(1 for a in al if a['verify']['state'] == 'rejected'),
++                    unverified=sum(1 for a in al if a['verify']['state'] == 'unverified'),
+                     response_s=st, done_s={k: v for k, v in stats(done).items() if k != 'p90'},
+                     escalated=sum(1 for a in al if a['escalated']), per_staff=per_staff, per_table=per_table)}
+ 
+@@ -501,8 +553,9 @@
+         for a in self.alerts.values():
+             r = f", nhận sau {(a['acked_at'] - a['created_at']) / 1000:.0f} giây" if a['acked_at'] else ''
+             v = a['verify']
+-            vv = '' if v['state'] in ('skipped', 'pending') else \
+-                f", Gemini {'xác nhận' if v['state'] == 'confirmed' else 'bác bỏ' if v['state'] == 'rejected' else 'lỗi'}"
++            vv = '' if v['state'] in ('skipped', 'pending') else ', ' + {
++                'confirmed': 'Gemini xác nhận', 'rejected': 'Gemini bác bỏ',
++                'unverified': f"chưa xác minh ({UNVERIFIED_VI.get(v.get('path'), 'không rõ')})"}.get(v['state'], 'Gemini lỗi')
+             lines.append(f"[{a['id']}] {clock(a['created_at'])} {where(a['table'], a['camera'])} "
+                          f"{KIND_VI[a['kind']]}; trạng thái {a['status']}{r}"
+                          f"{', người nhận ' + self._staff_name(a['acked_by']) if a['acked_by'] else ''}{vv}"
+--- a/easy-fnb/server/app.py
++++ b/easy-fnb/server/app.py
+@@ -292,6 +292,9 @@
+     b64 = body.get('crop_jpeg_b64')
+     try:
+         body['crop_jpeg'] = base64.b64decode(b64) if b64 else None
++        # nhiều ảnh cho Gemini: [{"role": "strip"|"overview"|"clean_ref", "jpeg_b64": "..."}]
++        body['images'] = [dict(role=str(im['role']), jpeg=base64.b64decode(im['jpeg_b64']))
++                          for im in body.get('images') or []]
+         return dict(alert_id=hub.edge_event(body))
+     except (KeyError, ValueError) as e:
+         raise HTTPException(400, str(e))

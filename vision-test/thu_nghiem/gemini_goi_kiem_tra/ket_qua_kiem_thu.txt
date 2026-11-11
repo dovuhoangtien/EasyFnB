@@ -1,0 +1,34 @@
+test_open_after_3_then_half_open_after_60s (__main__.TestBreaker.test_open_after_3_then_half_open_after_60s) ... ok
+test_success_resets_count (__main__.TestBreaker.test_success_resets_count) ... ok
+test_body_and_parse (__main__.TestClient.test_body_and_parse) ... Executing <Task finished name='Task-2' coro=<TestClient.test_body_and_parse() done, defined at C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\thu_nghiem\gemini_goi_kiem_tra\kiem_thu.py:306> result=None created at C:\Users\sosar\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\asyncio\runners.py:100> took 0.156 seconds
+ok
+test_fallback_when_per_part_resolution_rejected (__main__.TestClient.test_fallback_when_per_part_resolution_rejected) ... ok
+test_real_client_hang_through_hub (__main__.TestClient.test_real_client_hang_through_hub) ... ok
+test_call (__main__.TestDecide.test_call) ... ok
+test_only_consistent_khong_goi_cancels (__main__.TestDecide.test_only_consistent_khong_goi_cancels)
+Duyệt mọi tổ hợp: chỉ KHONG_GOI + ok + có lý do bác trong checklist mới ra 'reject'. ... ok
+test_table (__main__.TestDecide.test_table) ... ok
+test_breaker_5_errors (__main__.TestHubResilience.test_breaker_5_errors) ... ok
+test_breaker_counts_timeouts_and_failed_trial_reopens (__main__.TestHubResilience.test_breaker_counts_timeouts_and_failed_trial_reopens) ... ok
+test_hang_call_unverified_within_3s (__main__.TestHubResilience.test_hang_call_unverified_within_3s) ... ok
+test_hang_table_released_within_3s (__main__.TestHubResilience.test_hang_table_released_within_3s) ... ok
+test_goi_confirms (__main__.TestHubVerdicts.test_goi_confirms) ... ok
+test_images_reach_gemini (__main__.TestHubVerdicts.test_images_reach_gemini) ... ok
+test_khong_chac_marks_unverified (__main__.TestHubVerdicts.test_khong_chac_marks_unverified) ... ok
+test_khong_goi_dark_keeps_alert (__main__.TestHubVerdicts.test_khong_goi_dark_keeps_alert) ... ok
+test_khong_goi_inconsistent_keeps_alert (__main__.TestHubVerdicts.test_khong_goi_inconsistent_keeps_alert) ... ok
+test_khong_goi_ok_consistent_cancels (__main__.TestHubVerdicts.test_khong_goi_ok_consistent_cancels) ... ok
+test_legacy_single_crop_still_works (__main__.TestHubVerdicts.test_legacy_single_crop_still_works) ... ok
+test_table_belongings_unverified (__main__.TestHubVerdicts.test_table_belongings_unverified) ... ok
+test_table_can_don_assigns_after_verify (__main__.TestHubVerdicts.test_table_can_don_assigns_after_verify) ... ok
+test_table_sach_cancels (__main__.TestHubVerdicts.test_table_sach_cancels) ... ok
+test_built_packages (__main__.TestPackages.test_built_packages) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 9.982s
+
+OK
+
+  [treo] việc tới nhân viên sau 3.7 ms; "Chưa xác minh" sau 2.52 s
+
+  [treo, cần dọn] mở việc sau 2.53 s

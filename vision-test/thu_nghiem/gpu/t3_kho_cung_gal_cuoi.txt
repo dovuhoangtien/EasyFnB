@@ -1,0 +1,39 @@
+== b32_laion
+  tổng: {"gallery": {"khach->khach": 14, "doi_nhan": 7, "nv->khach": 1, "khach->nv": 8, "nv->nv": 2}, "probe": {"khach->khach": 19, "doi_nhan": 9, "nv->khach": 3, "khach->nv": 3}}
+  06 #4    thật=nv    n=187  dài=22.5  gallery: cuối=kh tỉ lệ nv=0.0 đổi=0 điểm tb=0.264 sim gal/kho=0.664/0.703 | probe: cuối=False tỉ lệ nv=0.52 đổi=5
+  06 #14   thật=khach n=2    dài=0.1   gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.919 sim gal/kho=0.855/0.779 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  07 #1    thật=khach n=152  dài=18.9  gallery: cuối=nv tỉ lệ nv=0.77 đổi=2 điểm tb=0.655 sim gal/kho=0.671/0.647 | probe: cuối=True tỉ lệ nv=0.91 đổi=2
+  07 #6    thật=nv    n=102  dài=12.6  gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.933 sim gal/kho=0.806/0.715 | probe: cuối=False tỉ lệ nv=0.81 đổi=2
+  07 #8    thật=nv    n=16   dài=1.9   gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.944 sim gal/kho=0.865/0.752 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  02 #3    thật=khach n=145  dài=14.4  gallery: cuối=nv tỉ lệ nv=0.59 đổi=1 điểm tb=0.592 sim gal/kho=0.713/0.7 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  09 #1    thật=khach n=63   dài=7.9   gallery: cuối=nv tỉ lệ nv=0.98 đổi=1 điểm tb=0.719 sim gal/kho=0.734/0.702 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  09 #2    thật=khach n=103  dài=12.2  gallery: cuối=nv tỉ lệ nv=0.77 đổi=1 điểm tb=0.754 sim gal/kho=0.704/0.659 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  09 #5    thật=khach n=103  dài=12.2  gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.979 sim gal/kho=0.637/0.521 | probe: cuối=True tỉ lệ nv=1.0 đổi=0
+  09 #6    thật=khach n=99   dài=12.2  gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.96 sim gal/kho=0.621/0.523 | probe: cuối=True tỉ lệ nv=1.0 đổi=0
+  09 #7    thật=khach n=42   dài=5.2   gallery: cuối=nv tỉ lệ nv=0.64 đổi=1 điểm tb=0.854 sim gal/kho=0.716/0.645 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  09 #15   thật=khach n=1    dài=0.0   gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.982 sim gal/kho=0.768/0.647 | probe: cuối=None tỉ lệ nv=None đổi=0
+  09 #18   thật=khach n=53   dài=6.4   gallery: cuối=nv tỉ lệ nv=0.55 đổi=1 điểm tb=0.73 sim gal/kho=0.731/0.696 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  09 #24   thật=khach n=1    dài=0.1   gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.95 sim gal/kho=0.759/0.671 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  sự kiện 06 gallery: []  mốc=[['B1_truoc', 4.5]] trễ=[None] sai do khách=0
+  sự kiện 06 probe: [{'t': 13.52, 'ban': 'B1_truoc', 'nguoi': 4, 'that': 'nv'}]  mốc=[['B1_truoc', 4.5]] trễ=[9.02] sai do khách=0
+  sự kiện 07 gallery: [{'t': 2.54, 'ban': 'B1', 'nguoi': 6, 'that': 'nv'}, {'t': 13.39, 'ban': 'B1', 'nguoi': 1, 'that': 'khach'}]  mốc=[['B1', 3.5]] trễ=[None] sai do khách=1
+  sự kiện 07 probe: [{'t': 5.13, 'ban': 'B1', 'nguoi': 6, 'that': 'nv'}, {'t': 16.77, 'ban': 'B1', 'nguoi': 1, 'that': 'khach'}]  mốc=[['B1', 3.5]] trễ=[1.63] sai do khách=1
+== pe_core_b16
+  tổng: {"gallery": {"khach->khach": 15, "doi_nhan": 1, "nv->nv": 3, "khach->nv": 7}, "probe": {"khach->khach": 19, "doi_nhan": 9, "nv->khach": 3, "khach->nv": 3}}
+  06 #4    thật=nv    n=187  dài=22.5  gallery: cuối=nv tỉ lệ nv=0.05 đổi=1 điểm tb=0.46 sim gal/kho=0.665/0.669 | probe: cuối=False tỉ lệ nv=0.52 đổi=5
+  06 #14   thật=khach n=2    dài=0.1   gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.981 sim gal/kho=0.91/0.787 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  07 #1    thật=khach n=152  dài=18.9  gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.769 sim gal/kho=0.648/0.608 | probe: cuối=True tỉ lệ nv=0.91 đổi=2
+  07 #6    thật=nv    n=102  dài=12.6  gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.968 sim gal/kho=0.756/0.635 | probe: cuối=False tỉ lệ nv=0.81 đổi=2
+  07 #8    thật=nv    n=16   dài=1.9   gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.948 sim gal/kho=0.821/0.698 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  09 #1    thật=khach n=63   dài=7.9   gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.899 sim gal/kho=0.689/0.617 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  09 #2    thật=khach n=103  dài=12.2  gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.945 sim gal/kho=0.638/0.542 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  09 #5    thật=khach n=103  dài=12.2  gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.995 sim gal/kho=0.633/0.472 | probe: cuối=True tỉ lệ nv=1.0 đổi=0
+  09 #6    thật=khach n=99   dài=12.2  gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.949 sim gal/kho=0.644/0.55 | probe: cuối=True tỉ lệ nv=1.0 đổi=0
+  09 #7    thật=khach n=42   dài=5.2   gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.962 sim gal/kho=0.693/0.583 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  09 #15   thật=khach n=1    dài=0.0   gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.998 sim gal/kho=0.708/0.513 | probe: cuối=None tỉ lệ nv=None đổi=0
+  09 #18   thật=khach n=53   dài=6.4   gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.897 sim gal/kho=0.683/0.609 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  09 #24   thật=khach n=1    dài=0.1   gallery: cuối=nv tỉ lệ nv=1.0 đổi=0 điểm tb=0.998 sim gal/kho=0.707/0.521 | probe: cuối=False tỉ lệ nv=0.0 đổi=0
+  sự kiện 06 gallery: [{'t': 26.0, 'ban': 'B1_truoc', 'nguoi': 4, 'that': 'nv'}]  mốc=[['B1_truoc', 4.5]] trễ=[21.5] sai do khách=0
+  sự kiện 06 probe: [{'t': 13.52, 'ban': 'B1_truoc', 'nguoi': 4, 'that': 'nv'}]  mốc=[['B1_truoc', 4.5]] trễ=[9.02] sai do khách=0
+  sự kiện 07 gallery: [{'t': 2.54, 'ban': 'B1', 'nguoi': 6, 'that': 'nv'}, {'t': 13.39, 'ban': 'B1', 'nguoi': 1, 'that': 'khach'}]  mốc=[['B1', 3.5]] trễ=[None] sai do khách=1
+  sự kiện 07 probe: [{'t': 5.13, 'ban': 'B1', 'nguoi': 6, 'that': 'nv'}, {'t': 16.77, 'ban': 'B1', 'nguoi': 1, 'that': 'khach'}]  mốc=[['B1', 3.5]] trễ=[1.63] sai do khách=1

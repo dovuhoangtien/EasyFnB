@@ -1,0 +1,19 @@
+{
+  "ghi_chu": "Vùng bàn vẽ tay thô (Claude, 5/11/2026) cho 3 clip quay thường (không time-lapse) chưa có vùng bàn, để thử độ ổn định theo thời gian thật. Khách ngồi suốt cả 3 clip: đáp án là C mọi lúc, không sự kiện nào. Clip 07, 09 máy quay lia nhẹ (lệch tới ~100 px) nên vùng bàn chỉ gần đúng. Không có xác suất bàn bẩn ở các clip này (lúc chạy không có vùng bàn), nên chỉ thử được phần có khách.",
+  "06_phuc_vu_ghi_order": {
+    "ban": {
+      "B1": [[0, 610], [1240, 555], [1280, 720], [0, 720]],
+      "B2": [[300, 445], [490, 445], [490, 478], [300, 478]]
+    }
+  },
+  "07_khach_tinh_tien": {
+    "ban": {
+      "B1": [[380, 600], [1060, 600], [1060, 720], [380, 720]]
+    }
+  },
+  "09_nhom_ban_tron": {
+    "ban": {
+      "B1": [[0, 500], [1220, 470], [1220, 600], [0, 640]]
+    }
+  }
+}

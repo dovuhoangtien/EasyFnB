@@ -1,0 +1,63 @@
+{
+  "ban": {
+    "dung": 121,
+    "tong": 137,
+    "ti_le": 0.883,
+    "theo_loai": {
+      "T": "51/59",
+      "C": "69/73",
+      "D": "1/5"
+    },
+    "dung_cho_tre": 130,
+    "ti_le_cho_tre": 0.949,
+    "nham": {
+      "D->?": 2,
+      "C->?": 2,
+      "T->D": 1,
+      "D->C": 2,
+      "C->T": 2,
+      "T->C": 7
+    },
+    "chi_tiet_sai": [
+      "01  0.25s B1: đúng D, máy ?",
+      "01  0.25s B2: đúng C, máy ?",
+      "01  0.25s B3: đúng C, máy ?",
+      "01  0.25s B4: đúng D, máy ?",
+      "01  1.25s B1: đúng T, máy D",
+      "01  2.75s B3: đúng D, máy C",
+      "01  3.75s B3: đúng C, máy T",
+      "01  4.75s B4: đúng T, máy C",
+      "01  5.25s B4: đúng T, máy C",
+      "01  5.75s B4: đúng T, máy C",
+      "01  6.25s B2: đúng D, máy C",
+      "01  6.25s B4: đúng T, máy C",
+      "01  6.75s B4: đúng T, máy C",
+      "01  7.25s B4: đúng T, máy C",
+      "01  7.75s B4: đúng T, máy C",
+      "01  9.25s B4: đúng C, máy T"
+    ]
+  },
+  "gio_tay": {
+    "bat_duoc": 5,
+    "tong": 7,
+    "recall": 0.714,
+    "bao_dung": 5,
+    "bao_nham": 1,
+    "precision": 0.833,
+    "tre_tb_s": 0.59,
+    "tre_tung_lan": [
+      -0.05,
+      0.18,
+      1.15,
+      1.07,
+      0.6
+    ],
+    "bo_sot": [
+      "10 em ngồi xa sau em áo đỏ (vua)",
+      "10 em mép trái, bị cắt khỏi khung (kho)"
+    ],
+    "chi_tiet_nham": [
+      "10 18.55s x=245"
+    ]
+  }
+}

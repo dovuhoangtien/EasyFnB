@@ -1,0 +1,20 @@
+  chưa có kết quả pipeline cho 10_thay_the_gio_tay_lop_hoc_a (thiếu thu_nghiem\ap_dung\b1_trang_thai_ban\10_thay_the_gio_tay_lop_hoc_a\su_kien.json)
+  chưa có kết quả pipeline cho 12_thay_the_gio_tay_hoi_bai (thiếu thu_nghiem\ap_dung\b1_trang_thai_ban\12_thay_the_gio_tay_hoi_bai\su_kien.json)
+  chưa có kết quả pipeline cho 02_quan_ngoai_troi_nhieu_ban (thiếu thu_nghiem\ap_dung\b1_trang_thai_ban\02_quan_ngoai_troi_nhieu_ban\su_kien.json)
+  chưa có kết quả pipeline cho 03_ban_an_xong_tu_tren (thiếu thu_nghiem\ap_dung\b1_trang_thai_ban\03_ban_an_xong_tu_tren\su_kien.json)
+  chưa có kết quả pipeline cho 04_phuc_vu_toi_khach_moi (thiếu thu_nghiem\ap_dung\b1_trang_thai_ban\04_phuc_vu_toi_khach_moi\su_kien.json)
+  chưa có kết quả pipeline cho 05_khach_vao_quan (thiếu thu_nghiem\ap_dung\b1_trang_thai_ban\05_khach_vao_quan\su_kien.json)
+  chưa có kết quả pipeline cho 06_phuc_vu_ghi_order (thiếu thu_nghiem\ap_dung\b1_trang_thai_ban\06_phuc_vu_ghi_order\su_kien.json)
+  chưa có kết quả pipeline cho 07_khach_tinh_tien (thiếu thu_nghiem\ap_dung\b1_trang_thai_ban\07_khach_tinh_tien\su_kien.json)
+  chưa có kết quả pipeline cho 08_quan_cafe_nhieu_nguoi (thiếu thu_nghiem\ap_dung\b1_trang_thai_ban\08_quan_cafe_nhieu_nguoi\su_kien.json)
+  chưa có kết quả pipeline cho 09_nhom_ban_tron (thiếu thu_nghiem\ap_dung\b1_trang_thai_ban\09_nhom_ban_tron\su_kien.json)
+  chưa có kết quả pipeline cho 01_phong_an_goc_cao (thiếu thu_nghiem\ap_dung\b1_trang_thai_ban\01_phong_an_goc_cao\su_kien.json)
+Gọi phục vụ: bắt 0/0
+  trễ từ lúc tay lên đỉnh: trung bình None s, trung vị None s, 90% dưới None s
+  theo loại gọi: 
+  theo loại ghế: 
+  theo cỡ người: 
+  theo người: 
+Báo nhầm: 0 lần trong 0.0 phút = None/giờ; riêng phiên ăn uống bình thường: 0 lần trong 0.0 phút
+  báo nhầm không rõ do cử chỉ nào: 0
+Báo trùng (một lần gọi, máy báo nhiều lần): 0

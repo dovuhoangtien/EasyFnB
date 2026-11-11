@@ -1,0 +1,512 @@
+{
+ "b32_laion": {
+  "ban": {
+   "dung": 75,
+   "tong": 91,
+   "sach": 49,
+   "n_sach": 59,
+   "ban": 26,
+   "n_ban": 32,
+   "auc": 0.896
+  },
+  "ban_v2": {
+   "dung": 70,
+   "tong": 91,
+   "sach": 49,
+   "n_sach": 59,
+   "ban": 21,
+   "n_ban": 32,
+   "auc": 0.831
+  },
+  "nhan_vien": {
+   "dung": 101,
+   "tong": 105,
+   "khach": 77,
+   "n_khach": 77,
+   "nv": 24,
+   "n_nv": 28,
+   "auc": 0.996
+  },
+  "gio_tay": {
+   "n_gio": 26,
+   "n_khong": 1668,
+   "auc_video": 0.977,
+   "gio@0.3": 22,
+   "nham@0.3": 46,
+   "scb@0.3": 0.797,
+   "gio@0.5": 18,
+   "nham@0.5": 15,
+   "scb@0.5": 0.846,
+   "gio@fp1%": 19,
+   "gio@fp3%": 22
+  },
+  "toc_do": {
+   "anh": "224x224",
+   "tham_so_anh_trieu": 87.8,
+   "gpu_ms_1": 11.41,
+   "gpu_ms_8": 26.32,
+   "gpu_fp16_ms_8": 10.12,
+   "cpu_ms_1": 65.8,
+   "cpu_ms_8": 23.7
+  }
+ },
+ "b32_datacomp": {
+  "ban": {
+   "dung": 75,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 16,
+   "n_ban": 32,
+   "auc": 0.951
+  },
+  "ban_v2": {
+   "dung": 75,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 16,
+   "n_ban": 32,
+   "auc": 0.948
+  },
+  "nhan_vien": {
+   "dung": 96,
+   "tong": 105,
+   "khach": 75,
+   "n_khach": 77,
+   "nv": 21,
+   "n_nv": 28,
+   "auc": 0.98
+  },
+  "gio_tay": {
+   "n_gio": 26,
+   "n_khong": 1668,
+   "auc_video": 0.957,
+   "gio@0.3": 20,
+   "nham@0.3": 53,
+   "scb@0.3": 0.775,
+   "gio@0.5": 18,
+   "nham@0.5": 17,
+   "scb@0.5": 0.818,
+   "gio@fp1%": 18,
+   "gio@fp3%": 20
+  },
+  "toc_do": {
+   "anh": "224x224",
+   "tham_so_anh_trieu": 87.8,
+   "gpu_ms_1": 10.53,
+   "gpu_ms_8": 25.12,
+   "gpu_fp16_ms_8": 9.71,
+   "cpu_ms_1": 44.6,
+   "cpu_ms_8": 23.1
+  }
+ },
+ "siglip2_b32": {
+  "ban": {
+   "dung": 75,
+   "tong": 91,
+   "sach": 53,
+   "n_sach": 59,
+   "ban": 22,
+   "n_ban": 32,
+   "auc": 0.901
+  },
+  "ban_v2": {
+   "dung": 78,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 19,
+   "n_ban": 32,
+   "auc": 0.894
+  },
+  "nhan_vien": {
+   "dung": 100,
+   "tong": 105,
+   "khach": 76,
+   "n_khach": 77,
+   "nv": 24,
+   "n_nv": 28,
+   "auc": 0.996
+  },
+  "gio_tay": {
+   "n_gio": 26,
+   "n_khong": 1668,
+   "auc_video": 0.979,
+   "gio@0.3": 21,
+   "nham@0.3": 77,
+   "scb@0.3": 0.789,
+   "gio@0.5": 17,
+   "nham@0.5": 16,
+   "scb@0.5": 0.823,
+   "gio@fp1%": 21,
+   "gio@fp3%": 21
+  },
+  "toc_do": {
+   "anh": "256x256",
+   "tham_so_anh_trieu": 94.6,
+   "gpu_ms_1": 11.44,
+   "gpu_ms_8": 49.96,
+   "gpu_fp16_ms_8": 18.84,
+   "cpu_ms_1": 73.2,
+   "cpu_ms_8": 65.7
+  }
+ },
+ "mobileclip2_s0": {
+  "ban": {
+   "dung": 72,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 13,
+   "n_ban": 32,
+   "auc": 0.924
+  },
+  "ban_v2": {
+   "dung": 75,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 16,
+   "n_ban": 32,
+   "auc": 0.89
+  },
+  "nhan_vien": {
+   "dung": 98,
+   "tong": 105,
+   "khach": 75,
+   "n_khach": 77,
+   "nv": 23,
+   "n_nv": 28,
+   "auc": 0.994
+  },
+  "gio_tay": {
+   "n_gio": 26,
+   "n_khong": 1668,
+   "auc_video": 0.97,
+   "gio@0.3": 19,
+   "nham@0.3": 64,
+   "scb@0.3": 0.815,
+   "gio@0.5": 11,
+   "nham@0.5": 17,
+   "scb@0.5": 0.826,
+   "gio@fp1%": 11,
+   "gio@fp3%": 16
+  },
+  "toc_do": {
+   "anh": "256x256",
+   "tham_so_anh_trieu": 11.4,
+   "gpu_ms_1": 26.81,
+   "gpu_ms_8": 43.23,
+   "gpu_fp16_ms_8": 32.25,
+   "cpu_ms_1": 59.3,
+   "cpu_ms_8": 48.6
+  }
+ },
+ "mobileclip2_s2": {
+  "ban": {
+   "dung": 80,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 21,
+   "n_ban": 32,
+   "auc": 0.916
+  },
+  "ban_v2": {
+   "dung": 76,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 17,
+   "n_ban": 32,
+   "auc": 0.942
+  },
+  "nhan_vien": {
+   "dung": 102,
+   "tong": 105,
+   "khach": 76,
+   "n_khach": 77,
+   "nv": 26,
+   "n_nv": 28,
+   "auc": 0.995
+  },
+  "gio_tay": {
+   "n_gio": 26,
+   "n_khong": 1668,
+   "auc_video": 0.982,
+   "gio@0.3": 21,
+   "nham@0.3": 45,
+   "scb@0.3": 0.863,
+   "gio@0.5": 12,
+   "nham@0.5": 14,
+   "scb@0.5": 0.873,
+   "gio@fp1%": 13,
+   "gio@fp3%": 22
+  },
+  "toc_do": {
+   "anh": "256x256",
+   "tham_so_anh_trieu": 35.8,
+   "gpu_ms_1": 50.81,
+   "gpu_ms_8": 106.64,
+   "gpu_fp16_ms_8": 71.25,
+   "cpu_ms_1": 109.8,
+   "cpu_ms_8": 108.0
+  }
+ },
+ "pe_core_b16": {
+  "ban": {
+   "dung": 71,
+   "tong": 91,
+   "sach": 52,
+   "n_sach": 59,
+   "ban": 19,
+   "n_ban": 32,
+   "auc": 0.903
+  },
+  "ban_v2": {
+   "dung": 80,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 21,
+   "n_ban": 32,
+   "auc": 0.918
+  },
+  "nhan_vien": {
+   "dung": 98,
+   "tong": 105,
+   "khach": 76,
+   "n_khach": 77,
+   "nv": 22,
+   "n_nv": 28,
+   "auc": 0.994
+  },
+  "gio_tay": {
+   "n_gio": 26,
+   "n_khong": 1668,
+   "auc_video": 0.991,
+   "gio@0.3": 22,
+   "nham@0.3": 32,
+   "scb@0.3": 0.896,
+   "gio@0.5": 13,
+   "nham@0.5": 7,
+   "scb@0.5": 0.926,
+   "gio@fp1%": 22,
+   "gio@fp3%": 23
+  },
+  "toc_do": {
+   "anh": "224x224",
+   "tham_so_anh_trieu": 93.7,
+   "gpu_ms_1": 20.77,
+   "gpu_ms_8": 129.79,
+   "gpu_fp16_ms_8": 42.42,
+   "cpu_ms_1": 147.8,
+   "cpu_ms_8": 134.3
+  }
+ },
+ "siglip2_b16": {
+  "ban": {
+   "dung": 74,
+   "tong": 91,
+   "sach": 50,
+   "n_sach": 59,
+   "ban": 24,
+   "n_ban": 32,
+   "auc": 0.918
+  },
+  "ban_v2": {
+   "dung": 77,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 18,
+   "n_ban": 32,
+   "auc": 0.93
+  },
+  "nhan_vien": {
+   "dung": 102,
+   "tong": 105,
+   "khach": 77,
+   "n_khach": 77,
+   "nv": 25,
+   "n_nv": 28,
+   "auc": 0.998
+  },
+  "gio_tay": {
+   "n_gio": 26,
+   "n_khong": 1668,
+   "auc_video": 0.964,
+   "gio@0.3": 22,
+   "nham@0.3": 61,
+   "scb@0.3": 0.801,
+   "gio@0.5": 19,
+   "nham@0.5": 8,
+   "scb@0.5": 0.839,
+   "gio@fp1%": 20,
+   "gio@fp3%": 22
+  },
+  "toc_do": {
+   "anh": "224x224",
+   "tham_so_anh_trieu": 92.9,
+   "gpu_ms_1": 16.13,
+   "gpu_ms_8": 91.23,
+   "gpu_fp16_ms_8": 30.57,
+   "cpu_ms_1": 106.9,
+   "cpu_ms_8": 86.4
+  }
+ },
+ "pe_core_s16": {
+  "ban": {
+   "dung": 84,
+   "tong": 91,
+   "sach": 57,
+   "n_sach": 59,
+   "ban": 27,
+   "n_ban": 32,
+   "auc": 0.974
+  },
+  "ban_v2": {
+   "dung": 78,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 19,
+   "n_ban": 32,
+   "auc": 0.978
+  },
+  "nhan_vien": {
+   "dung": 97,
+   "tong": 105,
+   "khach": 77,
+   "n_khach": 77,
+   "nv": 20,
+   "n_nv": 28,
+   "auc": 0.987
+  },
+  "gio_tay": {
+   "n_gio": 26,
+   "n_khong": 1668,
+   "auc_video": 0.957,
+   "gio@0.3": 20,
+   "nham@0.3": 59,
+   "scb@0.3": 0.826,
+   "gio@0.5": 8,
+   "nham@0.5": 13,
+   "scb@0.5": 0.85,
+   "gio@fp1%": 9,
+   "gio@fp3%": 20
+  },
+  "toc_do": {
+   "anh": "384x384",
+   "tham_so_anh_trieu": 23.8,
+   "gpu_ms_1": 17.01,
+   "gpu_ms_8": 139.3,
+   "gpu_fp16_ms_8": 43.22,
+   "cpu_ms_1": 114.6,
+   "cpu_ms_8": 121.5
+  }
+ },
+ "mobileclip2_b": {
+  "ban": {
+   "dung": 78,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 19,
+   "n_ban": 32,
+   "auc": 0.968
+  },
+  "ban_v2": {
+   "dung": 75,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 16,
+   "n_ban": 32,
+   "auc": 0.994
+  },
+  "nhan_vien": {
+   "dung": 99,
+   "tong": 105,
+   "khach": 76,
+   "n_khach": 77,
+   "nv": 23,
+   "n_nv": 28,
+   "auc": 0.991
+  },
+  "gio_tay": {
+   "n_gio": 26,
+   "n_khong": 1668,
+   "auc_video": 0.977,
+   "gio@0.3": 23,
+   "nham@0.3": 47,
+   "scb@0.3": 0.846,
+   "gio@0.5": 9,
+   "nham@0.5": 14,
+   "scb@0.5": 0.889,
+   "gio@fp1%": 12,
+   "gio@fp3%": 23
+  },
+  "toc_do": {
+   "anh": "224x224",
+   "tham_so_anh_trieu": 86.3,
+   "gpu_ms_1": 15.87,
+   "gpu_ms_8": 103.54,
+   "gpu_fp16_ms_8": 32.22,
+   "cpu_ms_1": 117.0,
+   "cpu_ms_8": 90.7
+  }
+ },
+ "dfn_b16": {
+  "ban": {
+   "dung": 77,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 18,
+   "n_ban": 32,
+   "auc": 0.954
+  },
+  "ban_v2": {
+   "dung": 77,
+   "tong": 91,
+   "sach": 59,
+   "n_sach": 59,
+   "ban": 18,
+   "n_ban": 32,
+   "auc": 0.96
+  },
+  "nhan_vien": {
+   "dung": 101,
+   "tong": 105,
+   "khach": 76,
+   "n_khach": 77,
+   "nv": 25,
+   "n_nv": 28,
+   "auc": 0.981
+  },
+  "gio_tay": {
+   "n_gio": 26,
+   "n_khong": 1668,
+   "auc_video": 0.975,
+   "gio@0.3": 20,
+   "nham@0.3": 45,
+   "scb@0.3": 0.81,
+   "gio@0.5": 8,
+   "nham@0.5": 10,
+   "scb@0.5": 0.823,
+   "gio@fp1%": 11,
+   "gio@fp3%": 22
+  },
+  "toc_do": {
+   "anh": "224x224",
+   "tham_so_anh_trieu": 86.2,
+   "gpu_ms_1": 16.23,
+   "gpu_ms_8": 100.7,
+   "gpu_fp16_ms_8": 31.26,
+   "cpu_ms_1": 104.4,
+   "cpu_ms_8": 84.8
+  }
+ }
+}

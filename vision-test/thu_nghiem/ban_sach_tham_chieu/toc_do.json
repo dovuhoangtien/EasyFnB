@@ -1,0 +1,10 @@
+{
+ "phan_loai_hien_tai_ms_4_ban": 34.16,
+ "phan_loai_+_toan_anh_ms_4_ban": 34.0,
+ "phan_loai_+_va_pe_ms_4_ban": 36.14,
+ "vram_pe_mb": 92,
+ "bo_nho_tham_chieu_pe_moi_ban_kb": 2160,
+ "them_dinov2_va_ms_4_ban": 58.48,
+ "vram_them_dinov2_mb": 111,
+ "gpu": "NVIDIA GeForce RTX 3050 Laptop GPU"
+}

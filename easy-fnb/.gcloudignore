@@ -1,0 +1,2 @@
+# gcloud run deploy --source chỉ tải lên những gì cần để build
+#!include:.dockerignore

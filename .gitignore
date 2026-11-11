@@ -1,0 +1,72 @@
+# Bản sao lưu và công cụ cục bộ
+*_pre-apply-*/
+.claude/
+.hallmark/
+.env
+.env.*
+*.local
+
+# Node / Python
+node_modules/
+dist/
+dist-ssr/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.log
+
+# Dữ liệu chạy của máy chủ (ảnh cắt từ camera)
+easy-fnb/server/data/
+# Giọng Piper: tải lại được, file lớn
+easy-fnb/server/voices/*.onnx
+easy-fnb/server/voices/so_sanh/
+
+# Video và ảnh: video CCTV của người khác chỉ dùng thử nội bộ, không công khai
+*.mp4
+*.avi
+*.mov
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.npz
+!easy-fnb/public/**
+!easy-fnb/src/**
+
+# Kết quả chạy thử
+vision-test/out*/
+vision-test/out*.json
+vision-test/danh_gia/so_nv/
+vision-test/thu_nghiem/**/_cache/
+vision-test/thu_nghiem/**/weights/
+
+# Model: trọng số gốc tải lại được, engine TensorRT phải xuất lại trên từng máy (xuat_engine.py)
+*.engine
+*.engine.cu
+*.onnx
+*.ts
+*_openvino_model/
+vision-test/models/*.pt
+# Giữ các đầu phân loại nhỏ tự train (vài KB)
+!vision-test/models/giotay_pe_b16.pt
+!vision-test/models/nhanvien_pe_b16.pt
+!vision-test/models/hanh_dong_pe_core_b16.pt
+!vision-test/models/giotay_clip_v1.pt
+!vision-test/models/nhanvien_clip_v1.pt
+*.pt
+!vision-test/models/giotay_pe_b16.pt
+!vision-test/models/nhanvien_pe_b16.pt
+!vision-test/models/hanh_dong_pe_core_b16.pt
+!vision-test/models/giotay_clip_v1.pt
+!vision-test/models/nhanvien_clip_v1.pt
+
+# Kết quả đo trong thư mục thử nghiệm
+vision-test/thu_nghiem/**/bench/
+vision-test/thu_nghiem/**/ket_qua*/
+**/chi_tiet.json
+**/su_kien.json
+**/tong_hop*.json
+
+# Ý tưởng khác, không thuộc Easy FnB
+thuc-tap-ao.md

@@ -1,0 +1,50 @@
+{
+  "ban": {
+    "dung": 130,
+    "tong": 137,
+    "ti_le": 0.949,
+    "theo_loai": {
+      "T": "59/59",
+      "C": "70/73",
+      "D": "1/5"
+    },
+    "dung_cho_tre": 136,
+    "ti_le_cho_tre": 0.993,
+    "nham": {
+      "D->?": 2,
+      "C->?": 2,
+      "D->C": 2,
+      "C->T": 1
+    },
+    "chi_tiet_sai": [
+      "01  0.25s B1: đúng D, máy ?",
+      "01  0.25s B2: đúng C, máy ?",
+      "01  0.25s B3: đúng C, máy ?",
+      "01  0.25s B4: đúng D, máy ?",
+      "01  2.75s B3: đúng D, máy C",
+      "01  3.75s B3: đúng C, máy T",
+      "01  6.25s B2: đúng D, máy C"
+    ]
+  },
+  "gio_tay": {
+    "bat_duoc": 3,
+    "tong": 7,
+    "recall": 0.429,
+    "bao_dung": 3,
+    "bao_nham": 0,
+    "precision": 1.0,
+    "tre_tb_s": 1.41,
+    "tre_tung_lan": [
+      0.02,
+      3.65,
+      0.56
+    ],
+    "bo_sot": [
+      "10 em áo xám giữa lớp (de)",
+      "10 em ngồi xa sau em áo đỏ (vua)",
+      "10 em mép trái, bị cắt khỏi khung (kho)",
+      "12 người mép trái (vua)"
+    ],
+    "chi_tiet_nham": []
+  }
+}

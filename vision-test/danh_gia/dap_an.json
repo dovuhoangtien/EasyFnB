@@ -1,0 +1,36 @@
+{
+  "ghi_chu": "Đáp án do người xem từng khung hình gán. T = trống (sạch hoặc đã bày sẵn), C = có khách, D = cần dọn (không khách, còn chén dĩa đã dùng), x = đang chuyển trạng thái, bỏ qua khi chấm. Các clip này KHÔNG dùng để train.",
+  "ban": {
+    "01_phong_an_goc_cao": {
+      "thu_tu": ["B1", "B2", "B3", "B4"],
+      "moc": {
+        "0.25": "DCCD", "0.75": "xCCD", "1.25": "TCCT", "1.75": "TCCT", "2.25": "TCCT",
+        "2.75": "TCDT", "3.25": "TCxT", "3.75": "TCCT", "4.25": "TCCT", "4.75": "TCCT",
+        "5.25": "TCCT", "5.75": "TCCT", "6.25": "TDCT", "6.75": "TxCT", "7.25": "TTCT",
+        "7.75": "TTCT", "8.25": "TTCT", "8.75": "TTCx", "9.25": "TTCC", "9.75": "TTCC",
+        "10.25": "TTCC", "10.75": "TTCC", "11.25": "TTCC", "11.75": "TTCC", "12.25": "TTCC",
+        "12.75": "TTCC", "13.25": "TTCC", "13.75": "TTCC", "14.25": "TTCC", "14.75": "TTCC"
+      }
+    },
+    "02_quan_ngoai_troi_nhieu_ban": {
+      "thu_tu": ["B1", "B2", "B3"],
+      "moc": {"2": "CCC", "4": "CCC", "6": "CCC", "8": "CCC", "10": "CCC", "12": "CCC", "14": "CCC"}
+    }
+  },
+  "gio_tay": {
+    "10_thay_the_gio_tay_lop_hoc_a": [
+      {"ai": "em áo xanh đậm cuối lớp, cạnh bảng", "tu": 16.5, "den": 21.5, "x": [1020, 1240], "kho": "de"},
+      {"ai": "em áo xanh dương phía trước", "tu": 17.0, "den": 21.5, "x": [700, 960], "kho": "de"},
+      {"ai": "em áo xám giữa lớp", "tu": 17.5, "den": 21.5, "x": [480, 680], "kho": "de"},
+      {"ai": "em ngồi xa sau em áo đỏ", "tu": 17.5, "den": 20.0, "x": [400, 540], "kho": "vua"},
+      {"ai": "em mép trái, bị cắt khỏi khung", "tu": 19.5, "den": 21.5, "x": [0, 140], "kho": "kho"}
+    ],
+    "12_thay_the_gio_tay_hoi_bai": [
+      {"ai": "người mép trái", "tu": 2.05, "den": 3.3, "x": [0, 220], "kho": "vua"},
+      {"ai": "cô tóc vàng, giơ nhanh ngang đầu", "tu": 2.0, "den": 2.75, "x": [520, 1020], "kho": "vua"}
+    ],
+    "khong_ai_gio_tay": ["02_quan_ngoai_troi_nhieu_ban", "03_ban_an_xong_tu_tren", "04_phuc_vu_toi_khach_moi",
+                          "05_khach_vao_quan", "06_phuc_vu_ghi_order", "07_khach_tinh_tien",
+                          "08_quan_cafe_nhieu_nguoi", "09_nhom_ban_tron", "01_phong_an_goc_cao"]
+  }
+}

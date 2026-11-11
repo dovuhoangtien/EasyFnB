@@ -1,0 +1,4307 @@
+[
+ {
+  "ten": "cu (Table hiện tại)",
+  "tham_so": null,
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy T",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      3.21,
+      "da_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.462,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "cu, viết lại (kiểm tra)",
+  "tham_so": {},
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy T",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      3.21,
+      "da_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.462,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "a1 EMA có khách",
+  "tham_so": {
+   "loc_khach": "ema",
+   "tau_khach": 0.5
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.0,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.0,
+      "can_don",
+      "B3"
+     ],
+     [
+      3.96,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.54,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.17,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.64 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.439,
+   "khach_moi_ao_moi_phut": 3.278
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "a2 EMA độ bẩn",
+  "tham_so": {
+   "loc_ban": "ema",
+   "tau_ban": 0.5
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      0.67,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.0,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 130,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.532,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.27
+  }
+ },
+ {
+  "ten": "a3 trễ độ bẩn 0,5/0,35",
+  "tham_so": {
+   "ban_sach": 0.35
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 128,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -1
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B1: đúng T, máy D",
+     " 1.25s B4: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      6.58,
+      "can_don",
+      "B2"
+     ],
+     [
+      6.83,
+      "da_don",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 2,
+   "su_kien": 7,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -5
+  },
+  "toc60": {
+   "dung": 128,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -1
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.462,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.63
+  }
+ },
+ {
+  "ten": "a4 EMA bẩn + trễ 0,5/0,35",
+  "tham_so": {
+   "loc_ban": "ema",
+   "tau_ban": 0.5,
+   "ban_sach": 0.35
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -1
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      6.58,
+      "can_don",
+      "B2"
+     ],
+     [
+      6.83,
+      "da_don",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 2,
+   "su_kien": 7,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -5
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -1
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.509,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "a5 trung vị bẩn + trễ 0,5/0,35",
+  "tham_so": {
+   "loc_ban": "trung_vi",
+   "ban_sach": 0.35
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -1
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      6.58,
+      "can_don",
+      "B2"
+     ],
+     [
+      7.17,
+      "da_don",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 2,
+   "su_kien": 7,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -5
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -1
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.485,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.5
+  }
+ },
+ {
+  "ten": "a6 EMA cả hai + trễ",
+  "tham_so": {
+   "loc_khach": "ema",
+   "tau_khach": 0.5,
+   "loc_ban": "ema",
+   "tau_ban": 0.5,
+   "ban_sach": 0.35
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -1
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.0,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.0,
+      "can_don",
+      "B3"
+     ],
+     [
+      3.96,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.54,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      6.54,
+      "can_don",
+      "B2"
+     ],
+     [
+      6.83,
+      "da_don",
+      "B2"
+     ],
+     [
+      9.17,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 2,
+   "su_kien": 7,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -5
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -1
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.64 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.485,
+   "khach_moi_ao_moi_phut": 3.278
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "b1 ra chậm 5 s",
+  "tham_so": {
+   "giu_ra": 5
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 2,
+   "su_kien": 8,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -4
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy T",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.21,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.75,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "tinh": {
+   "su_kien_nham": 0,
+   "khach_moi_nham": 0,
+   "chi_tiet": []
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 0.209,
+   "khach_moi_ao_moi_phut": 2.534
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 5.8,
+   "tre_can_don": 5.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "b2 ra chậm 10 s",
+  "tham_so": {
+   "giu_ra": 10
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 131,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      6.92,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 130,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 3,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 4,
+   "su_kien": 4,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -8
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 2,
+   "su_kien": 8,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -4
+  },
+  "tinh": {
+   "su_kien_nham": 0,
+   "khach_moi_nham": 0,
+   "chi_tiet": []
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 0.07,
+   "khach_moi_ao_moi_phut": 2.278
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 10.8,
+   "tre_can_don": 10.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "b3 vào 1 s, ra 10 s",
+  "tham_so": {
+   "giu_vao": 1,
+   "giu_ra": 10
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 131,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      6.92,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.25,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 130,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 3,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 4,
+   "su_kien": 4,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -8
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 2,
+   "su_kien": 8,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -4
+  },
+  "tinh": {
+   "su_kien_nham": 0,
+   "khach_moi_nham": 0,
+   "chi_tiet": []
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 0.07,
+   "khach_moi_ao_moi_phut": 1.883
+  },
+  "tre": {
+   "tre_khach_moi": 1.8,
+   "tre_khach_roi": 10.8,
+   "tre_can_don": 10.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "b4 vào 2 s, ra 20 s",
+  "tham_so": {
+   "giu_vao": 2,
+   "giu_ra": 20
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 6.25s B2: đúng D, máy C",
+     " 9.25s B4: đúng C, máy T"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      7.25,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.29,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 3,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 4,
+   "su_kien": 4,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -8
+  },
+  "toc60": {
+   "dung": 131,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "tinh": {
+   "su_kien_nham": 0,
+   "khach_moi_nham": 0,
+   "chi_tiet": []
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 0.07,
+   "khach_moi_ao_moi_phut": 0.604
+  },
+  "tre": {
+   "tre_khach_moi": 2.8,
+   "tre_khach_roi": 20.8,
+   "tre_can_don": null,
+   "tre_da_don": null
+  }
+ },
+ {
+  "ten": "c1 che > 30%",
+  "tham_so": {
+   "che": 0.3
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy T",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      3.21,
+      "da_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.369,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 2.0
+  }
+ },
+ {
+  "ten": "c2 che > 50%",
+  "tham_so": {
+   "che": 0.5
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy T",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      3.21,
+      "da_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.369,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "c3 che > 70%",
+  "tham_so": {
+   "che": 0.7
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy T",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      3.21,
+      "da_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.369,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "c4 che > 50% + xét sau khi rời",
+  "tham_so": {
+   "che": 0.5,
+   "xet_sau_roi": true
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy T",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      3.21,
+      "da_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 10,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -2
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.369,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "d1 sạch liên tục 5 s mới đã dọn",
+  "tham_so": {
+   "giu_sach": 5
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 129,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B4: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.21,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.416,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 5.4
+  }
+ },
+ {
+  "ten": "d2 sạch 10 s",
+  "tham_so": {
+   "giu_sach": 10
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 128,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B1: đúng T, máy D",
+     " 1.25s B4: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.38,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.5,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 129,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.416,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 10.4
+  }
+ },
+ {
+  "ten": "d3 phải có người tới bàn, sạch 5 s",
+  "tham_so": {
+   "giu_sach": 5,
+   "can_ghe": "ai_do"
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 124,
+   "dung_tre": 131,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 1,
+   "bo_sot": 2,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B4: đúng T, máy D",
+     " 1.75s B4: đúng T, máy D",
+     " 2.25s B4: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 2.75s B4: đúng T, máy D",
+     " 3.25s B4: đúng T, máy D",
+     " 3.75s B3: đúng C, máy D",
+     " 3.75s B4: đúng T, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.21,
+      "da_don",
+      "B1"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      4.08,
+      "da_don",
+      "B4"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 124,
+   "dung_tre": 129,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 1,
+   "bo_sot": 4,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 124,
+   "dung_tre": 131,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 1,
+   "bo_sot": 2,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.416,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 5.4
+  }
+ },
+ {
+  "ten": "d4 phải có nhân viên tới, sạch 5 s",
+  "tham_so": {
+   "giu_sach": 5,
+   "can_ghe": "nhan_vien"
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 87,
+   "dung_tre": 93,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 7,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -5
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B1: đúng T, máy D",
+     " 1.25s B4: đúng T, máy D",
+     " 1.75s B1: đúng T, máy D",
+     " 1.75s B4: đúng T, máy D",
+     " 2.25s B1: đúng T, máy D",
+     " 2.25s B4: đúng T, máy D",
+     " 2.75s B1: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 2.75s B4: đúng T, máy D",
+     " 3.25s B1: đúng T, máy D",
+     " 3.25s B4: đúng T, máy D",
+     " 3.75s B1: đúng T, máy D",
+     " 3.75s B3: đúng C, máy D",
+     " 3.75s B4: đúng T, máy D",
+     " 4.25s B1: đúng T, máy D",
+     " 4.25s B4: đúng T, máy D",
+     " 4.75s B1: đúng T, máy D",
+     " 4.75s B4: đúng T, máy D",
+     " 5.25s B1: đúng T, máy D",
+     " 5.25s B4: đúng T, máy D",
+     " 5.75s B1: đúng T, máy D",
+     " 5.75s B4: đúng T, máy D",
+     " 6.25s B1: đúng T, máy D",
+     " 6.25s B2: đúng D, máy C",
+     " 6.25s B4: đúng T, máy D",
+     " 6.75s B1: đúng T, máy D",
+     " 6.75s B4: đúng T, máy D",
+     " 7.25s B1: đúng T, máy D",
+     " 7.25s B4: đúng T, máy D",
+     " 7.75s B1: đúng T, máy D",
+     " 7.75s B4: đúng T, máy D",
+     " 8.25s B1: đúng T, máy D",
+     " 8.25s B4: đúng T, máy D",
+     " 8.75s B1: đúng T, máy D",
+     " 9.25s B1: đúng T, máy D",
+     " 9.75s B1: đúng T, máy D",
+     "10.25s B1: đúng T, máy D",
+     "10.75s B1: đúng T, máy D",
+     "11.25s B1: đúng T, máy D",
+     "11.75s B1: đúng T, máy D",
+     "12.25s B1: đúng T, máy D",
+     "12.75s B1: đúng T, máy D",
+     "13.25s B1: đúng T, máy D",
+     "13.75s B1: đúng T, máy D",
+     "14.25s B1: đúng T, máy D",
+     "14.75s B1: đúng T, máy D"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 115,
+   "dung_tre": 119,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 4,
+   "su_kien": 5,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -7
+  },
+  "toc60": {
+   "dung": 87,
+   "dung_tre": 93,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 7,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -5
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.416,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 5.4
+  }
+ },
+ {
+  "ten": "d5 = d4, không ai tới thì sạch 30 s",
+  "tham_so": {
+   "giu_sach": 5,
+   "can_ghe": "nhan_vien",
+   "giu_sach_lau": 30
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 126,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 2,
+   "bo_sot": 3,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B1: đúng T, máy D",
+     " 1.25s B4: đúng T, máy D",
+     " 1.75s B1: đúng T, máy D",
+     " 1.75s B4: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      2.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      2.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 127,
+   "dung_tre": 132,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 1,
+   "bo_sot": 4,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 128,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.416,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 5.4
+  }
+ },
+ {
+  "ten": "d6 = d3, không ai tới thì sạch 30 s",
+  "tham_so": {
+   "giu_sach": 5,
+   "can_ghe": "ai_do",
+   "giu_sach_lau": 30
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 128,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 1,
+   "bo_sot": 2,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B4: đúng T, máy D",
+     " 1.75s B4: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.21,
+      "da_don",
+      "B1"
+     ],
+     [
+      2.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.58,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 127,
+   "dung_tre": 132,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 1,
+   "bo_sot": 4,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 129,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 6,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 1,
+   "su_kien": 9,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -3
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 14.32 khach_roi B2",
+    "06 15.6 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.416,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 5.4
+  }
+ },
+ {
+  "ten": "K1 a4+b3",
+  "tham_so": {
+   "loc_ban": "ema",
+   "tau_ban": 0.5,
+   "ban_sach": 0.35,
+   "giu_vao": 1,
+   "giu_ra": 10
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 131,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      6.92,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.25,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 130,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 1,
+   "bo_sot": 4,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -1
+  },
+  "tinh": {
+   "su_kien_nham": 0,
+   "khach_moi_nham": 0,
+   "chi_tiet": []
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 0.07,
+   "khach_moi_ao_moi_phut": 1.883
+  },
+  "tre": {
+   "tre_khach_moi": 1.8,
+   "tre_khach_roi": 10.8,
+   "tre_can_don": 10.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "K2 a4+b3+d1",
+  "tham_so": {
+   "loc_ban": "ema",
+   "tau_ban": 0.5,
+   "ban_sach": 0.35,
+   "giu_vao": 1,
+   "giu_ra": 10,
+   "giu_sach": 5
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 129,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B1: đúng T, máy D",
+     " 1.25s B4: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B4"
+     ],
+     [
+      6.92,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.25,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 1,
+   "bo_sot": 4,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -1
+  },
+  "tinh": {
+   "su_kien_nham": 0,
+   "khach_moi_nham": 0,
+   "chi_tiet": []
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 0.07,
+   "khach_moi_ao_moi_phut": 1.883
+  },
+  "tre": {
+   "tre_khach_moi": 1.8,
+   "tre_khach_roi": 10.8,
+   "tre_can_don": 10.8,
+   "tre_da_don": 5.4
+  }
+ },
+ {
+  "ten": "K3 a4+b3+c4+d1",
+  "tham_so": {
+   "loc_ban": "ema",
+   "tau_ban": 0.5,
+   "ban_sach": 0.35,
+   "giu_vao": 1,
+   "giu_ra": 10,
+   "giu_sach": 5,
+   "che": 0.5,
+   "xet_sau_roi": true
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 129,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B1: đúng T, máy D",
+     " 1.25s B4: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B4"
+     ],
+     [
+      6.92,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.25,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 1,
+   "bo_sot": 4,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -1
+  },
+  "tinh": {
+   "su_kien_nham": 0,
+   "khach_moi_nham": 0,
+   "chi_tiet": []
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 0.07,
+   "khach_moi_ao_moi_phut": 1.883
+  },
+  "tre": {
+   "tre_khach_moi": 1.8,
+   "tre_khach_roi": 10.8,
+   "tre_can_don": 10.8,
+   "tre_da_don": 5.4
+  }
+ },
+ {
+  "ten": "K4 a6+b3+d1",
+  "tham_so": {
+   "loc_khach": "ema",
+   "tau_khach": 0.5,
+   "loc_ban": "ema",
+   "tau_ban": 0.5,
+   "ban_sach": 0.35,
+   "giu_vao": 1,
+   "giu_ra": 10,
+   "giu_sach": 5
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 129,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 3,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B1: đúng T, máy D",
+     " 1.25s B4: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B4"
+     ],
+     [
+      6.88,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.21,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 1,
+   "bo_sot": 4,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 131,
+   "dung_tre": 136,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 2,
+   "su_kien": 8,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -4
+  },
+  "tinh": {
+   "su_kien_nham": 0,
+   "khach_moi_nham": 0,
+   "chi_tiet": []
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 0.116,
+   "khach_moi_ao_moi_phut": 1.674
+  },
+  "tre": {
+   "tre_khach_moi": 1.8,
+   "tre_khach_roi": 10.8,
+   "tre_can_don": 10.8,
+   "tre_da_don": 5.4
+  }
+ },
+ {
+  "ten": "K6 a4 + vào 1 s, ra 5 s",
+  "tham_so": {
+   "loc_ban": "ema",
+   "tau_ban": 0.5,
+   "ban_sach": 0.35,
+   "giu_vao": 1,
+   "giu_ra": 5
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -1
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.21,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.21,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.08,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.75,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      6.75,
+      "can_don",
+      "B2"
+     ],
+     [
+      6.83,
+      "da_don",
+      "B2"
+     ],
+     [
+      9.25,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 2,
+   "su_kien": 7,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -5
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 1,
+   "su_kien_thua": -1
+  },
+  "tinh": {
+   "su_kien_nham": 0,
+   "khach_moi_nham": 0,
+   "chi_tiet": []
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 0.209,
+   "khach_moi_ao_moi_phut": 2.046
+  },
+  "tre": {
+   "tre_khach_moi": 1.8,
+   "tre_khach_roi": 5.8,
+   "tre_can_don": 5.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "K7 a4 + vào 1 s, ra 5 s + d1",
+  "tham_so": {
+   "loc_ban": "ema",
+   "tau_ban": 0.5,
+   "ban_sach": 0.35,
+   "giu_vao": 1,
+   "giu_ra": 5,
+   "giu_sach": 5
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 128,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -1
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B1: đúng T, máy D",
+     " 1.25s B4: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B4"
+     ],
+     [
+      3.21,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.21,
+      "can_don",
+      "B3"
+     ],
+     [
+      4.08,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      6.75,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      6.75,
+      "can_don",
+      "B2"
+     ],
+     [
+      7.0,
+      "da_don",
+      "B2"
+     ],
+     [
+      9.25,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 129,
+   "dung_tre": 135,
+   "tong": 137,
+   "doi_may": 5,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 2,
+   "su_kien": 7,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -5
+  },
+  "toc60": {
+   "dung": 130,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -1
+  },
+  "tinh": {
+   "su_kien_nham": 0,
+   "khach_moi_nham": 0,
+   "chi_tiet": []
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 0.209,
+   "khach_moi_ao_moi_phut": 2.046
+  },
+  "tre": {
+   "tre_khach_moi": 1.8,
+   "tre_khach_roi": 5.8,
+   "tre_can_don": 5.8,
+   "tre_da_don": 5.4
+  }
+ },
+ {
+  "ten": "K5 a4+b3+d6",
+  "tham_so": {
+   "loc_ban": "ema",
+   "tau_ban": 0.5,
+   "ban_sach": 0.35,
+   "giu_vao": 1,
+   "giu_ra": 10,
+   "giu_sach": 5,
+   "can_ghe": "ai_do",
+   "giu_sach_lau": 30
+  },
+  "neo": "cu",
+  "v4": {
+   "dung": 128,
+   "dung_tre": 134,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 1,
+   "bo_sot": 4,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B1: đúng T, máy D",
+     " 1.25s B4: đúng T, máy D",
+     " 1.75s B4: đúng T, máy D",
+     " 2.75s B3: đúng D, máy C",
+     " 6.25s B2: đúng D, máy C"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.33,
+      "da_don",
+      "B1"
+     ],
+     [
+      2.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      6.92,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      9.25,
+      "khach_moi",
+      "B4"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 126,
+   "dung_tre": 131,
+   "tong": 137,
+   "doi_may": 4,
+   "doi_that": 7,
+   "doi_thua": 3,
+   "bo_sot": 6,
+   "su_kien": 6,
+   "su_kien_can": 12,
+   "khach_moi": 1,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -6
+  },
+  "toc60": {
+   "dung": 128,
+   "dung_tre": 137,
+   "tong": 137,
+   "doi_may": 7,
+   "doi_that": 7,
+   "doi_thua": 0,
+   "bo_sot": 0,
+   "su_kien": 11,
+   "su_kien_can": 12,
+   "khach_moi": 2,
+   "khach_moi_thua": 0,
+   "ngan": 0,
+   "su_kien_thua": -1
+  },
+  "tinh": {
+   "su_kien_nham": 0,
+   "khach_moi_nham": 0,
+   "chi_tiet": []
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 0.07,
+   "khach_moi_ao_moi_phut": 1.883
+  },
+  "tre": {
+   "tre_khach_moi": 1.8,
+   "tre_khach_roi": 10.8,
+   "tre_can_don": 10.8,
+   "tre_da_don": 5.4
+  }
+ },
+ {
+  "ten": "e1 điểm neo trong bàn (nới 0,15h)",
+  "tham_so": null,
+  "neo": "trong",
+  "v4": {
+   "dung": 112,
+   "dung_tre": 119,
+   "tong": 137,
+   "doi_may": 10,
+   "doi_that": 7,
+   "doi_thua": 5,
+   "bo_sot": 3,
+   "su_kien": 16,
+   "su_kien_can": 12,
+   "khach_moi": 3,
+   "khach_moi_thua": 1,
+   "ngan": 1,
+   "su_kien_thua": 4
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 0.75s B2: đúng C, máy D",
+     " 1.25s B2: đúng C, máy D",
+     " 1.75s B2: đúng C, máy T",
+     " 2.25s B2: đúng C, máy T",
+     " 2.75s B2: đúng C, máy T",
+     " 2.75s B3: đúng D, máy C",
+     " 3.25s B2: đúng C, máy T",
+     " 3.75s B2: đúng C, máy T",
+     " 3.75s B3: đúng C, máy T",
+     " 4.25s B2: đúng C, máy T",
+     " 4.75s B2: đúng C, máy T",
+     " 5.25s B2: đúng C, máy T",
+     " 5.75s B2: đúng C, máy T",
+     " 6.25s B2: đúng D, máy T",
+     " 9.25s B4: đúng C, máy T",
+     " 9.75s B4: đúng C, máy T",
+     "10.25s B4: đúng C, máy T",
+     "12.25s B3: đúng C, máy D",
+     "12.75s B3: đúng C, máy D",
+     "14.25s B3: đúng C, máy D",
+     "14.75s B3: đúng C, máy D"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B2"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      1.71,
+      "da_don",
+      "B2"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      3.21,
+      "da_don",
+      "B3"
+     ],
+     [
+      4.17,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      10.5,
+      "khach_moi",
+      "B4"
+     ],
+     [
+      12.21,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      12.21,
+      "can_don",
+      "B3"
+     ],
+     [
+      13.04,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      14.17,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      14.17,
+      "can_don",
+      "B3"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 111,
+   "dung_tre": 117,
+   "tong": 137,
+   "doi_may": 8,
+   "doi_that": 7,
+   "doi_thua": 5,
+   "bo_sot": 5,
+   "su_kien": 12,
+   "su_kien_can": 12,
+   "khach_moi": 3,
+   "khach_moi_thua": 1,
+   "ngan": 0,
+   "su_kien_thua": 0
+  },
+  "toc60": {
+   "dung": 112,
+   "dung_tre": 119,
+   "tong": 137,
+   "doi_may": 10,
+   "doi_that": 7,
+   "doi_thua": 5,
+   "bo_sot": 3,
+   "su_kien": 16,
+   "su_kien_can": 12,
+   "khach_moi": 3,
+   "khach_moi_thua": 1,
+   "ngan": 1,
+   "su_kien_thua": 4
+  },
+  "tinh": {
+   "su_kien_nham": 2,
+   "khach_moi_nham": 1,
+   "chi_tiet": [
+    "06 6.12 khach_roi B2",
+    "06 25.52 khach_moi B2"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.462,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.4
+  }
+ },
+ {
+  "ten": "e2 khung người phủ >= 15% bàn",
+  "tham_so": null,
+  "neo": "phu",
+  "v4": {
+   "dung": 121,
+   "dung_tre": 130,
+   "tong": 137,
+   "doi_may": 13,
+   "doi_that": 7,
+   "doi_thua": 7,
+   "bo_sot": 2,
+   "su_kien": 19,
+   "su_kien_can": 12,
+   "khach_moi": 4,
+   "khach_moi_thua": 2,
+   "ngan": 1,
+   "su_kien_thua": 7
+  },
+  "v4_chi_tiet": {
+   "01_phong_an_goc_cao": {
+    "sai": [
+     " 0.25s B1: đúng D, máy ?",
+     " 0.25s B2: đúng C, máy ?",
+     " 0.25s B3: đúng C, máy ?",
+     " 0.25s B4: đúng D, máy ?",
+     " 1.25s B2: đúng C, máy D",
+     " 1.75s B2: đúng C, máy D",
+     " 2.25s B2: đúng C, máy D",
+     " 2.75s B2: đúng C, máy T",
+     " 2.75s B3: đúng D, máy C",
+     " 3.75s B3: đúng C, máy T",
+     " 5.25s B2: đúng C, máy D",
+     " 6.25s B2: đúng D, máy C",
+     " 9.25s B4: đúng C, máy T",
+     " 9.75s B4: đúng C, máy T",
+     "10.25s B4: đúng C, máy T",
+     "14.75s B3: đúng C, máy D"
+    ],
+    "su_kien": [
+     [
+      0.46,
+      "can_don",
+      "B1"
+     ],
+     [
+      0.46,
+      "can_don",
+      "B4"
+     ],
+     [
+      0.96,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      0.96,
+      "can_don",
+      "B2"
+     ],
+     [
+      1.04,
+      "da_don",
+      "B1"
+     ],
+     [
+      1.17,
+      "da_don",
+      "B4"
+     ],
+     [
+      2.29,
+      "da_don",
+      "B2"
+     ],
+     [
+      2.96,
+      "khach_moi",
+      "B2"
+     ],
+     [
+      3.04,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      3.04,
+      "can_don",
+      "B3"
+     ],
+     [
+      3.21,
+      "da_don",
+      "B3"
+     ],
+     [
+      4.17,
+      "khach_moi",
+      "B3"
+     ],
+     [
+      4.79,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      4.79,
+      "can_don",
+      "B2"
+     ],
+     [
+      5.33,
+      "khach_moi",
+      "B2"
+     ],
+     [
+      6.5,
+      "khach_roi",
+      "B2"
+     ],
+     [
+      10.5,
+      "khach_moi",
+      "B4"
+     ],
+     [
+      14.62,
+      "khach_roi",
+      "B3"
+     ],
+     [
+      14.62,
+      "can_don",
+      "B3"
+     ]
+    ]
+   },
+   "02_quan_ngoai_troi_nhieu_ban": {
+    "sai": [],
+    "su_kien": []
+   }
+  },
+  "v3": {
+   "dung": 119,
+   "dung_tre": 127,
+   "tong": 137,
+   "doi_may": 10,
+   "doi_that": 7,
+   "doi_thua": 6,
+   "bo_sot": 4,
+   "su_kien": 14,
+   "su_kien_can": 12,
+   "khach_moi": 4,
+   "khach_moi_thua": 2,
+   "ngan": 0,
+   "su_kien_thua": 2
+  },
+  "toc60": {
+   "dung": 121,
+   "dung_tre": 130,
+   "tong": 137,
+   "doi_may": 13,
+   "doi_that": 7,
+   "doi_thua": 7,
+   "bo_sot": 2,
+   "su_kien": 19,
+   "su_kien_can": 12,
+   "khach_moi": 4,
+   "khach_moi_thua": 2,
+   "ngan": 1,
+   "su_kien_thua": 7
+  },
+  "tinh": {
+   "su_kien_nham": 6,
+   "khach_moi_nham": 3,
+   "chi_tiet": [
+    "06 12.6 khach_roi B2",
+    "06 17.04 khach_moi B2",
+    "06 21.32 khach_roi B2",
+    "06 23.92 khach_moi B2",
+    "07 15.85 khach_roi B1",
+    "07 18.56 khach_moi B1"
+   ]
+  },
+  "nhieu": {
+   "su_kien_nham_moi_phut": 6.462,
+   "khach_moi_ao_moi_phut": 3.301
+  },
+  "tre": {
+   "tre_khach_moi": 0.8,
+   "tre_khach_roi": 0.8,
+   "tre_can_don": 0.8,
+   "tre_da_don": 0.4
+  }
+ }
+]

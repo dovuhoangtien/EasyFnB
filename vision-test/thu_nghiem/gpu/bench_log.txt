@@ -1,0 +1,42 @@
+A_v4nhay#1 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 81.3 ms + đồ vật 11.7 ms, ~11.7 khung/giây (thật 9.9), 4 sự kiện
+A_v4nhay#1 VRAM trước: 820 MB; đỉnh: 1703 MB
+B_t2a#1 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 79.6 ms + đồ vật 12.0 ms, ~12.5 khung/giây (thật 10.9), 4 sự kiện
+B_t2a#1 VRAM trước: 727 MB; đỉnh: 1643 MB
+C_ungvien#1 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 42.0 ms + đồ vật 11.3 ms, ~23.7 khung/giây (thật 18.6), 3 sự kiện
+C_ungvien#1 VRAM trước: 236 MB; đỉnh: 1530 MB
+D_luot#1 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 42.2 ms + đồ vật 11.0 ms, ~23.6 khung/giây (thật 18.7), 4 sự kiện
+D_luot#1 VRAM trước: 324 MB; đỉnh: 1325 MB
+E_t1day#1 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 76.7 ms + đồ vật 11.2 ms, ~12.4 khung/giây (thật 9.5), 5 sự kiện
+E_t1day#1 VRAM trước: 342 MB; đỉnh: 1396 MB
+F_t1tichluy#1 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 78.6 ms + đồ vật 11.3 ms, ~12.1 khung/giây (thật 10.2), 5 sự kiện
+F_t1tichluy#1 VRAM trước: 335 MB; đỉnh: 1249 MB
+G_dexuat#1 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 41.1 ms + đồ vật 11.0 ms, ~24.3 khung/giây (thật 18.9), 5 sự kiện
+G_dexuat#1 VRAM trước: 287 MB; đỉnh: 1295 MB
+A_v4nhay#2 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 78.3 ms + đồ vật 11.2 ms, ~12.2 khung/giây (thật 10.2), 4 sự kiện
+A_v4nhay#2 VRAM trước: 324 MB; đỉnh: 1416 MB
+B_t2a#2 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 76.7 ms + đồ vật 11.6 ms, ~13.0 khung/giây (thật 11.4), 4 sự kiện
+B_t2a#2 VRAM trước: 260 MB; đỉnh: 1177 MB
+C_ungvien#2 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 40.1 ms + đồ vật 11.4 ms, ~24.9 khung/giây (thật 19.8), 3 sự kiện
+C_ungvien#2 VRAM trước: 259 MB; đỉnh: 1223 MB
+D_luot#2 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 43.6 ms + đồ vật 13.3 ms, ~22.9 khung/giây (thật 18.0), 4 sự kiện
+D_luot#2 VRAM trước: 241 MB; đỉnh: 1369 MB
+E_t1day#2 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 83.3 ms + đồ vật 11.8 ms, ~11.5 khung/giây (thật 8.7), 5 sự kiện
+E_t1day#2 VRAM trước: 375 MB; đỉnh: 1425 MB
+F_t1tichluy#2 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 87.3 ms + đồ vật 12.2 ms, ~10.9 khung/giây (thật 9.1), 5 sự kiện
+F_t1tichluy#2 VRAM trước: 336 MB; đỉnh: 1318 MB
+G_dexuat#2 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 39.5 ms + đồ vật 11.3 ms, ~25.2 khung/giây (thật 19.7), 5 sự kiện
+G_dexuat#2 VRAM trước: 362 MB; đỉnh: 1623 MB
+A_v4nhay#3 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 74.3 ms + đồ vật 11.3 ms, ~12.8 khung/giây (thật 10.8), 4 sự kiện
+A_v4nhay#3 VRAM trước: 703 MB; đỉnh: 1657 MB
+B_t2a#3 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 76.5 ms + đồ vật 11.2 ms, ~13.1 khung/giây (thật 11.3), 4 sự kiện
+B_t2a#3 VRAM trước: 715 MB; đỉnh: 1783 MB
+C_ungvien#3 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 40.9 ms + đồ vật 11.6 ms, ~24.4 khung/giây (thật 19.5), 3 sự kiện
+C_ungvien#3 VRAM trước: 1149 MB; đỉnh: 1824 MB
+D_luot#3 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 53.3 ms + đồ vật 12.5 ms, ~18.7 khung/giây (thật 12.5), 4 sự kiện
+D_luot#3 VRAM trước: 711 MB; đỉnh: 1639 MB
+E_t1day#3 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 122.2 ms + đồ vật 15.7 ms, ~7.8 khung/giây (thật 5.5), 5 sự kiện
+E_t1day#3 VRAM trước: 694 MB; đỉnh: 1714 MB
+F_t1tichluy#3 VRAM trước: 649 MB; đỉnh: 777 MB
+G_dexuat#3 10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 38.0 ms + đồ vật 10.6 ms, ~26.3 khung/giây (thật 20.6), 5 sự kiện
+G_dexuat#3 VRAM trước: 654 MB; đỉnh: 1597 MB
+BENCH_XONG

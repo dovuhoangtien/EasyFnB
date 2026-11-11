@@ -1,0 +1,54 @@
+{
+  "m08_quan_an_vn_nv_ao_den": {
+    "ghi_chu": "1920x1080. Quan an Viet, goc cao. B1 = ban co khach (4-5 nguoi); B2, B3, B4 = ban trong da bay chen; B5, B6 = ban nho o xa (it tin cay hon). Da ve len khung hinh giay 40 va kiem tra bang mat.",
+    "xac_nhan_s": 1.0,
+    "ban": {
+      "B1": [[415, 505], [600, 485], [705, 640], [500, 740]],
+      "B2": [[750, 330], [1080, 305], [1105, 385], [770, 415]],
+      "B3": [[1345, 395], [1915, 500], [1900, 610], [1275, 465]],
+      "B4": [[905, 770], [1420, 950], [1330, 1075], [735, 1075]],
+      "B5": [[300, 330], [440, 305], [500, 350], [330, 385]],
+      "B6": [[680, 205], [830, 190], [840, 235], [690, 250]]
+    }
+  },
+  "m10_cafe_vn_khach_ve_nv_don_ban_6phut": {
+    "ghi_chu": "1280x720. Ca phe Viet, goc rong. B1 = ban giua (khach ve ~176-192 s, don ~203-214 s); B2 = ban duoi trai (khach ve ~270-279 s, don ~311-322 s); B3 = ban phai trong suot clip; B4 = ban nho phia sau, trong; B5 = ban xa ben trai co khach suot clip (nho, khong chac). Da kiem tra tren khung hinh giay 150 va 330.",
+    "xac_nhan_s": 1.0,
+    "ban": {
+      "B1": [[560, 440], [840, 400], [900, 470], [600, 520]],
+      "B2": [[205, 490], [480, 465], [530, 575], [220, 610]],
+      "B3": [[850, 360], [1040, 345], [1070, 400], [870, 430]],
+      "B4": [[555, 265], [680, 262], [690, 300], [555, 300]],
+      "B5": [[180, 270], [340, 265], [355, 305], [180, 310]]
+    }
+  },
+  "m11_cafe_vn_nv_ao_xanh_phuc_vu": {
+    "ghi_chu": "1920x1080. B1 = ban go toi gan camera (2 khach, nhan vien ao xanh bung khay toi ~69-78 s); B2 = ban giua 4-5 khach; B3 = ban xa da bay san, trong; B4 = ban xa ben phai co khach (nho). Da kiem tra tren khung hinh giay 30.",
+    "xac_nhan_s": 1.0,
+    "ban": {
+      "B1": [[600, 710], [1200, 880], [1180, 1075], [480, 1075]],
+      "B2": [[880, 335], [1095, 365], [1085, 425], [905, 435]],
+      "B3": [[1040, 205], [1185, 195], [1195, 225], [1050, 240]],
+      "B4": [[1480, 235], [1600, 225], [1610, 280], [1490, 295]]
+    }
+  },
+  "m13_quan_an_da_nang_goc_cao": {
+    "ghi_chu": "1280x720. B1 = ban trai 4 khach; B2 = ban duoi phai 2-3 khach (bi cat mep duoi, chu quang cao chay de len); B3, B4 = hai canh quay bar chu L, khong co khach ngoi (xem nhu ban trong da bay chen). Da kiem tra tren khung hinh giay 45.",
+    "xac_nhan_s": 1.0,
+    "ban": {
+      "B1": [[185, 265], [290, 235], [410, 375], [300, 425]],
+      "B2": [[790, 570], [990, 715], [700, 718], [660, 640]],
+      "B3": [[470, 112], [525, 105], [880, 285], [840, 330]],
+      "B4": [[880, 285], [1090, 115], [1130, 135], [900, 300]]
+    }
+  },
+  "m15_cafe_vn_khach_ngoi_yen": {
+    "ghi_chu": "1920x1080. B1 = ban dai gan camera (2 khach ngoi doi dien camera, chi lay phan mat ban truoc mat ho); B2 = ban giua 2-3 khach; B3 = ban nho phia xa (khong chac la mat ban, co the bo). Da kiem tra tren khung hinh giay 30.",
+    "xac_nhan_s": 1.0,
+    "ban": {
+      "B1": [[400, 935], [1470, 930], [1500, 1075], [370, 1075]],
+      "B2": [[770, 325], [900, 335], [865, 485], [700, 490]],
+      "B3": [[905, 215], [985, 210], [990, 265], [905, 275]]
+    }
+  }
+}

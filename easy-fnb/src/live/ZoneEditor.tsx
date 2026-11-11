@@ -1,0 +1,531 @@
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { Camera as CameraIcon, Film, RefreshCw, Save, Trash, Undo2 } from 'lucide-react';
+import { putZones, snapshotUrl } from './api';
+import { useRun } from './hooks';
+import { live, useLive } from './store';
+import { byName } from './text';
+import type { CameraZones, Point } from './types';
+
+interface Size {
+  w: number;
+  h: number;
+}
+
+interface EditTable {
+  key: number;
+  id: string;
+  polygon: Point[];
+}
+
+interface Bg extends Size {
+  src: string;
+}
+
+const DEFAULT_SPACE: Size = { w: 1280, h: 720 };
+let nextKey = 1000;
+
+function scaleTables(list: EditTable[], from: Size, to: Size): EditTable[] {
+  if (from.w === to.w && from.h === to.h) return list;
+  const sx = to.w / from.w;
+  const sy = to.h / from.h;
+  return list.map((t) => ({ ...t, polygon: t.polygon.map(([x, y]) => [x * sx, y * sy] as Point) }));
+}
+
+/** Tên bàn mới: B1, B2... số nhỏ nhất chưa dùng */
+function nextName(list: EditTable[]) {
+  const used = new Set(list.map((t) => t.id.trim().toUpperCase()));
+  let n = 1;
+  while (used.has(`B${n}`)) n++;
+  return `B${n}`;
+}
+
+const isTyping = (el: EventTarget | null) =>
+  el instanceof HTMLElement && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
+
+/** Ảnh nền để vẽ: chụp từ camera, hoặc lấy một khung từ video/ảnh trên máy */
+function useBackground(camera: string) {
+  const [mode, setMode] = useState<'snapshot' | 'file'>('snapshot');
+  const [bust, setBust] = useState(() => Date.now());
+  const [bg, setBg] = useState<Bg | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [video, setVideo] = useState<{ src: string; duration: number; t: number } | null>(null);
+  const objectUrls = useRef<string[]>([]);
+
+  const track = (url: string) => {
+    objectUrls.current.push(url);
+    return url;
+  };
+
+  useEffect(
+    () => () => {
+      objectUrls.current.forEach((u) => URL.revokeObjectURL(u));
+    },
+    [],
+  );
+
+  // Ảnh chụp thô (không vẽ chồng) từ camera
+  useEffect(() => {
+    if (mode !== 'snapshot') return;
+    let alive = true;
+    const img = new Image();
+    const src = snapshotUrl(camera, bust);
+    img.onload = () => {
+      if (!alive) return;
+      setBg({ src, w: img.naturalWidth, h: img.naturalHeight });
+      setNote(null);
+    };
+    img.onerror = () => {
+      if (!alive) return;
+      setBg(null);
+      setNote('Chưa có ảnh chụp từ camera này. Hãy chạy máy camera, hoặc chọn một video hay ảnh chụp từ đúng góc camera trên máy.');
+    };
+    img.src = src;
+    return () => {
+      alive = false;
+    };
+  }, [camera, bust, mode]);
+
+  const pickFile = (ev: ChangeEvent<HTMLInputElement>) => {
+    const file = ev.target.files?.[0];
+    ev.target.value = '';
+    if (!file) return;
+    const url = track(URL.createObjectURL(file));
+    if (file.type.startsWith('image/')) {
+      setVideo(null);
+      const img = new Image();
+      img.onload = () => {
+        setBg({ src: url, w: img.naturalWidth, h: img.naturalHeight });
+        setNote(null);
+      };
+      img.onerror = () => setNote('Không mở được ảnh này.');
+      img.src = url;
+    } else {
+      setVideo({ src: url, duration: 0, t: 0 });
+      setNote('Đang mở video…');
+    }
+  };
+
+  const grab = (el: HTMLVideoElement) => {
+    if (!el.videoWidth) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = el.videoWidth;
+    canvas.height = el.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(el, 0, 0);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        setBg({ src: track(URL.createObjectURL(blob)), w: canvas.width, h: canvas.height });
+        setNote(null);
+      },
+      'image/jpeg',
+      0.9,
+    );
+  };
+
+  return {
+    mode,
+    setMode,
+    bg,
+    note,
+    video,
+    setVideo,
+    setNote,
+    refresh: () => setBust(Date.now()),
+    pickFile,
+    grab,
+  };
+}
+
+/** Trình vẽ vùng bàn cho một camera */
+function ZoneCanvas({ camera, stored }: { camera: string; stored: CameraZones | undefined }) {
+  const back = useBackground(camera);
+  const { busy, run } = useRun();
+  const [edit, setEdit] = useState<{ space: Size; tables: EditTable[] } | null>(null);
+  const [draft, setDraft] = useState<Point[]>([]);
+  const [hover, setHover] = useState<Point | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [px, setPx] = useState(800);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const drag = useRef<{ key: number; idx: number; moved: boolean } | null>(null);
+  const justDragged = useRef(false);
+
+  const storedSpace: Size | null = stored && stored.frame_w > 0 && stored.frame_h > 0 ? { w: stored.frame_w, h: stored.frame_h } : null;
+  const space: Size = back.bg ?? storedSpace ?? DEFAULT_SPACE;
+
+  const sw = space.w;
+  const sh = space.h;
+  // Bàn đang hiện, quy về toạ độ của hình nền hiện tại
+  const view = useMemo<EditTable[]>(() => {
+    const to = { w: sw, h: sh };
+    if (edit) return scaleTables(edit.tables, edit.space, to);
+    if (!stored || !(stored.frame_w > 0 && stored.frame_h > 0)) return [];
+    const list = stored.tables.map((t, i) => ({ key: i, id: t.id, polygon: t.polygon }));
+    return scaleTables(list, { w: stored.frame_w, h: stored.frame_h }, to);
+  }, [edit, stored, sw, sh]);
+
+  const dirty = edit !== null;
+  const k = space.w / Math.max(1, px); // đơn vị ảnh trên mỗi điểm ảnh màn hình
+
+  // Đo bề rộng hình đang hiện để vẽ điểm tròn và chữ đúng cỡ
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setPx(el.clientWidth || 800));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const commit = (tables: EditTable[]) => setEdit({ space, tables });
+
+  const closeDraft = () => {
+    if (draft.length < 3) return;
+    const t: EditTable = { key: nextKey++, id: nextName(view), polygon: draft };
+    commit([...view, t]);
+    setDraft([]);
+    setHover(null);
+    setSelected(t.key);
+  };
+
+  const removeTable = (key: number) => {
+    commit(view.filter((t) => t.key !== key));
+    if (selected === key) setSelected(null);
+  };
+
+  const rename = (key: number, id: string) => commit(view.map((t) => (t.key === key ? { ...t, id } : t)));
+
+  // Phím tắt: Enter khép vùng, Backspace xoá điểm vừa chấm, Esc huỷ
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (isTyping(ev.target)) return;
+      if (ev.key === 'Enter' && draft.length >= 3) {
+        ev.preventDefault();
+        closeDraft();
+      } else if (ev.key === 'Backspace' && draft.length) {
+        ev.preventDefault();
+        setDraft((d) => d.slice(0, -1));
+      } else if (ev.key === 'Escape') {
+        if (draft.length) setDraft([]);
+        else setSelected(null);
+      } else if (ev.key === 'Delete' && selected !== null && !draft.length) {
+        removeTable(selected);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
+  const toPoint = (ev: { clientX: number; clientY: number }): Point | null => {
+    const svg = svgRef.current;
+    const ctm = svg?.getScreenCTM();
+    if (!svg || !ctm) return null;
+    const p = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse());
+    return [Math.min(space.w, Math.max(0, p.x)), Math.min(space.h, Math.max(0, p.y))];
+  };
+
+  const onStageClick = (ev: ReactMouseEvent<SVGSVGElement>) => {
+    if (justDragged.current) {
+      justDragged.current = false;
+      return;
+    }
+    const p = toPoint(ev);
+    if (!p) return;
+    if (draft.length >= 3) {
+      const [fx, fy] = draft[0];
+      if (Math.hypot(p[0] - fx, p[1] - fy) < 12 * k) {
+        closeDraft();
+        return;
+      }
+    }
+    setSelected(null);
+    setDraft((d) => [...d, p]);
+  };
+
+  const onMove = (ev: ReactPointerEvent<SVGSVGElement>) => {
+    const d = drag.current;
+    if (d) {
+      const p = toPoint(ev);
+      if (!p) return;
+      d.moved = true;
+      commit(view.map((t) => (t.key === d.key ? { ...t, polygon: t.polygon.map((q, i) => (i === d.idx ? p : q)) } : t)));
+      return;
+    }
+    if (draft.length) setHover(toPoint(ev));
+  };
+
+  const startDrag = (ev: ReactPointerEvent<SVGCircleElement>, key: number, idx: number) => {
+    ev.stopPropagation();
+    ev.currentTarget.setPointerCapture(ev.pointerId);
+    drag.current = { key, idx, moved: false };
+  };
+
+  const endDrag = () => {
+    if (drag.current?.moved) justDragged.current = true;
+    drag.current = null;
+  };
+
+  const problems = useMemo(() => {
+    const out: string[] = [];
+    const names = view.map((t) => t.id.trim());
+    if (names.some((n) => !n)) out.push('Có bàn chưa có tên.');
+    const dup = names.filter((n, i) => n && names.indexOf(n) !== i);
+    if (dup.length) out.push(`Tên bàn bị trùng: ${[...new Set(dup)].join(', ')}.`);
+    return out;
+  }, [view]);
+
+  const save = async () => {
+    const body: CameraZones = {
+      camera,
+      frame_w: Math.round(space.w),
+      frame_h: Math.round(space.h),
+      tables: view.map((t) => ({ id: t.id.trim(), polygon: t.polygon.map(([x, y]) => [Math.round(x), Math.round(y)] as Point) })),
+    };
+    const out = await run('save', () => putZones(body), `Đã lưu ${body.tables.length} bàn cho ${camera}`);
+    if (out) {
+      live.upsertZones(out);
+      setEdit(null);
+    }
+  };
+
+  const sorted = [...view].sort((a, b) => byName(a.id, b.id));
+  const r = 6 * k;
+  const drawing = draft.length > 0;
+
+  return (
+    <div className="zone-editor">
+      <div className="zone-toolbar">
+        <div className="seg seg--icons" role="group" aria-label="Nguồn hình nền">
+          <button type="button" aria-pressed={back.mode === 'snapshot'} onClick={() => back.setMode('snapshot')}>
+            <CameraIcon size={14} aria-hidden="true" />
+            Ảnh từ camera
+          </button>
+          <button type="button" aria-pressed={back.mode === 'file'} onClick={() => back.setMode('file')}>
+            <Film size={14} aria-hidden="true" />
+            Video hoặc ảnh trên máy
+          </button>
+        </div>
+        {back.mode === 'snapshot' ? (
+          <button type="button" className="btn btn--sm" onClick={back.refresh}>
+            <RefreshCw size={14} aria-hidden="true" />
+            Chụp lại
+          </button>
+        ) : (
+          <label className="btn btn--sm file-btn">
+            <Film size={14} aria-hidden="true" />
+            Chọn file
+            <input type="file" accept="video/*,image/*" className="visually-hidden" onChange={back.pickFile} />
+          </label>
+        )}
+        {back.mode === 'file' && back.video && back.video.duration > 0 && (
+          <label className="zone-seek small muted">
+            <span>Khung lúc</span>
+            <input
+              type="range"
+              min={0}
+              max={back.video.duration}
+              step={0.1}
+              value={back.video.t}
+              onChange={(ev) => {
+                const t = Number(ev.target.value);
+                back.setVideo((v) => (v ? { ...v, t } : v));
+                if (videoRef.current) videoRef.current.currentTime = t;
+              }}
+            />
+            <span className="measured cool">{back.video.t.toFixed(1)} giây</span>
+          </label>
+        )}
+        {back.mode === 'file' && back.video && (
+          <video
+            ref={videoRef}
+            className="visually-hidden"
+            src={back.video.src}
+            muted
+            playsInline
+            preload="auto"
+            onLoadedMetadata={(ev) => {
+              const el = ev.currentTarget;
+              const duration = Number.isFinite(el.duration) ? el.duration : 0;
+              const t = Math.min(1, duration / 2);
+              back.setVideo((v) => (v ? { ...v, duration, t } : v));
+              el.currentTime = t;
+            }}
+            onSeeked={(ev) => back.grab(ev.currentTarget)}
+            onError={() => back.setNote('Trình duyệt không mở được video này. Hãy thử file .mp4 (H.264), hoặc chụp màn hình rồi chọn ảnh.')}
+          />
+        )}
+      </div>
+
+      {back.note && <p className="small muted">{back.note}</p>}
+
+      <div className="zone-layout">
+        <div ref={stageRef} className="zone-stage" style={{ aspectRatio: `${space.w} / ${space.h}` }} data-drawing={drawing || undefined}>
+          {back.bg ? <img src={back.bg.src} alt={`Hình nền của ${camera} để vẽ vùng bàn`} draggable={false} /> : <div className="zone-blank">Chưa có hình nền</div>}
+          <svg
+            ref={svgRef}
+            viewBox={`0 0 ${space.w} ${space.h}`}
+            preserveAspectRatio="none"
+            onClick={onStageClick}
+            onPointerMove={onMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            onPointerLeave={() => setHover(null)}
+            role="application"
+            aria-label="Bấm để chấm góc bàn. Enter khép vùng, Backspace xoá điểm vừa chấm, Esc huỷ."
+          >
+            {view.map((t) => {
+              const [cx, cy] = t.polygon.reduce<[number, number]>((acc, [x, y]) => [acc[0] + x / t.polygon.length, acc[1] + y / t.polygon.length], [0, 0]);
+              const isSel = t.key === selected;
+              return (
+                <g key={t.key} className="ez-table" data-selected={isSel || undefined}>
+                  <polygon
+                    points={t.polygon.map((p) => p.join(',')).join(' ')}
+                    vectorEffect="non-scaling-stroke"
+                    onClick={(ev) => {
+                      if (drawing) return;
+                      ev.stopPropagation();
+                      setSelected(t.key);
+                    }}
+                  />
+                  <text x={cx} y={cy} fontSize={14 * k} strokeWidth={4 * k} textAnchor="middle" dominantBaseline="middle">
+                    {t.id || '?'}
+                  </text>
+                  {isSel &&
+                    t.polygon.map(([x, y], i) => (
+                      <circle
+                        key={i}
+                        className="zone-handle"
+                        cx={x}
+                        cy={y}
+                        r={r * 1.2}
+                        vectorEffect="non-scaling-stroke"
+                        onPointerDown={(ev) => startDrag(ev, t.key, i)}
+                        onClick={(ev) => ev.stopPropagation()}
+                      />
+                    ))}
+                </g>
+              );
+            })}
+            {drawing && (
+              <g className="ez-draft">
+                <polyline points={[...draft, ...(hover ? [hover] : [])].map((p) => p.join(',')).join(' ')} vectorEffect="non-scaling-stroke" />
+                {draft.map(([x, y], i) => (
+                  <circle key={i} cx={x} cy={y} r={i === 0 && draft.length >= 3 ? r * 1.6 : r} data-first={i === 0 || undefined} vectorEffect="non-scaling-stroke" />
+                ))}
+              </g>
+            )}
+          </svg>
+        </div>
+
+        <aside className="zone-side">
+          <p className="small ink2">
+            {drawing
+              ? `Đang vẽ bàn mới: ${draft.length} điểm. ${draft.length >= 3 ? 'Bấm lại điểm đầu hoặc Enter để khép vùng.' : 'Chấm tiếp các góc bàn.'}`
+              : 'Bấm lên hình để chấm từng góc bàn, bấm lại điểm đầu hoặc Enter để khép vùng. Bấm vào một bàn để chọn, kéo các chấm tròn để chỉnh.'}
+          </p>
+          <p className="tiny muted">Backspace xoá điểm vừa chấm, Esc huỷ, Delete xoá bàn đang chọn.</p>
+          {drawing && (
+            <div className="flex gap-2">
+              <button type="button" className="btn btn--sm btn--primary" disabled={draft.length < 3} onClick={closeDraft}>
+                Khép vùng
+              </button>
+              <button type="button" className="btn btn--sm" onClick={() => setDraft((d) => d.slice(0, -1))}>
+                Xoá điểm cuối
+              </button>
+              <button type="button" className="btn btn--sm btn--ghost" onClick={() => setDraft([])}>
+                Huỷ
+              </button>
+            </div>
+          )}
+
+          {sorted.length ? (
+            <ul className="zone-list" aria-label="Các bàn đã vẽ">
+              {sorted.map((t) => (
+                <li key={t.key} data-selected={t.key === selected || undefined}>
+                  <button type="button" className="zone-pick" aria-pressed={t.key === selected} onClick={() => setSelected(t.key)} aria-label={`Chọn bàn ${t.id}`}>
+                    <span className="tiny muted">{t.polygon.length} góc</span>
+                  </button>
+                  <label className="visually-hidden" htmlFor={`zn-${t.key}`}>
+                    Tên bàn
+                  </label>
+                  <input id={`zn-${t.key}`} className="input zone-name" value={t.id} maxLength={12} onChange={(ev) => rename(t.key, ev.target.value)} onFocus={() => setSelected(t.key)} />
+                  <button type="button" className="btn btn--icon btn--ghost" aria-label={`Xoá bàn ${t.id}`} onClick={() => removeTable(t.key)}>
+                    <Trash size={15} aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="small muted">Camera {camera} chưa có bàn nào.</p>
+          )}
+
+          {problems.map((p) => (
+            <p key={p} className="small bad">
+              {p}
+            </p>
+          ))}
+
+          <div className="flex gap-2 flex-wrap mt-auto">
+            <button type="button" className="btn btn--primary" disabled={!dirty || problems.length > 0 || busy !== null} onClick={() => void save()}>
+              <Save size={16} aria-hidden="true" />
+              Lưu vùng bàn
+            </button>
+            <button
+              type="button"
+              className="btn btn--ghost"
+              disabled={!dirty}
+              onClick={() => {
+                setEdit(null);
+                setDraft([]);
+                setSelected(null);
+              }}
+            >
+              <Undo2 size={16} aria-hidden="true" />
+              Bỏ thay đổi
+            </button>
+          </div>
+          <p className="tiny muted">
+            Lưu theo cỡ ảnh {Math.round(space.w)}×{Math.round(space.h)}. Máy camera tự đổi tỉ lệ nếu video có cỡ khác.
+          </p>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+/** Chọn camera rồi vẽ vùng bàn cho camera đó */
+export function ZoneEditor({ initialCamera }: { initialCamera: string | null }) {
+  const cameras = useLive((s) => s.cameras);
+  const zones = useLive((s) => s.zones);
+  const ids = useMemo(() => {
+    const set = new Set<string>([...cameras.map((c) => c.id), ...zones.map((z) => z.camera)]);
+    if (!set.size) set.add('cam1');
+    return [...set].sort(byName);
+  }, [cameras, zones]);
+  const [picked, setPicked] = useState<string | null>(initialCamera);
+  const camera = picked && ids.includes(picked) ? picked : ids[0];
+  const stored = zones.find((z) => z.camera === camera);
+
+  return (
+    <section className="panel" aria-labelledby="zones-title">
+      <div className="panel-head">
+        <h2 id="zones-title">Vùng bàn trên hình camera</h2>
+        <label className="flex items-center gap-2 small muted">
+          Camera
+          <select className="input phone-select" value={camera} onChange={(ev) => setPicked(ev.target.value)}>
+            {ids.map((id) => (
+              <option key={id} value={id}>
+                {cameras.find((c) => c.id === id)?.name ?? id}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <div className="panel-body">
+        <ZoneCanvas key={camera} camera={camera} stored={stored} />
+      </div>
+    </section>
+  );
+}

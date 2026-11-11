@@ -1,0 +1,9 @@
+  thiếu kết quả bàn cho 01_phong_an_goc_cao
+  thiếu kết quả bàn cho 02_quan_ngoai_troi_nhieu_ban
+Traceback (most recent call last):
+  File "C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\danh_gia\cham_diem.py", line 127, in <module>
+    main()
+  File "C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\danh_gia\cham_diem.py", line 109, in main
+    print(f"Trạng thái bàn: đúng {tb['dung']}/{tb['tong']} = {tb['ti_le']:.0%} (chấm chặt), "
+                                                             ^^^^^^^^^^^^^^^^^
+TypeError: unsupported format string passed to NoneType.__format__

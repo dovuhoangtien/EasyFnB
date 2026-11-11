@@ -1,0 +1,263 @@
+{
+ "v4 (hop: luật hoặc model>=0.35, giữ 0.6 s)": {
+  "bat": 5,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.41,
+  "tre": [
+   -0.02,
+   0.35,
+   0.48,
+   0.67,
+   0.56
+  ],
+  "sot": [
+   "10 em ngồi xa sau em áo đỏ (vua)",
+   "10 em mép trái, bị cắt khỏi khung (kho)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "ro": 6
+  }
+ },
+ "v4 + cổng mềm (cùng luật giữ)": {
+  "bat": 6,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.72,
+  "tre": [
+   -0.12,
+   0.25,
+   0.48,
+   2.55,
+   0.67,
+   0.52
+  ],
+  "sot": [
+   "10 em mép trái, bị cắt khỏi khung (kho)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "ro": 7
+  }
+ },
+ "T1 đủ (rõ 0.6 s, mơ hồ 1.5 s, RGB 1.0 s, tích luỹ)": {
+  "bat": 6,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.64,
+  "tre": [
+   -0.08,
+   0.28,
+   0.39,
+   1.72,
+   0.99,
+   0.52
+  ],
+  "sot": [
+   "10 em mép trái, bị cắt khỏi khung (kho)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "tich_luy": 6,
+   "ro": 1
+  }
+ },
+ "T1, mơ hồ 2.0 s": {
+  "bat": 6,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.64,
+  "tre": [
+   -0.08,
+   0.28,
+   0.39,
+   1.72,
+   0.99,
+   0.52
+  ],
+  "sot": [
+   "10 em mép trái, bị cắt khỏi khung (kho)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "tich_luy": 6,
+   "ro": 1
+  }
+ },
+ "T1 bỏ tích luỹ": {
+  "bat": 4,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.7,
+  "tre": [
+   0.12,
+   0.89,
+   0.52,
+   1.27
+  ],
+  "sot": [
+   "10 em ngồi xa sau em áo đỏ (vua)",
+   "10 em mép trái, bị cắt khỏi khung (kho)",
+   "12 cô tóc vàng, giơ nhanh ngang đầu (vua)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "ro": 3,
+   "mo_ho": 2
+  }
+ },
+ "T1 bỏ đường RGB": {
+  "bat": 6,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.64,
+  "tre": [
+   -0.08,
+   0.28,
+   0.39,
+   1.72,
+   0.99,
+   0.52
+  ],
+  "sot": [
+   "10 em mép trái, bị cắt khỏi khung (kho)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "tich_luy": 6,
+   "ro": 1
+  }
+ },
+ "T1 chỉ cổng cũ (không cổng mềm, không RGB)": {
+  "bat": 6,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.64,
+  "tre": [
+   -0.08,
+   0.28,
+   0.39,
+   1.72,
+   0.99,
+   0.52
+  ],
+  "sot": [
+   "10 em mép trái, bị cắt khỏi khung (kho)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "tich_luy": 6,
+   "ro": 1
+  }
+ },
+ "rõ = như v4 (0.6 s) + RGB 1.0 s + tích luỹ": {
+  "bat": 6,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.57,
+  "tre": [
+   -0.12,
+   0.25,
+   0.39,
+   1.72,
+   0.67,
+   0.52
+  ],
+  "sot": [
+   "10 em mép trái, bị cắt khỏi khung (kho)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "ro": 6,
+   "tich_luy": 2
+  }
+ },
+ "v4 + chỉ tích luỹ (cổng cũ, không RGB, không mơ hồ)": {
+  "bat": 6,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.58,
+  "tre": [
+   -0.08,
+   0.28,
+   0.39,
+   1.72,
+   0.67,
+   0.52
+  ],
+  "sot": [
+   "10 em mép trái, bị cắt khỏi khung (kho)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "tich_luy": 5,
+   "ro": 2
+  }
+ },
+ "v4 + chỉ tích luỹ, ngưỡng 0.30": {
+  "bat": 6,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.83,
+  "tre": [
+   -0.05,
+   0.35,
+   0.45,
+   2.99,
+   0.67,
+   0.56
+  ],
+  "sot": [
+   "10 em mép trái, bị cắt khỏi khung (kho)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "tich_luy": 3,
+   "ro": 4
+  }
+ },
+ "v4 + chỉ tích luỹ, ngưỡng 0.20": {
+  "bat": 6,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.5,
+  "tre": [
+   -0.15,
+   0.22,
+   0.32,
+   1.52,
+   0.67,
+   0.44
+  ],
+  "sot": [
+   "10 em mép trái, bị cắt khỏi khung (kho)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "tich_luy": 5,
+   "ro": 2
+  }
+ },
+ "rõ = như v4 (0.6 s) + RGB 1.0 s": {
+  "bat": 6,
+  "tong": 7,
+  "nham": 0,
+  "tre_tb": 0.72,
+  "tre": [
+   -0.12,
+   0.25,
+   0.48,
+   2.55,
+   0.67,
+   0.52
+  ],
+  "sot": [
+   "10 em mép trái, bị cắt khỏi khung (kho)"
+  ],
+  "chi_tiet_nham": [],
+  "duong": {
+   "ro": 7
+  }
+ }
+}

@@ -1,0 +1,92 @@
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26n-pose_544x960_fp16.engine for TensorRT inference...
+[11/05/2026-20:40:31] [TRT] [I] Loaded engine size: 9 MiB
+[11/05/2026-20:40:31] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +20, now: CPU 0, GPU 25 (MiB)
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26s_736x1280_fp16.engine for TensorRT inference...
+[11/05/2026-20:40:31] [TRT] [I] Loaded engine size: 22 MiB
+[11/05/2026-20:40:31] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +42, now: CPU 1, GPU 85 (MiB)
+01_phong_an_goc_cao.mp4: 359 khung, người 11.4 ms + đồ vật 11.9 ms, ~64.8 khung/giây (thật 32.2), 10 sự kiện
+      0.46s  Bàn cần dọn        bàn=B1  đầu clip đã có đồ trên bàn, không có khách
+      0.46s  Bàn cần dọn        bàn=B4  đầu clip đã có đồ trên bàn, không có khách
+      1.04s  Bàn đã dọn         bàn=B1  
+      1.17s  Bàn đã dọn         bàn=B4  
+      3.04s  Khách rời bàn      bàn=B3  
+      3.04s  Bàn cần dọn        bàn=B3  còn đồ trên bàn sau khi khách đi
+      3.21s  Bàn đã dọn         bàn=B3  
+      4.04s  Khách mới vào bàn  bàn=B3  2 người
+      6.58s  Khách rời bàn      bàn=B2  
+      9.21s  Khách mới vào bàn  bàn=B4  2 người
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26n-pose_544x960_fp16.engine for TensorRT inference...
+[11/05/2026-20:40:43] [TRT] [I] Loaded engine size: 9 MiB
+[11/05/2026-20:40:43] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +20, now: CPU 0, GPU 25 (MiB)
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26s_736x1280_fp16.engine for TensorRT inference...
+[11/05/2026-20:40:43] [TRT] [I] Loaded engine size: 22 MiB
+[11/05/2026-20:40:43] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +42, now: CPU 1, GPU 85 (MiB)
+02_quan_ngoai_troi_nhieu_ban.mp4: 434 khung, người 10.7 ms + đồ vật 11.8 ms, ~68.4 khung/giây (thật 36.3), 0 sự kiện
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26n-pose_544x960_fp16.engine for TensorRT inference...
+[11/05/2026-20:40:56] [TRT] [I] Loaded engine size: 9 MiB
+[11/05/2026-20:40:56] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +20, now: CPU 0, GPU 25 (MiB)
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26s_736x1280_fp16.engine for TensorRT inference...
+[11/05/2026-20:40:56] [TRT] [I] Loaded engine size: 22 MiB
+[11/05/2026-20:40:56] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +42, now: CPU 1, GPU 85 (MiB)
+03_ban_an_xong_tu_tren.mp4: 197 khung, người 8.8 ms + đồ vật 11.8 ms, ~78.6 khung/giây (thật 62.4), 0 sự kiện
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26n-pose_544x960_fp16.engine for TensorRT inference...
+[11/05/2026-20:40:59] [TRT] [I] Loaded engine size: 9 MiB
+[11/05/2026-20:40:59] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +20, now: CPU 0, GPU 25 (MiB)
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26s_736x1280_fp16.engine for TensorRT inference...
+[11/05/2026-20:40:59] [TRT] [I] Loaded engine size: 22 MiB
+[11/05/2026-20:40:59] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +42, now: CPU 1, GPU 85 (MiB)
+04_phuc_vu_toi_khach_moi.mp4: 334 khung, người 11.3 ms + đồ vật 12.1 ms, ~65.1 khung/giây (thật 47.3), 0 sự kiện
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26n-pose_544x960_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:06] [TRT] [I] Loaded engine size: 9 MiB
+[11/05/2026-20:41:06] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +20, now: CPU 0, GPU 25 (MiB)
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26s_736x1280_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:06] [TRT] [I] Loaded engine size: 22 MiB
+[11/05/2026-20:41:06] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +42, now: CPU 1, GPU 85 (MiB)
+05_khach_vao_quan.mp4: 360 khung, người 10.6 ms + đồ vật 11.5 ms, ~69.2 khung/giây (thật 45.1), 0 sự kiện
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26n-pose_544x960_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:15] [TRT] [I] Loaded engine size: 9 MiB
+[11/05/2026-20:41:15] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +20, now: CPU 0, GPU 25 (MiB)
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26s_736x1280_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:15] [TRT] [I] Loaded engine size: 22 MiB
+[11/05/2026-20:41:15] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +42, now: CPU 1, GPU 85 (MiB)
+06_phuc_vu_ghi_order.mp4: 679 khung, người 10.9 ms + đồ vật 11.7 ms, ~67.4 khung/giây (thật 48.1), 0 sự kiện
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26n-pose_544x960_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:29] [TRT] [I] Loaded engine size: 9 MiB
+[11/05/2026-20:41:29] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +20, now: CPU 0, GPU 25 (MiB)
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26s_736x1280_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:29] [TRT] [I] Loaded engine size: 22 MiB
+[11/05/2026-20:41:29] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +42, now: CPU 1, GPU 85 (MiB)
+07_khach_tinh_tien.mp4: 456 khung, người 10.7 ms + đồ vật 11.6 ms, ~68.7 khung/giây (thật 46.4), 0 sự kiện
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26n-pose_544x960_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:39] [TRT] [I] Loaded engine size: 9 MiB
+[11/05/2026-20:41:39] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +20, now: CPU 0, GPU 25 (MiB)
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26s_736x1280_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:39] [TRT] [I] Loaded engine size: 22 MiB
+[11/05/2026-20:41:39] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +42, now: CPU 1, GPU 85 (MiB)
+08_quan_cafe_nhieu_nguoi.mp4: 397 khung, người 10.3 ms + đồ vật 11.4 ms, ~70.8 khung/giây (thật 50.1), 0 sự kiện
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26n-pose_544x960_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:47] [TRT] [I] Loaded engine size: 9 MiB
+[11/05/2026-20:41:47] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +20, now: CPU 0, GPU 25 (MiB)
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26s_736x1280_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:47] [TRT] [I] Loaded engine size: 22 MiB
+[11/05/2026-20:41:48] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +42, now: CPU 1, GPU 85 (MiB)
+09_nhom_ban_tron.mp4: 308 khung, người 10.7 ms + đồ vật 11.7 ms, ~68.6 khung/giây (thật 44.6), 0 sự kiện
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26n-pose_544x960_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:55] [TRT] [I] Loaded engine size: 9 MiB
+[11/05/2026-20:41:55] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +20, now: CPU 0, GPU 25 (MiB)
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26s_736x1280_fp16.engine for TensorRT inference...
+[11/05/2026-20:41:55] [TRT] [I] Loaded engine size: 22 MiB
+[11/05/2026-20:41:55] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +42, now: CPU 1, GPU 85 (MiB)
+10_thay_the_gio_tay_lop_hoc_a.mp4: 644 khung, người 10.5 ms + đồ vật 11.2 ms, ~70.2 khung/giây (thật 36.6), 3 sự kiện
+     16.48s  Khách giơ tay gọi  bàn=None  điểm giơ tay 1.25
+     19.65s  Khách giơ tay gọi  bàn=None  điểm giơ tay 1.42
+     20.65s  Khách giơ tay gọi  bàn=None  điểm giơ tay 1.35
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26n-pose_544x960_fp16.engine for TensorRT inference...
+[11/05/2026-20:42:13] [TRT] [I] Loaded engine size: 9 MiB
+[11/05/2026-20:42:13] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +20, now: CPU 0, GPU 25 (MiB)
+Loading C:\Users\sosar\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\scratch-workspaces\7d58fbbd-096b-4aa8-b0a4-c7271da52073\92788678-51d2-48a1-83fc-577b6251a8c7\scratch-2026-10-31-4fd720\vision-test\models\yolo26s_736x1280_fp16.engine for TensorRT inference...
+[11/05/2026-20:42:13] [TRT] [I] Loaded engine size: 22 MiB
+[11/05/2026-20:42:13] [TRT] [I] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +42, now: CPU 1, GPU 85 (MiB)
+12_thay_the_gio_tay_hoi_bai.mp4: 138 khung, người 10.4 ms + đồ vật 10.1 ms, ~72.8 khung/giây (thật 30.6), 2 sự kiện
+      2.56s  Khách giơ tay gọi  bàn=None  điểm giơ tay 0.00
+      2.56s  Khách giơ tay gọi  bàn=None  điểm giơ tay 2.83

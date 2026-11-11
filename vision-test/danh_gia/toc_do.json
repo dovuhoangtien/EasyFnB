@@ -1,0 +1,122 @@
+{
+ "yolo26n-pose @960 | GPU PyTorch": {
+  "ms": 18.3,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26n-pose @960 | GPU PyTorch FP16": {
+  "ms": 19.9,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26n-pose @960 | GPU TensorRT FP16": {
+  "ms": 7.5,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26s-pose @960 | GPU PyTorch": {
+  "ms": 19.1,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26s-pose @960 | GPU PyTorch FP16": {
+  "ms": 21.0,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26s-pose @960 | GPU TensorRT FP16": {
+  "ms": 8.0,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26s @1280 | GPU PyTorch": {
+  "ms": 25.3,
+  "so_vat_tb": 13.4,
+  "anh": "736x1280"
+ },
+ "yolo26s @1280 | GPU PyTorch FP16": {
+  "ms": 17.1,
+  "so_vat_tb": 13.4,
+  "anh": "736x1280"
+ },
+ "yolo26s @1280 | GPU TensorRT FP16": {
+  "ms": 9.1,
+  "so_vat_tb": 13.4,
+  "anh": "736x1280"
+ },
+ "yolo26s @960 | GPU PyTorch": {
+  "ms": 16.5,
+  "so_vat_tb": 13.1,
+  "anh": "544x960"
+ },
+ "yolo26s @960 | GPU PyTorch FP16": {
+  "ms": 18.5,
+  "so_vat_tb": 13.1,
+  "anh": "544x960"
+ },
+ "yolo26s @960 | GPU TensorRT FP16": {
+  "ms": 7.3,
+  "so_vat_tb": 13.1,
+  "anh": "544x960"
+ },
+ "yolo26n-pose @960 | CPU PyTorch": {
+  "ms": 51.2,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26n-pose @960 | CPU ONNX Runtime": {
+  "ms": 40.9,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26n-pose @960 | CPU OpenVINO": {
+  "ms": 26.1,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26s-pose @960 | CPU PyTorch": {
+  "ms": 106.7,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26s-pose @960 | CPU ONNX Runtime": {
+  "ms": 101.1,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26s-pose @960 | CPU OpenVINO": {
+  "ms": 67.6,
+  "so_vat_tb": 3.0,
+  "anh": "544x960"
+ },
+ "yolo26s @1280 | CPU PyTorch": {
+  "ms": 165.3,
+  "so_vat_tb": 13.6,
+  "anh": "736x1280"
+ },
+ "yolo26s @1280 | CPU ONNX Runtime": {
+  "ms": 188.5,
+  "so_vat_tb": 13.6,
+  "anh": "736x1280"
+ },
+ "yolo26s @1280 | CPU OpenVINO": {
+  "ms": 111.8,
+  "so_vat_tb": 13.6,
+  "anh": "736x1280"
+ },
+ "yolo26s @960 | CPU PyTorch": {
+  "ms": 100.9,
+  "so_vat_tb": 13.0,
+  "anh": "544x960"
+ },
+ "yolo26s @960 | CPU ONNX Runtime": {
+  "ms": 95.3,
+  "so_vat_tb": 13.0,
+  "anh": "544x960"
+ },
+ "yolo26s @960 | CPU OpenVINO": {
+  "ms": 60.4,
+  "so_vat_tb": 13.0,
+  "anh": "544x960"
+ }
+}

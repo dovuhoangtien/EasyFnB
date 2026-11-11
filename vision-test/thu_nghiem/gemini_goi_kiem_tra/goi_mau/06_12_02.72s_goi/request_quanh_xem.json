@@ -1,0 +1,103 @@
+{
+ "contents": [
+  {
+   "role": "user",
+   "parts": [
+    {
+     "text": "Kiểm tra cảnh báo từ camera quán ăn. Ảnh 1: 4 khung trong 1,5 giây (trái sang phải, trên xuống dưới), cắt quanh MỘT người. Ảnh 2: toàn cảnh, khung đỏ là người đó. Chỉ xét người trong khung đỏ.\nGOI: giơ tay ngang hoặc trên đầu, hướng ra quán để gọi nhân viên, giữ hoặc vẫy qua ít nhất 2 khung.\nKHONG_GOI nếu là: vươn vai, vuốt hoặc chỉnh tóc, gãi đầu, chỉnh kính hoặc mũ, uống hoặc ăn, nâng ly chúc, nghe hoặc chụp điện thoại, chỉ tay khi nói chuyện, chống cằm, vẫy chào bạn cùng bàn, nhân viên (đồng phục, bưng khay).\nKHONG_CHAC: ảnh không đủ rõ để kết luận. Không đoán.\nĐiền checklist trước, rồi verdict. reason: tiếng Việt, tối đa 12 chữ."
+    },
+    {
+     "inline_data": {
+      "mime_type": "image/jpeg",
+      "data": "<JPEG 82564 byte, base64>"
+     },
+     "mediaResolution": {
+      "level": "MEDIA_RESOLUTION_MEDIUM"
+     }
+    },
+    {
+     "inline_data": {
+      "mime_type": "image/jpeg",
+      "data": "<JPEG 49775 byte, base64>"
+     },
+     "mediaResolution": {
+      "level": "MEDIA_RESOLUTION_LOW"
+     }
+    }
+   ]
+  }
+ ],
+ "generationConfig": {
+  "responseMimeType": "application/json",
+  "responseJsonSchema": {
+   "type": "object",
+   "properties": {
+    "checklist": {
+     "type": "object",
+     "properties": {
+      "hand_above_head": {
+       "type": "boolean"
+      },
+      "held_or_waved_across_frames": {
+       "type": "boolean"
+      },
+      "wearing_staff_uniform": {
+       "type": "boolean"
+      }
+     },
+     "required": [
+      "hand_above_head",
+      "held_or_waved_across_frames",
+      "wearing_staff_uniform"
+     ]
+    },
+    "alt": {
+     "type": "string",
+     "enum": [
+      "vuon_vai",
+      "chinh_toc",
+      "uong_an",
+      "nang_ly",
+      "dien_thoai",
+      "chi_tay",
+      "vay_ban",
+      "nhan_vien",
+      "khac",
+      "none"
+     ]
+    },
+    "image_quality": {
+     "type": "string",
+     "enum": [
+      "ok",
+      "toi",
+      "mo",
+      "bi_che",
+      "qua_nho"
+     ]
+    },
+    "verdict": {
+     "type": "string",
+     "enum": [
+      "GOI",
+      "KHONG_GOI",
+      "KHONG_CHAC"
+     ]
+    },
+    "reason": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "checklist",
+    "alt",
+    "image_quality",
+    "verdict",
+    "reason"
+   ]
+  },
+  "thinkingConfig": {
+   "thinkingLevel": "MINIMAL"
+  }
+ }
+}

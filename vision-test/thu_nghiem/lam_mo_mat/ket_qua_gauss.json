@@ -1,0 +1,422 @@
+{
+ "che_do": "gauss",
+ "toc_do": {
+  "khung": 101,
+  "nguoi_tb": 6.0,
+  "nguoi_max": 10,
+  "ms_tb_copy": 23.954,
+  "ms_p95_copy": 51.206,
+  "ms_max_copy": 132.621,
+  "ms_tb_inplace": 21.943,
+  "ms_p95_inplace": 48.731,
+  "ms_tb_le10": 21.943
+ },
+ "nguon_elip": {
+  "kp": 577,
+  "vai": 1,
+  "box": 0,
+  "bo_qua": 31
+ },
+ "so_nguoi": 609,
+ "tay_gio": {
+  "tong": 56,
+  "bi_mo_tren_10pct": 2,
+  "bi_mo_bat_ky": 3,
+  "theo_nhan": 55,
+  "theo_nhan_bi_mo_tren_10pct": 2
+ },
+ "tay_chi_tiet": [
+  {
+   "khung": "10_0495",
+   "nguoi": 5,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.23,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0502",
+   "nguoi": 5,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.63,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0509",
+   "nguoi": 6,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.74,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0517",
+   "nguoi": 6,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.91,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0524",
+   "nguoi": 6,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.77,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0532",
+   "nguoi": 6,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.77,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0539",
+   "nguoi": 6,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.79,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0547",
+   "nguoi": 6,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.83,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0554",
+   "nguoi": 5,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.86,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0562",
+   "nguoi": 6,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.62,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0562",
+   "nguoi": 6,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.99,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0569",
+   "nguoi": 6,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.59,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0569",
+   "nguoi": 6,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 2.01,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0577",
+   "nguoi": 0,
+   "nhan": "em áo xám giữa lớp",
+   "nang": 1.43,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0577",
+   "nguoi": 5,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.9,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0584",
+   "nguoi": 0,
+   "nhan": "em áo xám giữa lớp",
+   "nang": 1.37,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0584",
+   "nguoi": 4,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 2.18,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0592",
+   "nguoi": 0,
+   "nhan": "em áo xám giữa lớp",
+   "nang": 1.42,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0592",
+   "nguoi": 3,
+   "nhan": "em áo xanh dương phía trước",
+   "nang": 1.01,
+   "ti_le_mo": 0.817
+  },
+  {
+   "khung": "10_0592",
+   "nguoi": 4,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.86,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0599",
+   "nguoi": 0,
+   "nhan": "em áo xám giữa lớp",
+   "nang": 1.24,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0599",
+   "nguoi": 4,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 2.16,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0599",
+   "nguoi": 7,
+   "nhan": "em áo xanh dương phía trước",
+   "nang": 1.18,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0607",
+   "nguoi": 4,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 2.21,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0614",
+   "nguoi": 4,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 2.25,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0622",
+   "nguoi": 4,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 2.29,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0622",
+   "nguoi": 6,
+   "nhan": "em áo xanh dương phía trước",
+   "nang": 1.45,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0629",
+   "nguoi": 4,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.35,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0629",
+   "nguoi": 4,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 2.16,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0637",
+   "nguoi": 2,
+   "nhan": "em áo xanh dương phía trước",
+   "nang": 1.04,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0637",
+   "nguoi": 4,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 1.34,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "10_0637",
+   "nguoi": 4,
+   "nhan": "em áo xanh đậm cuối lớp, cạnh bảng",
+   "nang": 2.08,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0052",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 1.17,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0052",
+   "nguoi": 7,
+   "nhan": "người mép trái",
+   "nang": 1.81,
+   "ti_le_mo": 0.768
+  },
+  {
+   "khung": "12_0055",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 1.69,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0058",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 2.54,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0058",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 2.09,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0060",
+   "nguoi": 1,
+   "nhan": "cô tóc vàng, giơ nhanh ngang đầu",
+   "nang": 0.61,
+   "ti_le_mo": 0.016
+  },
+  {
+   "khung": "12_0060",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 2.47,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0060",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 2.64,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0063",
+   "nguoi": 5,
+   "nhan": "người mép trái",
+   "nang": 2.36,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0063",
+   "nguoi": 5,
+   "nhan": "người mép trái",
+   "nang": 2.58,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0065",
+   "nguoi": 5,
+   "nhan": "người mép trái",
+   "nang": 2.44,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0065",
+   "nguoi": 5,
+   "nhan": "người mép trái",
+   "nang": 2.66,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0068",
+   "nguoi": 5,
+   "nhan": "người mép trái",
+   "nang": 2.43,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0068",
+   "nguoi": 5,
+   "nhan": "người mép trái",
+   "nang": 2.64,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0070",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 2.4,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0070",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 2.61,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0073",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 2.48,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0073",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 2.42,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0075",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 2.88,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0075",
+   "nguoi": 6,
+   "nhan": "người mép trái",
+   "nang": 2.27,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0078",
+   "nguoi": 7,
+   "nhan": "người mép trái",
+   "nang": 2.12,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0078",
+   "nguoi": 7,
+   "nhan": "người mép trái",
+   "nang": 1.95,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0080",
+   "nguoi": 7,
+   "nhan": "người mép trái",
+   "nang": 1.8,
+   "ti_le_mo": 0.0
+  },
+  {
+   "khung": "12_0083",
+   "nguoi": 6,
+   "nhan": null,
+   "nang": 1.67,
+   "ti_le_mo": 0.0
+  }
+ ]
+}
