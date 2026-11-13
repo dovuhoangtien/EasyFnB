@@ -4,7 +4,13 @@ Phạm vi: **demo hackathon** (một project, một môi trường). Mã nằm �
 
 Trạng thái: bản nháp để duyệt. Chưa `terraform apply` lên project thật; mới chạy `terraform validate` và `terraform test` (provider giả).
 
+> **Phạm vi.** Tài liệu này chỉ mô tả hạ tầng **demo** (suy luận ở laptop GPU tại quán, chế độ edge). Kiến trúc tổng thể cho nhiều quán, với **suy luận chạy trên cloud** và các phần chịu tải (GPU, hàng khung, Pub/Sub, Firestore, co giãn), nằm ở [`architecture.md`](architecture.md) và ADR-0010 đến ADR-0015. Phần đó chưa có trong IaC.
+
 ## 1. Sơ đồ
+
+![Kiến trúc demo](architecture/google-cloud-demo.png)
+
+Sơ đồ sửa được: [`architecture/google-cloud-demo.drawio`](architecture/google-cloud-demo.drawio). Bản văn bản rút gọn:
 
 ```mermaid
 flowchart LR

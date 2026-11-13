@@ -1,6 +1,6 @@
 # ADR-0003: Trạng thái ca trong RAM, một instance; cấu hình nằm ở bucket
 
-- Trạng thái: Đề xuất
+- Trạng thái: Đề xuất. **Thay thế một phần bởi ADR-0013** cho kiến trúc đích (trạng thái ngoài RAM, nhiều instance). Vẫn đúng cho demo.
 - Ngày: 2026-11-13
 
 ## Bối cảnh
@@ -21,6 +21,7 @@
 - Không scale ngang, không dự phòng. Chấp nhận cho demo; không dùng cho sản phẩm nhiều quán.
 - gcsfuse không phải ổ đĩa cục bộ: ghi nhiều file nhỏ chậm hơn. Lượng ghi của app thấp (một file cấu hình, vài ảnh mỗi sự kiện) nhưng **chưa đo**. Nếu thấy chậm, đặt `persist_data = false` (DATA_DIR về `/tmp/easyfnb`, camera đẩy lại vùng bàn như `HUONG_DAN.md` mô tả).
 - Cần Cloud Run gen2 (đã dùng).
+- **Rủi ro bổ sung (phát hiện sau khi viết):** `hub.edge_event` và `_attach_evidence` ghi ảnh bằng `write_bytes` đồng bộ ngay trong handler `async`, chạy chung vòng lặp với SSE, MJPEG và WebSocket. Trên gcsfuse, mỗi lần ghi có thể chặn vòng lặp trong lúc chờ tải lên bucket (mỗi sự kiện 1 ảnh cắt cộng tối đa 3 ảnh bằng chứng). Mức chặn **chưa đo**. Nếu thấy hình trực tiếp hoặc thông báo đơ khi có sự kiện, đặt `persist_data = false` hoặc bọc các lần ghi bằng `asyncio.to_thread`.
 
 ## Phương án đã cân nhắc
 

@@ -1,6 +1,6 @@
 # ADR-0002: AI nhìn chạy tại quán, cloud chỉ nhận sự kiện
 
-- Trạng thái: Đề xuất
+- Trạng thái: Đề xuất. **Thay thế một phần bởi ADR-0010** cho kiến trúc đích (suy luận lên cloud). Vẫn đúng cho demo hiện tại và cho chế độ edge (chế độ C).
 - Ngày: 2026-11-13
 
 ## Bối cảnh
