@@ -300,6 +300,11 @@ class Hub:
         z = dict(camera=z['camera'], frame_w=int(z['frame_w']), frame_h=int(z['frame_h']),
                  tables=[dict(id=str(t['id']), polygon=[[float(x), float(y)] for x, y in t['polygon']])
                          for t in z['tables']])
+        for t in z['tables']:
+            if not t['id'].strip() or len(t['polygon']) < 3:
+                raise ValueError(f"bàn {t['id'] or '(không tên)'} cần tên và ít nhất 3 điểm")
+        if len({t['id'] for t in z['tables']}) != len(z['tables']):
+            raise ValueError('có hai bàn trùng tên')
         self.zones[z['camera']] = z
         keep = {f"{z['camera']}/{t['id']}" for t in z['tables']}
         for key in [k for k in self.tables if k.startswith(z['camera'] + '/') and k not in keep]:
@@ -667,9 +672,14 @@ class Hub:
         self._early.clear()
         self.tables.clear()
         self.log.clear()
+        # chấm công cũng là của ca: ai đang mở app thì tính lại từ lúc bắt đầu ca mới, ai không mở thì xoá
+        t = now_ms()
+        self.attendance = {sid: [{'in': t, 'out': None}] for sid in self.attendance
+                           if self.online.get(sid, 0) > 0 or sid in self.pending_off}
         for f in [*(self.data / 'crops').glob('*.jpg'), *(self.data / 'evidence').glob('*.jpg')]:
             f.unlink()
         self.publish('reset', {})
+        self.publish('staff', self.staff_view())
         self.add_log('system', 'Đã xoá dữ liệu ca, bắt đầu ca mới')
 
     # ------------------------------------------------------------ vòng lặp nền
@@ -717,6 +727,15 @@ class Hub:
                 self._pub_alert(self._public(a))
 
     # ------------------------------------------------------------ báo cáo
+    # Mốc xếp loại tốc độ nhận việc: tới FAST_S giây là nhanh, tới SLOW_S là hơi chậm, hơn nữa là chậm.
+    # Màn hình hiện chữ (nhanh, chậm) thay cho số giây, nên mốc đặt ở một chỗ duy nhất là đây.
+    FAST_S, SLOW_S = 30, 60
+
+    def _speed(self, secs):
+        return dict(fast=sum(1 for x in secs if x <= self.FAST_S),
+                    ok=sum(1 for x in secs if self.FAST_S < x <= self.SLOW_S),
+                    slow=sum(1 for x in secs if x > self.SLOW_S))
+
     def report(self):
         al = [a for a in self.alerts.values()]
         t = now_ms()
@@ -735,25 +754,31 @@ class Hub:
             mine = [a for a in al if a['acked_by'] == s['id']]
             r = [(a['acked_at'] - a['created_at']) / 1000 for a in mine]
             per_staff.append(dict(id=s['id'], name=s['name'], acked=len(mine),
-                                  done=sum(1 for a in al if a['done_by'] == s['id']),
-                                  mean_response_s=round(statistics.fmean(r), 1) if r else None))
+                                  done=sum(1 for a in al if a['done_by'] == s['id'] or (
+                                      # camera thấy người đã nhận việc tới bàn / bàn đã dọn: việc đó là của người ấy
+                                      a['done_by'] == 'camera' and a['acked_by'] == s['id']
+                                      and not (a.get('close_reason') or '').startswith('Tự đóng'))),
+                                  mean_response_s=round(statistics.fmean(r), 1) if r else None,
+                                  **self._speed(r)))
         tables = sorted({a['table'] for a in al if a['table']})
         per_table = [dict(table=tb, calls=sum(1 for a in al if a['table'] == tb and a['kind'] == 'call'),
                           clearings=sum(1 for a in al if a['table'] == tb and a['kind'] == 'needs_clearing'),
                           guests=sum(1 for a in al if a['table'] == tb and a['kind'] == 'new_guest'))
                      for tb in tables]
         st = stats(resp)
+        missed = sum(1 for a in al if a['status'] == 'done' and a['kind'] != 'needs_clearing'
+                     and not a.get('arrived_at') and a['done_by'] == 'camera')
+        speed = dict(**self._speed(resp), missed=missed, fast_s=self.FAST_S, slow_s=self.SLOW_S)
         return {'from': min((a['created_at'] for a in al), default=t), 'to': t, **dict(
                     counts={k: sum(1 for a in al if a['kind'] == k) for k in TASK_KINDS},
                     cancelled=sum(1 for a in al if a['status'] == 'cancelled'),
                     rejected_by_gemini=sum(1 for a in al if a['verify']['state'] == 'rejected'),
                     unverified=sum(1 for a in al if a['verify']['state'] == 'unverified'),
-                    response_s=st, done_s={k: v for k, v in stats(done).items() if k != 'p90'},
+                    response_s=st, speed=speed, done_s={k: v for k, v in stats(done).items() if k != 'p90'},
                     escalated=sum(1 for a in al if a['escalated']), per_staff=per_staff, per_table=per_table,
                     # thời gian phản hồi do camera đo (nhân viên có mặt ở bàn), không cần ai bấm nút
                     arrived=sum(1 for a in al if a.get('arrived_at')),
-                    no_arrival=sum(1 for a in al if a['status'] == 'done' and a['kind'] != 'needs_clearing'
-                                   and not a.get('arrived_at') and a['done_by'] == 'camera'))}
+                    no_arrival=missed)}
 
     def log_text(self, limit=400):
         """Nhật ký dạng chữ, cũ trước mới sau, để đưa cho LLM đọc."""

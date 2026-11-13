@@ -45,7 +45,7 @@ vision-test/thu_nghiem/**/weights/
 *.engine
 *.engine.cu
 *.onnx
-*.ts
+vision-test/**/*.ts
 *_openvino_model/
 vision-test/models/*.pt
 # Giữ các đầu phân loại nhỏ tự train (vài KB)

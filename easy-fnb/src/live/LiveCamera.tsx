@@ -127,12 +127,12 @@ export function LiveCamera({ camera, zones, tables, alerts }: Props) {
     <div className="live-cam" style={{ aspectRatio: `${w} / ${h}` }}>
       {shown ? (
         <img className="live-cam-img" src={shown.src} alt={`Khung hình mới nhất của ${camera.name}`} draggable={false} />
-      ) : (
+      ) : zoneList.length === 0 ? (
         <div className="cam-offline">
           <h3>{failed ? 'Chưa có khung hình từ camera này' : 'Đang chờ khung hình đầu tiên'}</h3>
-          <p>Máy camera gửi ảnh về máy chủ khi đang chạy. Vùng bàn vẫn hiện bên dưới nếu đã vẽ.</p>
+          <p>Máy camera gửi ảnh về máy chủ khi đang chạy.</p>
         </div>
-      )}
+      ) : null}
 
       {zoneList.length > 0 && (
         <>
@@ -183,7 +183,7 @@ export function LiveCamera({ camera, zones, tables, alerts }: Props) {
         {camera.fps !== null && online && <span className="hud-tag measured">{camera.fps.toFixed(1)} khung/giây</span>}
       </div>
       <div className="cam-hud cam-hud--bottom">
-        {camera.source ? <span className="hud-tag hud-src">{camera.source}</span> : <span />}
+        {camera.source ? <span className="hud-tag hud-src">{camera.source}</span> : !shown && zoneList.length > 0 ? <span className="hud-tag">Chưa có hình, chỉ hiện vùng bàn</span> : <span />}
         {camera.last_frame_at !== null && <span className="hud-tag measured">{clockTime(camera.last_frame_at)}</span>}
       </div>
     </div>

@@ -1,0 +1,884 @@
+/* Lớp hoàn thiện của Easy FnB: bề mặt trình duyệt, chuyển động, các trạng thái chờ.
+ * Nguyên tắc: màu chỉ dùng cho trạng thái; chuyển động chỉ để báo một việc vừa đổi. */
+
+/* ---------- bề mặt trình duyệt ---------- */
+:root {
+  accent-color: var(--color-accent);
+  caret-color: var(--color-accent);
+  scrollbar-color: var(--color-border-emphasized) transparent;
+  scrollbar-width: thin;
+}
+::selection {
+  background: color-mix(in oklab, var(--color-accent) 24%, transparent);
+}
+
+/* ---------- đổi trang ---------- */
+@keyframes fx-route-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.fx-route {
+  animation: fx-route-in 380ms var(--ease-out) both;
+}
+
+/* ---------- phần tử danh sách vào và ra ---------- */
+@keyframes fx-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+}
+@keyframes fx-item-out {
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+    filter: blur(2px);
+  }
+}
+.fx-item {
+  animation: fx-item-in 420ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+.fx-item[data-leaving] {
+  animation: fx-item-out 220ms var(--ease-in) both;
+  pointer-events: none;
+}
+.fx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------- con số đổi ---------- */
+.fx-roll {
+  display: inline-block;
+  vertical-align: bottom;
+}
+.fx-roll span {
+  display: inline-block;
+}
+@keyframes fx-roll-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.18em);
+    filter: blur(2px);
+  }
+}
+.fx-roll-in {
+  animation: fx-roll-in 500ms cubic-bezier(0.34, 1.45, 0.64, 1) both;
+  animation-delay: calc(var(--d, 0) * 70ms);
+}
+
+/* ---------- logo ---------- */
+.fx-mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  flex: none;
+}
+
+/* ---------- ô biểu tượng có màu ---------- */
+.fx-ico {
+  --tone: var(--color-text-secondary);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  flex: none;
+  color: var(--tone);
+  background: color-mix(in oklab, var(--tone) 14%, transparent);
+  transition:
+    color var(--dur-long) var(--ease-out),
+    background-color var(--dur-long) var(--ease-out);
+}
+.fx-ico[data-tone='accent'] {
+  --tone: var(--color-accent);
+}
+.fx-ico[data-tone='info'] {
+  --tone: var(--color-text-info);
+}
+.fx-ico[data-tone='warning'] {
+  --tone: var(--color-text-warning);
+}
+.fx-ico[data-tone='success'] {
+  --tone: var(--color-text-success);
+}
+.fx-ico[data-tone='error'] {
+  --tone: var(--color-text-error);
+}
+
+/* ---------- thước đo tốc độ phục vụ ----------
+ * Dựng lại từ block "Context meter" của Bencho (https://bencho.dev/blocks/context-meter),
+ * giấy phép MIT, Copyright (c) 2026 Lorenzo Cabra. */
+.fx-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  min-width: 0;
+  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+}
+.fx-meter-title {
+  margin: 0;
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.fx-meter-figure {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-height: 2.5rem;
+}
+.fx-meter-num {
+  font-size: 2.25rem;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.fx-meter-num[data-kind='fast'] {
+  color: var(--fx-fast-text);
+}
+.fx-meter-num[data-kind='ok'] {
+  color: var(--fx-ok-text);
+}
+.fx-meter-num[data-kind='slow'] {
+  color: var(--fx-slow-text);
+}
+.fx-meter-num[data-kind='missed'] {
+  color: var(--fx-missed-text);
+}
+.fx-meter-of {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-size);
+}
+.fx-meter-bar {
+  display: flex;
+  gap: 4px;
+  height: 40px;
+}
+.fx-meter-bar[data-size='sm'] {
+  display: inline-flex;
+  gap: 2px;
+  width: 132px;
+  height: 10px;
+  flex: none;
+}
+@keyframes fx-seg-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+}
+.fx-meter-seg {
+  flex: 0 1 0;
+  min-width: 6px;
+  background: var(--color-background-muted);
+  transform-origin: left center;
+  animation: fx-seg-in 700ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+  transition:
+    flex-grow 820ms cubic-bezier(0.65, 0, 0.2, 1),
+    opacity 180ms var(--ease-out);
+}
+.fx-meter-bar[data-size='sm'] .fx-meter-seg {
+  min-width: 4px;
+  animation: none;
+}
+.fx-meter-seg[data-kind='fast'],
+.fx-swatch[data-kind='fast'] {
+  background: var(--fx-fast);
+}
+.fx-meter-seg[data-kind='ok'],
+.fx-swatch[data-kind='ok'] {
+  background: var(--fx-ok);
+}
+.fx-meter-seg[data-kind='slow'],
+.fx-swatch[data-kind='slow'] {
+  background: var(--fx-slow);
+}
+.fx-meter-seg[data-kind='missed'],
+.fx-swatch[data-kind='missed'] {
+  background: var(--fx-missed);
+}
+.fx-meter-seg[data-dim] {
+  opacity: 0.22;
+}
+.fx-meter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fx-meter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: var(--text-supporting-size);
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-micro) var(--ease-out),
+    border-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out);
+}
+.fx-meter-chip b {
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.fx-meter-chip[data-on] {
+  background: var(--color-background-muted);
+  border-color: var(--color-border-emphasized);
+  color: var(--color-text-primary);
+}
+.fx-meter-chip[data-empty] {
+  opacity: 0.55;
+}
+.fx-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: none;
+  background: var(--color-border-emphasized);
+}
+
+/* ---------- ca hôm nay: thước đo bên trái, hai con số bên phải ---------- */
+.fx-shift-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+@media (min-width: 48rem) {
+  .fx-shift-top {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+}
+
+/* ---------- bảng nhân viên trong ca ---------- */
+.fx-staff-wrap {
+  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+  overflow-x: auto;
+}
+.fx-staff {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-body-size);
+}
+.fx-staff th,
+.fx-staff td {
+  padding: 12px 20px;
+  text-align: left;
+  vertical-align: middle;
+  font-weight: inherit;
+}
+.fx-staff thead th {
+  font-size: var(--text-supporting-size);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.fx-staff tbody tr + tr > * {
+  border-top: 1px solid var(--color-border);
+}
+.fx-staff-num {
+  font-size: var(--text-large-size);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.fx-staff-speed {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.fx-staff-time {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+@media (max-width: 40rem) {
+  .fx-staff-wide {
+    display: none;
+  }
+  .fx-staff th,
+  .fx-staff td {
+    padding: 12px;
+  }
+  .fx-staff thead th {
+    white-space: normal;
+  }
+  .fx-staff .fx-meter-bar[data-size='sm'] {
+    width: 72px;
+  }
+}
+
+/* ---------- đầu trang ---------- */
+.fx-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+}
+.fx-head h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2rem);
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.fx-head-sub {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+}
+.fx-clock {
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.fx-clock-colon {
+  animation: fx-blink 2s steps(2, jump-none) infinite;
+}
+@keyframes fx-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---------- dải số liệu: một khối, ngăn bằng vạch mảnh ---------- */
+.fx-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  background: var(--color-border);
+  overflow: hidden;
+}
+@media (min-width: 48rem) {
+  .fx-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.fx-strip[data-cols='3'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 40rem) {
+  .fx-strip[data-cols='3'] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.fx-strip[data-cols='1'] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: 1fr;
+}
+.fx-strip[data-cols='1'] .fx-strip-cell {
+  justify-content: center;
+}
+.fx-strip-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px;
+  background: var(--color-background-card);
+  min-width: 0;
+}
+.fx-strip-value {
+  font-size: 1.75rem;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  transition: color var(--dur-long) var(--ease-out);
+}
+.fx-strip-value[data-tone='warn'] {
+  color: var(--color-text-warning);
+}
+.fx-strip-value[data-tone='bad'] {
+  color: var(--color-text-error);
+}
+.fx-strip-value small {
+  font-size: 0.6em;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  letter-spacing: 0;
+}
+
+/* ---------- chờ camera: khung ngắm ---------- */
+.fx-cam-wait {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  min-height: 260px;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-container);
+  background: var(--color-background-muted);
+  overflow: hidden;
+  isolation: isolate;
+}
+.fx-cam-wait::before {
+  /* bốn góc khung ngắm */
+  content: "";
+  position: absolute;
+  inset: 18px;
+  z-index: -1;
+  --c: var(--color-border-emphasized);
+  --l: 22px;
+  background:
+    linear-gradient(var(--c), var(--c)) top left / var(--l) 2px,
+    linear-gradient(var(--c), var(--c)) top left / 2px var(--l),
+    linear-gradient(var(--c), var(--c)) top right / var(--l) 2px,
+    linear-gradient(var(--c), var(--c)) top right / 2px var(--l),
+    linear-gradient(var(--c), var(--c)) bottom left / var(--l) 2px,
+    linear-gradient(var(--c), var(--c)) bottom left / 2px var(--l),
+    linear-gradient(var(--c), var(--c)) bottom right / var(--l) 2px,
+    linear-gradient(var(--c), var(--c)) bottom right / 2px var(--l);
+  background-repeat: no-repeat;
+}
+.fx-cam-wait::after {
+  /* vạch quét chậm, cho biết đang chờ tín hiệu */
+  content: "";
+  position: absolute;
+  inset-inline: 18px;
+  top: 0;
+  height: 28%;
+  z-index: -1;
+  background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--color-text-primary) 7%, transparent));
+  border-bottom: 1px solid color-mix(in oklab, var(--color-text-primary) 22%, transparent);
+  animation: fx-scan 4.2s var(--ease-in-out) infinite;
+}
+@keyframes fx-scan {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(360%);
+  }
+}
+.fx-cam-wait-body {
+  max-width: 440px;
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* hình camera hiện dần khi khung đầu tiên tới */
+@keyframes fx-reveal {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(1.015);
+  }
+}
+.fx-cam-frame .live-cam-img {
+  animation: fx-reveal 600ms var(--ease-out) both;
+}
+.fx-cam-frame .zone {
+  transition:
+    fill 420ms var(--ease-out),
+    stroke 420ms var(--ease-out);
+}
+
+/* ---------- bàn ---------- */
+.fx-table-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border-emphasized);
+  flex: none;
+  transition: background-color var(--dur-long) var(--ease-out);
+}
+.fx-table-chip[data-state="occupied"] .fx-table-dot {
+  background: var(--color-text-info);
+}
+.fx-table-chip[data-state="needs_clearing"] .fx-table-dot {
+  background: var(--color-text-warning);
+}
+.fx-table-chip[data-hot] .fx-table-dot {
+  background: var(--color-text-error);
+  animation: fx-ping 1.4s var(--ease-out) infinite;
+}
+@keyframes fx-ping {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-text-error) 55%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 9px transparent;
+  }
+}
+
+/* ---------- việc: lúc vừa tới và thanh chờ ---------- */
+@keyframes fx-arrive {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--fx-kind, var(--color-text-primary)) 60%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+@keyframes fx-sweep {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(240%);
+  }
+}
+.fx-task[data-kind="call"],
+.fx-phone-task[data-kind="call"] {
+  --fx-kind: var(--color-text-error);
+}
+.fx-task[data-kind="needs_clearing"],
+.fx-phone-task[data-kind="needs_clearing"] {
+  --fx-kind: var(--color-text-warning);
+}
+.fx-task[data-kind="new_guest"],
+.fx-phone-task[data-kind="new_guest"] {
+  --fx-kind: var(--color-text-info);
+}
+/* vòng sáng nằm ở lớp bọc, vì thẻ việc cắt phần tràn */
+.fx-item:has(> [data-fresh]) {
+  border-radius: var(--radius-container);
+  animation:
+    fx-item-in 420ms var(--ease-out) both,
+    fx-arrive 900ms var(--ease-out) 200ms 2;
+}
+.fx-item > [data-kind="call"] {
+  --fx-kind: var(--color-text-error);
+}
+.fx-item:has(> [data-kind="call"]) {
+  --fx-kind: var(--color-text-error);
+}
+.fx-item:has(> [data-kind="needs_clearing"]) {
+  --fx-kind: var(--color-text-warning);
+}
+.fx-item:has(> [data-kind="new_guest"]) {
+  --fx-kind: var(--color-text-info);
+}
+.fx-task[data-fresh]::before,
+.fx-phone-task[data-fresh]::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 45%;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent, color-mix(in oklab, var(--fx-kind, var(--color-text-primary)) 16%, transparent), transparent);
+  animation: fx-sweep 1000ms var(--ease-out) 160ms both;
+}
+.fx-wait {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 3px;
+  background: color-mix(in oklab, var(--color-text-primary) 8%, transparent);
+}
+.fx-wait > i {
+  display: block;
+  height: 100%;
+  transform-origin: left center;
+  transform: scaleX(var(--p, 0));
+  background: var(--color-text-secondary);
+  transition:
+    transform 1s linear,
+    background-color var(--dur-long) var(--ease-out);
+}
+.fx-wait[data-level="warn"] > i {
+  background: var(--color-text-warning);
+}
+.fx-wait[data-level="late"] > i {
+  background: var(--color-text-error);
+}
+.fx-age {
+  padding: 4px 8px;
+  line-height: 1.2;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: var(--color-background-muted);
+  color: var(--color-text-secondary);
+  font-size: var(--text-supporting-size);
+  font-weight: 500;
+  transition:
+    color var(--dur-long) var(--ease-out),
+    background-color var(--dur-long) var(--ease-out);
+}
+.fx-age[data-level="ok"] {
+  color: var(--color-text-success);
+  background: var(--color-success-muted);
+}
+.fx-age[data-level="warn"] {
+  color: var(--color-text-warning);
+  background: var(--color-warning-muted);
+}
+.fx-age[data-level="late"] {
+  color: var(--color-text-error);
+  background: var(--color-error-muted);
+  font-weight: 600;
+}
+
+/* dòng "vừa xong" */
+.fx-done-row {
+  display: grid;
+  grid-template-columns: 16px max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+}
+.fx-done-row svg {
+  color: var(--color-text-success);
+}
+.fx-done-row[data-cancelled] svg {
+  color: var(--color-icon-secondary);
+}
+
+/* ---------- người ---------- */
+.fx-person {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.fx-person::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--color-background-card);
+  background: var(--color-border-emphasized);
+  transition: background-color var(--dur-long) var(--ease-out);
+}
+.fx-person[data-online]::after {
+  background: var(--color-text-success);
+}
+
+/* ---------- điện thoại ---------- */
+.fx-radar {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+}
+.fx-radar > i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-emphasized);
+  animation: fx-radar 3.6s var(--ease-out) infinite;
+}
+.fx-radar > i:nth-child(2) {
+  animation-delay: 1.2s;
+}
+.fx-radar > i:nth-child(3) {
+  animation-delay: 2.4s;
+}
+@keyframes fx-radar {
+  from {
+    transform: scale(0.34);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+.fx-radar > span {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--color-background-card);
+  border: 1px solid var(--color-border);
+}
+.fx-phone-head {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  margin: calc(-1 * max(16px, env(safe-area-inset-top))) -16px 0;
+  padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: color-mix(in oklab, var(--color-background-body) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+}
+.fx-phone-hello {
+  font-size: clamp(2rem, 9vw, 2.6rem);
+  line-height: 1.08;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 0;
+  text-wrap: balance;
+}
+/* nút trên điện thoại lún nhẹ khi bấm */
+.fx-phone-app button {
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+.fx-phone-app button:active:not(:disabled) {
+  transform: scale(0.975);
+}
+
+/* ---------- biểu đồ mọc lên ---------- */
+@keyframes fx-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes fx-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes fx-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes fx-fade {
+  from {
+    opacity: 0;
+  }
+}
+.fx-ch-bar-fill {
+  transform-origin: left center;
+  animation: fx-grow-x 700ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 60ms + 120ms);
+}
+.fx-ch-col-fill {
+  transform-origin: center bottom;
+  animation: fx-grow-y 700ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 35ms + 120ms);
+}
+.fx-ch-line polyline {
+  stroke-dasharray: 1;
+  animation: fx-draw 1100ms var(--ease-in-out) 120ms both;
+}
+.fx-ch-line .fx-ch-area {
+  animation: fx-fade 700ms var(--ease-out) 700ms both;
+}
+.fx-blocks > * {
+  animation: fx-item-in 460ms var(--ease-out) both;
+}
+.fx-blocks > :nth-child(2) {
+  animation-delay: 70ms;
+}
+.fx-blocks > :nth-child(3) {
+  animation-delay: 140ms;
+}
+.fx-blocks > :nth-child(n + 4) {
+  animation-delay: 210ms;
+}
+
+/* ---------- trợ lý đang nghĩ ---------- */
+.fx-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+}
+.fx-thinking-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+.fx-thinking-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: fx-think 1.2s var(--ease-in-out) infinite;
+}
+.fx-thinking-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.fx-thinking-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes fx-think {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* ---------- cài đặt ---------- */
+.fx-kv {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+}
+.fx-kv:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+.fx-code {
+  min-width: 0;
+  flex: 1 1 auto;
+  margin: 0;
+  overflow-x: auto;
+  padding: 12px;
+  border-radius: var(--radius-element);
+  background: var(--color-background-muted);
+  font-family: var(--font-family-code);
+  font-size: var(--text-supporting-size);
+  line-height: 1.5;
+  white-space: pre;
+}
+
+/* Bớt chuyển động: giữ đổi màu và mờ dần, bỏ vòng lặp và di chuyển lớn */
+@media (prefers-reduced-motion: reduce) {
+  .fx-cam-wait::after,
+  .fx-radar > i,
+  .fx-clock-colon,
+  .fx-thinking-dots i,
+  .fx-table-chip[data-hot] .fx-table-dot {
+    animation: none;
+  }
+  .fx-radar > i:first-child {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+}

@@ -171,21 +171,51 @@ interface State {
 - `PUT /api/settings` body `Partial<Pick<Settings, 'verify_kinds'|'hold_until_verified'|'escalate_s'|'dedup_s'>>` → `Settings`
 - `POST /api/reset` → `{}` clears alerts, log, table states, crops (keeps zones, staff, settings)
 
-## AI (Gemini)
+## AI (Gemini, Google ADK)
 
-- `POST /api/assistant` body `{ "question": "Bàn B2 gọi mấy lần?" }`
-  → `{ "answer": string, "refs": { "alert_id": string | null, "t": number, "table": string | null }[] }`
-  Gemini answers from the event log and alerts. When Gemini is off, returns a plain answer computed
-  without AI for a few known questions, or a message saying Gemini is not configured.
+- `POST /api/assistant` body `{ "question": "Bàn nào chờ lâu nhất?", "session"?: string }`
+  The owner's assistant. The answer is a short sentence plus display blocks the UI renders (stats, chart, events with
+  photos, table, staff cards). `session` keeps the conversation context (ADK only); any string, default one shared session.
+  ```ts
+  { answer: string,                 // 1-3 Vietnamese sentences, no markdown
+    blocks: Block[],                // 0-5 blocks, in display order
+    suggestions: string[],          // up to 3 follow-up questions
+    refs: { alert_id: string | null, t: number, table: string | null }[],   // every event shown in an `events` block
+    engine: 'adk' | 'rules',        // 'adk' = Google ADK agent on Gemini; 'rules' = computed without AI
+    model: string | null,           // Gemini model when engine is 'adk', otherwise null
+    ms: number }
+  type Tone = 'good' | 'warn' | 'bad' | null;
+  type Block =
+    | { type: 'stats', title: string | null,
+        items: { label: string, value: string, note: string | null, tone: Tone }[] }
+    | { type: 'chart', title: string, kind: 'bar' | 'column' | 'line', unit: string,   // bar = compare, column/line = over time
+        points: { label: string, value: number, note: string | null }[] }
+    | { type: 'events', title: string,
+        items: { alert_id: string, kind: 'call' | 'needs_clearing' | 'new_guest', table: string | null, t: number,
+                 status: string, wait_s: number | null,      // arrived_s if the camera measured it, else acked - created; open tasks count to now
+                 staff: string | null, text: string,
+                 crop_url: string | null, strip_url: string | null, video_t: number | null }[] }
+    | { type: 'table', title: string, columns: string[], rows: string[][] }
+    | { type: 'staff', title: string,
+        items: { id: string, name: string, role: string, online: boolean, acked: number, done: number,
+                 mean_response_s: number | null, worked_s: number, first_in: number | null }[] }
+  ```
+  With `GEMINI_API_KEY` set the answer comes from a Google ADK agent (`server/tro_ly.py`): Gemini picks which tools to
+  call, the server fills every number and block, so figures are never copied by the model. Without the key, or when
+  ADK fails or takes over 30 s, the same blocks are built by keyword rules; the call still returns 200 with
+  `engine: 'rules'`. 400 when `question` is empty.
 - `GET /api/report` → shift metrics, computed without AI:
   ```ts
   { from: number, to: number,
     counts: Record<'call'|'needs_clearing'|'new_guest', number>,
     cancelled: number, rejected_by_gemini: number,
     response_s: { mean: number|null, median: number|null, p90: number|null }, // created -> acked
+    // how many tasks were picked up fast (<= fast_s), a bit slow (<= slow_s), slow (> slow_s), or by nobody
+    speed: { fast: number, ok: number, slow: number, missed: number, fast_s: 30, slow_s: 60 },
     done_s: { mean: number|null, median: number|null },                     // created -> done
     escalated: number,
-    per_staff: { id: string, name: string, acked: number, done: number, mean_response_s: number|null }[],
+    per_staff: { id: string, name: string, acked: number, done: number, mean_response_s: number|null,
+                 fast: number, ok: number, slow: number }[],
     per_table: { table: string, calls: number, clearings: number, guests: number }[] }
   ```
 - `POST /api/report/summary` → `{ "text": string }` Vietnamese end-of-shift summary written by Gemini

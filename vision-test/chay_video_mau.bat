@@ -22,7 +22,7 @@ set "PY=python"
 set "N=%~1"
 if "%N%"=="" set "N=1"
 set "URL=%~2"
-if "%URL%"=="" set "URL=http://localhost:8080"
+if "%URL%"=="" set "URL=http://127.0.0.1:8080"
 
 if "%N%"=="1" set "F=m01_bbq_vn_ban_an.mp4"
 if "%N%"=="2" set "F=m02_bbq_han_dong_khach.mp4"

@@ -12,15 +12,17 @@ Hợp đồng giữa các phần: `server/API.md`.
 
 ## Chạy thử trên một máy
 
-1. **Khoá LLM (không bắt buộc để chạy).** Có hai lựa chọn, đặt một biến môi trường ở User variables rồi mở cửa sổ dòng lệnh mới:
+1. **Khoá LLM (không bắt buộc để chạy).** Cách gọn nhất: chép `easy-fnb\.env.example` thành `easy-fnb\.env`, điền khoá vào rồi chạy lại máy chủ (máy chủ tự đọc tệp này khi khởi động; tệp không lên git và không vào ảnh Docker). Hoặc đặt biến môi trường ở User variables rồi mở cửa sổ dòng lệnh mới. Có hai lựa chọn:
    - `KIE_API_KEY`: dùng kie.ai, model `deepseek-v4-1-flash` (đọc được ảnh). Đây là đường đang dùng vì chưa có khoá Gemini. Vì kie.ai chậm, mặc định chỉ dùng để hỏi đáp / tóm tắt ca.
    - `GEMINI_API_KEY`: dùng Gemini, model `gemini-3.5-flash-lite`. Chỉ dùng khi không đặt `KIE_API_KEY`.
    Không có khoá nào app vẫn chạy, chỉ thiếu bước kiểm tra ảnh và trợ lý AI.
 2. **Máy chủ.** Bấm đúp `easy-fnb\chay_may_chu.bat`. Lần đầu nó tự cài thư viện và build web (vài phút). Cửa sổ in ra hai địa chỉ: một cho máy này, một cho điện thoại cùng wifi. Windows hỏi cho Python vào mạng thì chọn **Private network, Allow**; không thì điện thoại không vào được.
 3. **Camera.** Bấm đúp `vision-test\chay_camera.bat`: chạy clip `01_phong_an_goc_cao.mp4` lặp lại như camera thật. Clip này có sẵn vùng bàn B1 đến B4 trong `zones.json`, camera tự đẩy lên máy chủ.
-4. **Màn hình quản lý.** Mở `http://localhost:8080/truc-tiep`: hình camera trực tiếp, trạng thái bàn, hàng việc.
-5. **Điện thoại nhân viên.** Mở `http://<địa chỉ wifi>:8080/nv-tt/lan` (Lan, phục vụ); link đúng của từng người có sẵn ở trang Cài đặt, mục nhân viên. Có sẵn `minh` (phục vụ) và `tu` (dọn bàn). Bấm **Bắt đầu ca** để điện thoại kêu, rung và đọc to khi có việc.
-6. **Trợ lý.** `http://localhost:8080/truc-tiep/tro-ly`: hỏi về ca làm ("bàn nào gọi nhiều nhất?", "vì sao có việc bị chuyển người?").
+4. **Màn hình quản lý.** Mở `http://localhost:8080/`: hình camera trực tiếp, trạng thái bàn, hàng việc.
+5. **Điện thoại nhân viên.** Mở `http://<địa chỉ wifi>:8080/nv/lan` (Lan, phục vụ); link đúng của từng người có sẵn ở trang Cài đặt, mục Nhân viên. Có sẵn `minh` (phục vụ) và `tu` (dọn bàn). Bấm **Bắt đầu ca** để điện thoại kêu, rung và đọc to khi có việc.
+6. **Trợ lý.** Hỏi về ca làm ("bàn nào chờ lâu nhất?", "nhân viên nào làm tốt nhất?", "giờ nào bận nhất?"). Câu trả lời kèm chỉ số, biểu đồ, ảnh sự kiện, bảng. Có `GEMINI_API_KEY` thì trợ lý chạy bằng Google ADK trên Gemini (kể cả khi đang đặt `KIE_API_KEY`); không có khoá thì máy chủ tự tính và trả lời không dùng AI, vẫn đủ các khối hiển thị.
+
+**Xem mọi thứ đã nối chưa.** Chấm **Trực tiếp** ở góc trên bên phải màn hình quản lý sáng xanh là trang đang nối được với máy chủ; mất kết nối thì chấm đổi màu và đầu trang hiện dòng báo. Trang **Cài đặt, mục Kết nối** có lệnh chạy camera đã điền sẵn địa chỉ máy chủ, và nút **Thử kết nối** gửi một câu hỏi thật tới Gemini để biết khoá có dùng được không. Máy khác muốn kiểm tra máy chủ còn sống thì gọi `GET /api/health`.
 
 Đang sửa giao diện web thì chạy `npm run dev` trong `easy-fnb` và mở cổng 5173 (tự chuyển `/api` sang máy chủ 8080). Lúc demo chỉ cần cổng 8080.
 
@@ -45,7 +47,7 @@ Lần chạy máy chủ đầu tiên cần internet để tải model (khoảng 
 Biến môi trường (đặt trước khi chạy máy chủ):
 
 - `TTS_ENGINE`: `vieneu`, `piper` hoặc `off`. Bỏ trống thì dùng VieNeu nếu có, không thì Piper, không có cả hai thì app vẫn chạy nhưng không có giọng.
-- `VIENEU_VOICE`: tên giọng, gõ không dấu cũng được. Mặc định `Thùy Dung` (nữ, giọng Nam, kiểu đọc tin). Thử thêm: `Mai Anh`, `Ngọc Huyền` (nữ Bắc), `Mỹ Duyên` (nữ Nam), `Minh Triết` (nam Nam). Đổi giọng thì các câu được đọc lại bằng giọng mới.
+- `VIENEU_VOICE`: tên giọng, gõ không dấu cũng được. Mặc định `Thiện Minh` (nam). Giọng cũ: `Thùy Dung` (nữ, giọng Nam, kiểu đọc tin). Thử thêm: `Mai Anh`, `Ngọc Huyền` (nữ Bắc), `Mỹ Duyên` (nữ Nam), `Minh Triết` (nam Nam). Đổi giọng thì các câu được đọc lại bằng giọng mới.
 - `VIENEU_PYTHON`, `PIPER_PYTHON`, `PIPER_MODEL`: đường dẫn nếu cài chỗ khác.
 
 Kiểm tra: mở `http://localhost:8080/api/tts/status` (thấy `"engine":"vieneu"`) và `http://localhost:8080/api/tts?text=Bàn B1 gọi phục vụ`. Mã bàn và số được đọc thành chữ ("B1" thành "bê một"). File nghe thử so sánh hai giọng nằm ở `server\voices\so_sanh`.
@@ -78,7 +80,7 @@ vision-test\chay_camera.bat <nguồn> [máy chủ] [mã camera]
 - **Mỗi góc quay một mã camera** (`cam1`, `cam2`...). Vùng bàn lưu theo mã camera, nên góc mới dùng mã mới, hoặc vẽ lại.
 - Ví dụ: `chay_camera.bat du_lieu_quay\phien_01\video.mp4 http://localhost:8080 cam2`
 
-**Vẽ vùng bàn:** mở `http://localhost:8080/truc-tiep/cai-dat`, chọn camera, vẽ khung từng bàn trên ảnh camera gửi lên, bấm lưu. Camera đang chạy tự áp dụng sau khoảng 3 giây, không cần chạy lại. Vùng bàn cũng được lưu ở `vision-test\vung_ban_may_chu.json`: máy chủ khởi động lại (Cloud Run) thì camera đẩy lên lại.
+**Vẽ vùng bàn:** mở `http://localhost:8080/cai-dat`, mục Vùng bàn, chọn camera, vẽ khung từng bàn trên ảnh camera gửi lên, bấm lưu. Camera đang chạy tự áp dụng sau khoảng 3 giây, không cần chạy lại. Vùng bàn cũng được lưu ở `vision-test\vung_ban_may_chu.json`: máy chủ khởi động lại (Cloud Run) thì camera đẩy lên lại.
 
 **Camera hiểu gì về từng người** (để biết vì sao nó báo hoặc không báo):
 
@@ -119,7 +121,7 @@ iPhone/Android chỉ cho trang web dùng camera khi địa chỉ là `https`. M�
    vision-test\chay_camera_dien_thoai.bat cam1 https://172.21.1.8:8443
    ```
 
-4. Vẽ vùng bàn ở `https://172.21.1.8:8443/truc-tiep/cai-dat`; nhân viên mở `https://172.21.1.8:8443/nv-tt/lan`.
+4. Vẽ vùng bàn ở `https://172.21.1.8:8443/cai-dat`; nhân viên mở `https://172.21.1.8:8443/nv/lan`.
 
 Ghi chú:
 
@@ -140,6 +142,14 @@ Trong `easy-fnb`, với khoá đã đặt:
 
 Hai lệnh đầu dùng Gemini, hai lệnh sau dùng kie.ai (`KIE_API_KEY`). Lệnh không có ảnh chỉ hỏi một câu để thử khoá; lệnh có ảnh gửi một ảnh cắt và in LLM nghĩ có đúng là khách đang gọi không (`call` hoặc `needs_clearing`).
 
+Thử riêng trợ lý ADK với Gemini thật (cần `GEMINI_API_KEY`), trên một ca giả nhỏ, in câu trả lời và các khối:
+
+```
+.venv\Scripts\python -X utf8 -m server.tro_ly "Bàn nào chờ lâu nhất?"
+```
+
+Mỗi câu in `[adk, <model>, <ms>]` nếu Gemini đã trả lời qua ADK; `[rules, None, ...]` là ADK lỗi (xem dòng cảnh báo ngay trên) và máy chủ đã tự trả lời.
+
 kie.ai chậm hơn Gemini nhiều: mỗi lượt 20–80 giây vì model luôn suy luận. Vì vậy mặc định máy chủ chỉ dùng kie.ai để **hỏi đáp và tóm tắt ca**; việc báo nhân viên do camera tự quyết ngay trên máy (YOLO + vùng bàn), không chờ AI. Muốn bật lại kiểm tra ảnh thì tích trong Cài đặt trực tiếp — khi đó máy chủ nới hạn xác minh lên 100 giây, cảnh báo vẫn hiện ngay và AI xác nhận/huỷ sau.
 
 ## Đưa lên Cloud Run
@@ -158,12 +168,22 @@ $k = [guid]::NewGuid().ToString('N'); setx EDGE_KEY $k; $env:EDGE_KEY = $k
 
 gcloud run deploy easy-fnb --source . --region asia-southeast1 --allow-unauthenticated `
   --max-instances 1 --min-instances 1 --no-cpu-throttling --timeout 3600 --memory 512Mi `
-  --set-env-vars "KIE_API_KEY=$env:KIE_API_KEY,EDGE_KEY=$env:EDGE_KEY"
+  --set-env-vars "GEMINI_API_KEY=$env:GEMINI_API_KEY,EDGE_KEY=$env:EDGE_KEY"
 ```
 
-(Dùng Gemini thì thay `KIE_API_KEY` bằng `GEMINI_API_KEY`; có cả hai thì máy chủ chọn kie.ai.)
+Lệnh này lấy khoá từ biến môi trường của cửa sổ đang mở, nên đặt `$env:GEMINI_API_KEY = '<khoá>'` trước khi chạy. Tệp `.env` trên máy không được đưa lên Cloud Run. (Đang dùng kie.ai thì thay `GEMINI_API_KEY` bằng `KIE_API_KEY`; có cả hai thì việc kiểm tra ảnh đi qua kie.ai, trợ lý vẫn dùng Gemini.)
 
-Xong nó in ra địa chỉ dạng `https://easy-fnb-....run.app`. Camera gửi lên đó (mở cửa sổ mới để có `EDGE_KEY`):
+Chưa có khoá lúc triển khai cũng không sao: app chạy đủ, sau đó thêm khoá mà không phải build lại:
+
+```powershell
+gcloud run services update easy-fnb --region asia-southeast1 --update-env-vars "GEMINI_API_KEY=<khoá>"
+```
+
+Xong nó in ra địa chỉ dạng `https://easy-fnb-....run.app`. Kiểm tra theo thứ tự:
+
+1. Mở `https://easy-fnb-....run.app/api/health`, phải thấy `"ok": true`.
+2. Mở trang quản lý, vào **Cài đặt, mục Kết nối**, bấm **Thử kết nối**. Thấy tên model và số mili giây là Gemini đã nối.
+3. Chép lệnh chạy camera ngay trong mục đó (đã điền sẵn địa chỉ Cloud Run) và chạy trên máy camera, ở cửa sổ mới để có `EDGE_KEY`:
 
 ```
 vision-test\chay_camera.bat clips\01_phong_an_goc_cao.mp4 https://easy-fnb-....run.app cam1
@@ -176,7 +196,17 @@ Vì sao các tham số này:
 - `--timeout 3600`: luồng sự kiện trực tiếp (SSE) giữ kết nối lâu; hết giờ trình duyệt tự nối lại.
 - Dữ liệu ca (việc, nhật ký) mất khi máy chủ khởi động lại. Vùng bàn thì camera đẩy lại được.
 
-Muốn giấu khoá kỹ hơn thì dùng Secret Manager: `--set-secrets KIE_API_KEY=<tên secret>:latest` thay cho phần trong `--set-env-vars`.
+Muốn giấu khoá kỹ hơn thì dùng Secret Manager: `--set-secrets GEMINI_API_KEY=<tên secret>:latest` thay cho phần trong `--set-env-vars`.
+
+Muốn giữ vùng bàn, danh sách nhân viên và cài đặt qua mỗi lần khởi động lại thì gắn một bucket Cloud Storage làm thư mục dữ liệu (thêm vào lệnh deploy):
+
+```powershell
+  --add-volume "name=du-lieu,type=cloud-storage,bucket=<TÊN BUCKET>" `
+  --add-volume-mount "volume=du-lieu,mount-path=/data" `
+  --execution-environment gen2
+```
+
+và thêm `DATA_DIR=/data` vào chuỗi `--set-env-vars` ở trên. Tài khoản dịch vụ của Cloud Run cần quyền ghi vào bucket đó.
 
 ## Trước giờ demo
 
@@ -184,5 +214,5 @@ Muốn giấu khoá kỹ hơn thì dùng Secret Manager: `--set-secrets KIE_API_
 - Để dự án ở đường dẫn ngắn (ví dụ `D:\EasyFnB`). Đường dẫn quá dài thì PyTorch báo `WinError 206 ... too long` khi nạp thư viện GPU.
 - Bản demo (v5) chạy khoảng 15 đến 20 khung/giây trên laptop RTX 3050 khi gửi lên máy chủ (góc trên phải màn hình camera). Chậm hơn nhiều thì bỏ `--pose-refine rtmpose-m --refine-mode luot` trong `chay_camera.bat`.
 - Engine TensorRT gắn với GPU đã build ra nó. Đổi laptop thì chạy lại `danh_gia\do_toc_do.py xuat --gpu`.
-- Mở sẵn: màn hình quản lý trên laptop (`/truc-tiep`), điện thoại Lan và Tú, tab trợ lý.
+- Mở sẵn: màn hình quản lý trên laptop (`/`), điện thoại Lan và Tú (`/nv/lan`, `/nv/tu`), tab trợ lý. Chấm **Trực tiếp** ở góc trên bên phải sáng xanh là đã nối máy chủ.
 - Muốn làm lại từ đầu ca: nút đặt lại trên trang Cài đặt (gọi `POST /api/reset`).

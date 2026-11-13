@@ -2,7 +2,7 @@
 :: Chay camera AI (ban v5 demo) va gui len app Easy FnB.
 ::   chay_camera.bat [nguon] [may chu] [ma camera]
 ::   nguon   : file video (chay lap lai), so webcam (0), hoac rtsp://...  Mac dinh: clips\01_phong_an_goc_cao.mp4
-::   may chu : mac dinh http://localhost:8080. Cloud Run co dat EDGE_KEY thi dat bien EDGE_KEY truoc khi chay.
+::   may chu : mac dinh http://127.0.0.1:8080 (khong dung localhost: Windows thu IPv6 truoc, cham 2 giay). Cloud Run co dat EDGE_KEY thi dat bien EDGE_KEY truoc khi chay.
 ::   ma camera: mac dinh cam1 (vung ban ve tren web gan voi ma nay)
 :: Them tham so khac sau 3 tham so tren, vi du: chay_camera.bat 0 http://localhost:8080 cam1 --device cpu
 setlocal
@@ -24,7 +24,7 @@ set "PY=python"
 set "SRC=%~1"
 if "%SRC%"=="" set "SRC=clips\01_phong_an_goc_cao.mp4"
 set "URL=%~2"
-if "%URL%"=="" set "URL=http://localhost:8080"
+if "%URL%"=="" set "URL=http://127.0.0.1:8080"
 set "CAM=%~3"
 if "%CAM%"=="" set "CAM=cam1"
 set "MORE="

@@ -27,3 +27,8 @@ dist-ssr
 .venv
 server/data
 __pycache__
+
+# khoá và cấu hình riêng của từng máy
+.env
+.env.*
+!.env.example

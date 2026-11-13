@@ -1,0 +1,14 @@
+{
+ "bytetrack": {
+  "ma": 60,
+  "ma_2s": 41,
+  "do_dai_tb_s": 13.8,
+  "ms_khung": 1.6
+ },
+ "botsort_osnet": {
+  "ma": 68,
+  "ma_2s": 44,
+  "do_dai_tb_s": 11.9,
+  "ms_khung": 68.8
+ }
+}

@@ -48,7 +48,7 @@ def gui(url, body):
 def main():
     ap = argparse.ArgumentParser(description='Nạp vùng bàn của clip mẫu lên máy chủ')
     ap.add_argument('clip', help='tên clip trong zones.json, ví dụ m01_bbq_vn_ban_an')
-    ap.add_argument('may_chu', nargs='?', default='http://localhost:8080')
+    ap.add_argument('may_chu', nargs='?', default='http://127.0.0.1:8080')
     ap.add_argument('--camera', default='cam1')
     ap.add_argument('--zones', type=Path, default=HERE / 'zones.json')
     a = ap.parse_args()

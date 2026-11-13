@@ -1,53 +1,42 @@
-import { Route, Routes } from 'react-router';
-import { Shell } from './components/Shell';
-import { ToastProvider } from './components/ui';
-import Assistant from './pages/Assistant';
-import Camera from './pages/Camera';
-import LiveAssistant from './pages/live/LiveAssistant';
-import LiveDashboard from './pages/live/LiveDashboard';
-import LiveSetup from './pages/live/LiveSetup';
-import LiveStaffPhone from './pages/live/LiveStaffPhone';
+import { Navigate, Route, Routes, useParams } from 'react-router';
+import OwnerShell from './app/OwnerShell';
+import Now from './app/Now';
+import Assistant from './app/Assistant';
+import Shift from './app/Shift';
+import Settings from './app/Settings';
+import StaffPhone from './app/StaffPhone';
 import PhoneCamera from './pages/live/PhoneCamera';
-import Overview from './pages/Overview';
-import Regulars from './pages/Regulars';
-import Report from './pages/Report';
-import Staff from './pages/Staff';
-import StaffChannels from './pages/StaffChannels';
-import StaffPhone from './pages/StaffPhone';
 
-function Dashboard() {
-  return (
-    <Shell>
-      <Routes>
-        <Route path="/" element={<Overview />} />
-        <Route path="/camera" element={<Camera />} />
-        <Route path="/nhan-vien" element={<Staff />} />
-        <Route path="/app-nhan-vien" element={<StaffChannels />} />
-        <Route path="/khach-quen" element={<Regulars />} />
-        <Route path="/tro-ly" element={<Assistant />} />
-        <Route path="/bao-cao" element={<Report />} />
-        {/* Chạy thật: dữ liệu từ máy chủ và camera */}
-        <Route path="/truc-tiep" element={<LiveDashboard />} />
-        <Route path="/truc-tiep/cai-dat" element={<LiveSetup />} />
-        <Route path="/truc-tiep/tro-ly" element={<LiveAssistant />} />
-        <Route path="*" element={<Overview />} />
-      </Routes>
-    </Shell>
-  );
+/** Link cũ /nv-tt/:id (đã gửi cho nhân viên) vẫn mở được */
+function OldStaffLink() {
+  const { id } = useParams();
+  return <Navigate to={id ? `/nv/${id}` : '/nv'} replace />;
 }
 
 export default function App() {
   return (
-    <ToastProvider>
-      <Routes>
-        {/* App trên điện thoại nhân viên: không có khung quản lý */}
-        <Route path="/nv" element={<StaffPhone />} />
-        <Route path="/nv/:id" element={<StaffPhone />} />
-        <Route path="/phat" element={<PhoneCamera />} />
-        <Route path="/nv-tt" element={<LiveStaffPhone />} />
-        <Route path="/nv-tt/:id" element={<LiveStaffPhone />} />
-        <Route path="/*" element={<Dashboard />} />
-      </Routes>
-    </ToastProvider>
+    <Routes>
+      {/* Chủ quán */}
+      <Route element={<OwnerShell />}>
+        <Route index element={<Now />} />
+        <Route path="tro-ly" element={<Assistant />} />
+        <Route path="ca" element={<Shift />} />
+        <Route path="cai-dat" element={<Settings />} />
+      </Route>
+
+      {/* Nhân viên, mở trên điện thoại */}
+      <Route path="nv" element={<StaffPhone />} />
+      <Route path="nv/:id" element={<StaffPhone />} />
+      {/* Điện thoại làm camera */}
+      <Route path="phat" element={<PhoneCamera />} />
+
+      {/* Đường dẫn cũ */}
+      <Route path="nv-tt" element={<OldStaffLink />} />
+      <Route path="nv-tt/:id" element={<OldStaffLink />} />
+      <Route path="truc-tiep" element={<Navigate to="/" replace />} />
+      <Route path="truc-tiep/cai-dat" element={<Navigate to="/cai-dat" replace />} />
+      <Route path="truc-tiep/tro-ly" element={<Navigate to="/tro-ly" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }

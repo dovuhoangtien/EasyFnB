@@ -30,6 +30,22 @@ Chỉ dùng trong nội bộ hackathon, không phát hành lại, không dùng c
 - Đã bỏ tiếng; m10 và m14 được cắt và mã hoá lại, các clip khác giữ nguyên luồng hình gốc.
 - Ghi chú chi tiết + mốc thời gian sự kiện: `GHI_CHU_CLIP_MOI.md`. Vùng bàn đề xuất: `vung_ban_de_xuat.json`. Ảnh tổng quan từng clip: `_sheet/<tên clip>.jpg`.
 
+### Clip m18–m26 (tải 12/11/2026)
+
+| Tệp | Nội dung | Nguồn |
+| --- | --- | --- |
+| `m18_ph_nuong_han_phong_an.mp4` | Quán nướng kiểu Hàn ở Davao (Philippines), góc cao, ~8 bàn gỗ, khách ngồi ăn, nhân viên đi lại. 1280×720, 30 fps, 926 s | https://www.youtube.com/watch?v=rIY3mvxk2bo (cắt 74–998 s) |
+| `m19_ph_nha_hang_san_vuon_ngay.mp4` | Nhà hàng sân vườn đèn lồng đỏ, ban ngày, rất nhiều bàn, khách đông. 267 s | https://www.youtube.com/watch?v=wkdrNv9lGZE (cắt 73–339 s) |
+| `m20_ph_nha_hang_san_vuon_dem.mp4` | Cùng nhà hàng, ban đêm, đèn vàng. 378 s | https://www.youtube.com/watch?v=KY5OV1iCu3o (cắt 30–408 s) |
+| `m21_ph_food_haus_ban_nv_ao_den.mp4` | Quán bình dân ngoài trời ban đêm, bàn nhựa xanh. Khung hình bị người đăng phóng to/thu nhỏ theo người, vài chỗ đã bị làm mờ sẵn. 441 s | https://www.youtube.com/watch?v=ZP_dV5FZano (cắt 30–471 s) |
+| `m22_ph_quan_nuong_phong_an_13phut.mp4` | Quán nướng, phòng ăn sau quầy, có đồng hồ trên hình, gia đình ăn tối. 758 s | https://www.youtube.com/watch?v=pf6GXsHkEpk (cắt 30–788 s, bỏ phần camera quầy phía sau) |
+| `m23_ph_quay_nuong_ban_ngan.mp4` | Cùng quán, góc qua quầy nhìn ra 5 bàn. 166 s | https://www.youtube.com/watch?v=CNn0_xdAl-g (cắt 30–196 s) |
+| `m24_ph_quan_binh_dan_nhieu_ban.mp4` | Quán cơm bình dân: quầy "pay as you order" phía trước, bàn ghế nhựa phía sau. 444 s | https://www.youtube.com/watch?v=_GvFBUI-gGk (cắt 30–474 s) |
+| `m25_my_nha_hang_phong_an.mp4` | Nhà hàng ở Mỹ, camera mắt cá ở cửa vào: quầy đón khách, khách đứng chờ, bàn bên phải. 594 s | https://www.youtube.com/watch?v=FsKal7K2zJY (đài truyền hình đăng bản ghi camera) |
+| `m26_ph_samgyup_truc_tiep_10phut.mp4` | Quán samgyup ở Davao, camera cố định có đồng hồ, giờ cao điểm tối, ~10 bàn. 600 s | Ghi trực tiếp từ luồng camera của kênh JazBaz Philippines, https://www.youtube.com/watch?v=5vKt1Hs44u0, 12/11/2026 20:05–20:15 giờ Davao |
+
+**Lưu ý về nguồn m18–m24:** kênh James Shawn đăng lại hình từ các camera quán ở Davao (phần lớn là luồng công khai của JazBaz), nhưng mở đầu và kết thúc mỗi video là quảng cáo nội dung người lớn và rao bán video quay lén. Các phần đó đã bị cắt bỏ khỏi tệp. Không dùng các clip này trong video demo hay bất cứ thứ gì công khai; chỉ để thử máy nội bộ, xoá khi xong việc. Nguồn sạch hơn là ghi thẳng từ luồng của JazBaz như m26.
+
 ## Cách dùng
 
 ```

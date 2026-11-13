@@ -170,6 +170,13 @@ class DieuPhoi(unittest.TestCase):
         r = hub.report()
         self.assertEqual(r['arrived'], 2)
         self.assertIsNotNone(r['response_s']['mean'])
+        # xếp loại tốc độ: việc nhận sau 12 giây là nhanh, không việc nào chậm hay bị bỏ lỡ
+        sp = r['speed']
+        self.assertEqual(sp['fast'] + sp['ok'] + sp['slow'], sum(1 for x in hub.alerts.values() if x['acked_at']))
+        self.assertGreaterEqual(sp['fast'], 1)
+        self.assertEqual((sp['slow'], sp['missed']), (0, 0))
+        lan = next(x for x in r['per_staff'] if x['id'] == 'lan')
+        self.assertEqual(lan['fast'] + lan['ok'] + lan['slow'], lan['acked'])
 
     def test_staff_arrival_does_not_finish_clearing(self):
         hub = self.make()
@@ -200,5 +207,56 @@ class DieuPhoi(unittest.TestCase):
         self.assertIsNone(hub.alerts[aid].get('arrived_s'))
 
 
+class VungBan(unittest.TestCase):
+    """Vùng bàn sai không được ghi đè vùng đang dùng."""
+    def test_tu_choi_vung_sai_va_giu_vung_cu(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            hub = Hub(Path(tmp), NoGemini())
+            tot = dict(camera='cam1', frame_w=640, frame_h=360,
+                       tables=[dict(id='B1', polygon=[[0, 0], [10, 0], [10, 10]])])
+            hub.set_zones(tot)
+            for sai in ([dict(id='B9', polygon=[[0, 0], [1, 1]])],
+                        [dict(id=' ', polygon=[[0, 0], [10, 0], [10, 10]])],
+                        [dict(id='B1', polygon=[[0, 0], [10, 0], [10, 10]])] * 2):
+                with self.assertRaises(ValueError):
+                    hub.set_zones(dict(tot, tables=sai))
+            self.assertEqual([t['id'] for t in hub.get_zones('cam1')['tables']], ['B1'])
+
+
+class GhiCong(unittest.TestCase):
+    def test_camera_dong_viec_thi_ghi_cong_nguoi_da_nhan(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            hub = Hub(Path(tmp), NoGemini())
+            hub.staff_online('lan', +1)
+            aid = hub.edge_event(ev('khach_moi', table='B5'))
+            hub.ack(aid, 'lan')
+            hub.edge_event(dict(camera='cam1', kind='nv_den', table='B5'))
+            self.assertEqual(hub.alerts[aid]['done_by'], 'camera')
+            lan = next(x for x in hub.report()['per_staff'] if x['id'] == 'lan')
+            self.assertEqual((lan['acked'], lan['done']), (1, 1))
+
+
 if __name__ == '__main__':
     unittest.main()
+
+
+class NapEnv(unittest.TestCase):
+    def test_doc_env_khong_de_bien_da_co(self):
+        import os
+        import tempfile
+        from server import nap_env
+        with tempfile.TemporaryDirectory() as d:
+            f = os.path.join(d, '.env')
+            with open(f, 'w', encoding='utf-8') as fh:
+                fh.write('# ghi chú\nEZ_THU_A="mot hai"\nexport EZ_THU_B=2\nEZ_THU_C=\nEZ_THU_D=moi\nkhong hop le\n')
+            os.environ['EZ_THU_D'] = 'cu'
+            try:
+                self.assertEqual(nap_env(f), ['EZ_THU_A', 'EZ_THU_B'])
+                self.assertEqual(os.environ['EZ_THU_A'], 'mot hai')
+                self.assertEqual(os.environ['EZ_THU_B'], '2')
+                self.assertNotIn('EZ_THU_C', os.environ)
+                self.assertEqual(os.environ['EZ_THU_D'], 'cu')   # biến đã đặt sẵn thắng tệp .env
+            finally:
+                for k in ('EZ_THU_A', 'EZ_THU_B', 'EZ_THU_D'):
+                    os.environ.pop(k, None)
+        self.assertEqual(nap_env(os.path.join(d, 'khong_co')), [])

@@ -408,6 +408,24 @@ class TestEvidence(HubCase):
         self.assertEqual(list((Path(self.tmp.name) / 'evidence').glob('*.jpg')), [])
         self.assertEqual(hub.eids, {})
 
+    async def test_reset_restarts_attendance(self):
+        hub = self.make([], evidence_wait_s=0.1)
+        hub.staff = [dict(id='lan', name='Lan', role='serve'), dict(id='minh', name='Minh', role='serve')]
+        hub.staff_online('lan', +1)
+        hub.staff_online('minh', +1)
+        hub.staff_online('minh', -1)
+        del hub.pending_off['minh']   # như vòng lặp nền làm khi hết thời gian chờ
+        hub._finish_off('minh')
+        hub.attendance['lan'][0]['in'] -= 3600_000  # Lan vào ca từ một tiếng trước
+        hub.reset()
+        v = {x['id']: x for x in hub.staff_view()}
+        self.assertIsNone(v['minh']['first_in'])            # không mở app: ca mới chưa vào
+        self.assertEqual(v['minh']['worked_s'], 0)
+        self.assertTrue(v['lan']['online'])                 # đang mở app: tính lại từ lúc bắt đầu ca mới
+        self.assertLess(abs(v['lan']['first_in'] - v['lan']['on_since']), 1)
+        self.assertGreater(v['lan']['first_in'], hub.attendance['lan'][0]['in'] - 1)
+        self.assertEqual(v['lan']['worked_s'], 0)
+
 
 # ====================================================================== client thật (httpx giả lập mạng)
 def real_gemini(handler):

@@ -1,0 +1,391 @@
+/* Phần riêng của Easy FnB dựng trên token Astryx: ảnh bằng chứng, biểu đồ, khung camera, màn hình điện thoại. */
+
+/* ---------- khung trang ---------- */
+.fx-page {
+  width: 100%;
+  max-width: 1320px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fx-now-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+@media (min-width: 64rem) {
+  .fx-now-grid {
+    grid-template-columns: minmax(0, 1.75fr) minmax(320px, 1fr);
+  }
+  .fx-now-side {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+/* ---------- số liệu ---------- */
+.fx-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.fx-stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: var(--radius-container);
+  background: var(--color-background-card);
+  border: 1px solid var(--color-border);
+  min-width: 0;
+}
+.fx-stat-value {
+  font-size: 1.6rem;
+  line-height: 1.2;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- camera ---------- */
+.fx-cam-frame {
+  border-radius: var(--radius-container);
+  overflow: hidden;
+  background: var(--color-background-muted);
+}
+.fx-cam-frame .live-cam {
+  border-radius: 0;
+  border: 0;
+}
+
+.fx-table-chip {
+  transition: background-color var(--dur-long) var(--ease-out), border-color var(--dur-long) var(--ease-out);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-element);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+  font-size: var(--text-supporting-size);
+  font-variant-numeric: tabular-nums;
+}
+.fx-table-chip[data-state="occupied"] {
+  background: var(--color-info-muted);
+  border-color: var(--color-border-info);
+}
+.fx-table-chip[data-state="needs_clearing"] {
+  background: var(--color-warning-muted);
+  border-color: var(--color-border-warning);
+}
+.fx-table-chip[data-hot] {
+  background: var(--color-error-muted);
+  border-color: var(--color-border-error);
+}
+
+/* ---------- việc ---------- */
+.fx-task {
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--dur-short) var(--ease-out), background-color var(--dur-short) var(--ease-out);
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+}
+.fx-task[data-urgent] {
+  border-color: var(--color-border-error);
+  background: color-mix(in oklab, var(--color-error-muted) 38%, var(--color-background-card));
+}
+
+.fx-shot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-element);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-muted);
+  color: var(--color-icon-secondary);
+  cursor: zoom-in;
+}
+.fx-shot img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fx-shot--empty {
+  cursor: default;
+}
+.fx-shot:focus-visible,
+.fx-flip:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.fx-flip {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border-radius: var(--radius-element);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background-muted);
+  background-size: 200% 200%;
+  background-repeat: no-repeat;
+  cursor: zoom-in;
+}
+.fx-flip-tag {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-background-inverted, var(--color-text-primary));
+  color: var(--color-background-surface);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- khối trả lời của trợ lý ---------- */
+.fx-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+  min-width: 0;
+}
+.fx-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.fx-ch-bar {
+  display: grid;
+  grid-template-columns: minmax(64px, max-content) minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 8px 12px;
+  font-size: var(--text-supporting-size);
+}
+.fx-ch-bar-track {
+  height: 14px;
+  border-radius: 4px;
+  background: var(--color-background-muted);
+  overflow: hidden;
+}
+.fx-ch-bar-fill {
+  height: 100%;
+  min-width: 2px;
+  border-radius: 4px;
+  background: var(--color-icon-blue);
+}
+.fx-ch-num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.fx-ch-col {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 160px;
+  padding-top: 20px;
+  border-bottom: 1px solid var(--color-border-emphasized);
+}
+.fx-ch-col-item {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.fx-ch-col-fill {
+  width: min(100%, 44px);
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  background: var(--color-icon-blue);
+}
+.fx-ch-col-val {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transform: translateY(-100%);
+  padding-bottom: 2px;
+}
+.fx-ch-axis {
+  display: flex;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.fx-ch-axis > span {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fx-ch-line {
+  width: 100%;
+  height: 160px;
+  overflow: visible;
+}
+.fx-ch-line polyline {
+  fill: none;
+  stroke: var(--color-icon-blue);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.fx-ch-line .fx-ch-area {
+  fill: color-mix(in oklab, var(--color-icon-blue) 14%, transparent);
+  stroke: none;
+}
+.fx-ch-line line {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.fx-ev {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+}
+.fx-ev:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+@media (min-width: 40rem) {
+  .fx-ev[data-media] {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+}
+
+.fx-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- trang Trợ lý chiếm hết chiều cao còn lại ---------- */
+.fx-chat-page {
+  width: 100%;
+  max-width: 920px;
+  margin-inline: auto;
+  height: calc(100dvh - 120px);
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+}
+.fx-chat-page > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ---------- điện thoại nhân viên ---------- */
+.fx-phone-app {
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 480px;
+  margin-inline: auto;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(32px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.fx-phone-task {
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--dur-short) var(--ease-out);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+}
+.fx-phone-task[data-big] {
+  border-width: 2px;
+  border-color: var(--color-border-emphasized);
+}
+.fx-phone-task[data-big][data-kind="call"] {
+  border-color: var(--color-border-error);
+}
+.fx-phone-table {
+  font-size: 2.6rem;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.fx-phone-task:not([data-big]) .fx-phone-table {
+  font-size: 1.5rem;
+}
+
+/* ---------- dòng sửa nhân viên ---------- */
+.fx-staff-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+/* Text của Astryx luôn là inline; khi dùng làm đoạn hay tiêu đề thì phải xuống dòng */
+p.astryx-text,
+div.astryx-text,
+h1.astryx-text,
+h2.astryx-text,
+h3.astryx-text {
+  display: block;
+}
+
+/* Bảng của Astryx tự tràn ra mép thẻ 20px; trong khối trả lời thì giữ trong lề */
+.fx-block .astryx-table-scroll-wrapper {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* dòng chọn tên trên điện thoại */
+.fx-phone-pick {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px;
+  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+.fx-phone-pick:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

@@ -62,7 +62,7 @@ def synth(tts, voice: str, text: str) -> np.ndarray:
 
 def main():
     tts = Vieneu()
-    voice = pick_voice(tts, sys.argv[1] if len(sys.argv) > 1 else 'Thùy Dung')
+    voice = pick_voice(tts, sys.argv[1] if len(sys.argv) > 1 else 'Thiện Minh')
     sr = int(tts.sample_rate)
     proto.write('ready\n')
     for line in sys.stdin:

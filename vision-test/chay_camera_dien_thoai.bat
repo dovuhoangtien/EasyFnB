@@ -5,5 +5,5 @@ setlocal
 set "CAM=%~1"
 if "%CAM%"=="" set "CAM=cam1"
 set "URL=%~2"
-if "%URL%"=="" set "URL=http://localhost:8080"
+if "%URL%"=="" set "URL=http://127.0.0.1:8080"
 call "%~dp0chay_camera.bat" %URL%/api/phone/%CAM%/mjpeg %URL% %CAM%

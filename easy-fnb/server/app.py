@@ -7,8 +7,9 @@ Chạy (từ thư mục easy-fnb):
 Biến môi trường:
     KIE_API_KEY       khoá kie.ai; có khoá này thì dùng kie.ai thay Gemini (xem server/llm.py)
     KIE_MODEL         mặc định deepseek-v4-1-flash
-    GEMINI_API_KEY   khoá Gemini (dùng khi không có KIE_API_KEY; không có thì vẫn chạy, chỉ không kiểm tra ảnh và không có trợ lý AI)
+    GEMINI_API_KEY   khoá Gemini; trợ lý ADK luôn dùng khoá này (kiểm tra ảnh/tóm tắt chỉ dùng khi không có KIE_API_KEY; không có thì vẫn chạy, chỉ không kiểm tra ảnh và không có trợ lý AI)
     GEMINI_MODEL     mặc định gemini-3.5-flash-lite
+    (các biến trên có thể ghi trong tệp easy-fnb/.env, xem .env.example)
     EDGE_KEY         nếu đặt, camera phải gửi header X-Edge-Key giống vậy (nên đặt khi chạy trên Cloud Run)
     DATA_DIR         nơi lưu cấu hình và ảnh cắt, mặc định server/data
 Hợp đồng API: server/API.md
@@ -17,8 +18,8 @@ import asyncio
 import base64
 import json
 import os
+import time
 from contextlib import asynccontextmanager
-from datetime import datetime
 from pathlib import Path
 
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
@@ -26,15 +27,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 
 from .gemini import Gemini, GeminiError
-from .hub import VN, Hub, clock, now_ms
+from .hub import Hub, clock, now_ms
 from .llm import Llm
 from .net import lan_ip
+from .tro_ly import TroLy
 from .tts import Tts
 
 HERE = Path(__file__).resolve().parent
 DIST = HERE.parent / 'dist'
 DATA = Path(os.environ.get('DATA_DIR', HERE / 'data'))
 EDGE_KEY = os.environ.get('EDGE_KEY', '').strip()
+CLOUD = bool(os.environ.get('K_SERVICE'))   # K_SERVICE có sẵn khi chạy trên Cloud Run
+STARTED = time.monotonic()
 
 # Chọn nhà cung cấp LLM: có KIE_API_KEY thì dùng kie.ai, không thì Gemini (nếu có GEMINI_API_KEY).
 # Cả hai cùng giao diện nên phần còn lại của máy chủ không phải biết bên nào đang chạy.
@@ -48,12 +52,15 @@ if isinstance(gemini, Llm):
 else:
     hub = Hub(DATA, gemini)
 tts = Tts(DATA / 'tts')
+tro_ly = TroLy(hub, gemini)
 
 
 @asynccontextmanager
 async def lifespan(_app):
     task = asyncio.create_task(hub.tick_forever())
-    asyncio.create_task(tts.warm())  # giọng đọc sẵn sàng ngay, câu đầu không phải chờ 3-4 giây khởi động Piper
+    asyncio.create_task(tts.warm([f"Bàn {t['id']}" for z in hub.zones.values() for t in z.get('tables', [])]))  # giọng đọc sẵn sàng ngay, câu đầu không phải chờ 3-4 giây khởi động Piper
+    if tro_ly.adk_wanted:            # nạp google-adk sẵn (vài giây) để câu hỏi đầu tiên không phải chờ
+        asyncio.create_task(asyncio.to_thread(tro_ly.load_adk))
     khoa = 'KIE_API_KEY' if isinstance(gemini, Llm) else 'GEMINI_API_KEY'
     hub.add_log('system', 'Máy chủ khởi động' + (f', {gemini.ten} bật ({gemini.model})' if gemini.enabled
                                                   else f', {gemini.ten} tắt (chưa có {khoa})'))
@@ -88,11 +95,47 @@ def sse(event, data):
     return f'event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n'
 
 
+@app.get('/api/health')
+async def health():
+    """Cho Cloud Run và người vận hành: máy chủ còn sống không. Không đụng tới AI hay ổ đĩa."""
+    return dict(ok=True, uptime_s=int(time.monotonic() - STARTED))
+
+
+def tro_ly_engine():
+    """Trợ lý đang trả lời bằng gì: 'adk' (Gemini qua Google ADK) hay 'rules' (tính từ số liệu, không AI)."""
+    return 'adk' if tro_ly.adk_wanted and tro_ly._adk is not False else 'rules'
+
+
 @app.get('/api/info')
 async def info():
-    """Địa chỉ wifi của máy chủ, để trang Cài đặt đưa link cho điện thoại nhân viên (localhost thì điện thoại không mở được)."""
-    return dict(lan_ip=lan_ip(), gemini=gemini.enabled, provider=gemini.ten,
-                model=gemini.model if gemini.enabled else None)
+    """Tình trạng các phần của hệ thống, cho bảng "Hệ thống" trên thanh trên cùng và trang Cài đặt.
+    lan_ip: địa chỉ wifi của máy chủ, để đưa link cho điện thoại (localhost thì điện thoại không mở được)."""
+    return dict(lan_ip=None if CLOUD else lan_ip(), gemini=gemini.enabled, provider=gemini.ten,
+                model=gemini.model if gemini.enabled else None,
+                key_name='KIE_API_KEY' if isinstance(gemini, Llm) else 'GEMINI_API_KEY',
+                assistant=tro_ly_engine(), assistant_model=tro_ly.model if tro_ly_engine() == 'adk' else None,
+                tts=tts.status(), cloud=CLOUD, edge_key=bool(EDGE_KEY),
+                uptime_s=int(time.monotonic() - STARTED), subscribers=len(hub.subs))
+
+
+@app.post('/api/ai/test')
+async def ai_test():
+    """Gọi thử AI một câu ngắn để biết khoá và model có dùng được không (nút "Thử kết nối" trong Cài đặt)."""
+    if not gemini.enabled:
+        return dict(ok=False, provider=gemini.ten, error='Chưa có khoá AI trên máy chủ.')
+    t0 = time.perf_counter()
+    try:
+        cau = 'Trả lời đúng một chữ: OK'
+        goi = gemini.generate([{'type': 'input_text', 'text': cau}] if isinstance(gemini, Llm) else [{'text': cau}])
+        text = await asyncio.wait_for(goi, timeout=40)
+    except asyncio.TimeoutError:
+        return dict(ok=False, provider=gemini.ten, model=gemini.model, error='Quá 40 giây chưa có trả lời.')
+    except (GeminiError, OSError, ValueError) as e:
+        return dict(ok=False, provider=gemini.ten, model=gemini.model, error=str(e)[:300])
+    except Exception as e:  # lỗi mạng của httpx: báo gọn, không để 500
+        return dict(ok=False, provider=gemini.ten, model=gemini.model, error=f'{type(e).__name__}: {e}'[:300])
+    return dict(ok=True, provider=gemini.ten, model=gemini.model, ms=int((time.perf_counter() - t0) * 1000),
+                reply=str(text).strip()[:40])
 
 
 @app.get('/api/stream')
@@ -160,10 +203,18 @@ async def evidence(aid: str, name: str):
 
 
 # ------------------------------------------------------------------ nhân viên, quản lý
+def nhan_vien(body):
+    """Mã nhân viên trong body phải có trong danh sách, không thì việc 'đang xử lý' mà không ai làm."""
+    sid = body.get('staff')
+    if not any(s['id'] == sid for s in hub.staff):
+        raise HTTPException(400, f'không có nhân viên {sid!r}')
+    return sid
+
+
 @app.post('/api/alerts/{aid}/ack')
 async def ack(aid: str, body: dict = Body(...)):
     find(aid)
-    return hub.ack(aid, body.get('staff'))
+    return hub.ack(aid, nhan_vien(body))
 
 
 @app.post('/api/alerts/{aid}/done')
@@ -181,7 +232,7 @@ async def cancel(aid: str, body: dict = Body(...)):
 @app.post('/api/alerts/{aid}/assign')
 async def assign(aid: str, body: dict = Body(...)):
     find(aid)
-    return hub.assign_to(aid, body.get('staff'))
+    return hub.assign_to(aid, nhan_vien(body))
 
 
 @app.post('/api/alerts')
@@ -268,34 +319,13 @@ def plain_summary(r):
 
 @app.post('/api/assistant')
 async def assistant(body: dict = Body(...)):
-    q = (body.get('question') or '').strip()
+    """Trợ lý nhiều dạng trả lời (chữ, chỉ số, biểu đồ, sự kiện có ảnh, bảng, thẻ nhân viên). Tác tử Google ADK
+    khi có GEMINI_API_KEY; không thì trả lời theo luật, không dùng AI. Xem server/tro_ly.py."""
+    q = body.get('question')
+    q = q.strip() if isinstance(q, str) else ''
     if not q:
         raise HTTPException(400, 'thiếu câu hỏi')
-    r = hub.report()
-    if not gemini.enabled:
-        return dict(answer=f'{gemini.ten} chưa được bật (máy chủ thiếu KIE_API_KEY hoặc GEMINI_API_KEY). '
-                           'Số liệu ca hiện có: ' + plain_summary(r), refs=[])
-    try:
-        d = await gemini.answer(q, dict(report=report_text(r), log=hub.log_text()))
-    except GeminiError as e:
-        raise HTTPException(502, f'{gemini.ten} lỗi: {e}')
-    refs = []
-    for x in d.get('refs') or []:
-        aid = x.get('alert_id') or None
-        if aid:
-            aid = aid.strip('[]')
-        a = hub.alerts.get(aid) if aid else None
-        t = a['created_at'] if a else _time_today(x.get('time'))
-        refs.append(dict(alert_id=aid if a else None, t=t, table=x.get('table') or (a['table'] if a else None)))
-    return dict(answer=d.get('answer', ''), refs=refs)
-
-
-def _time_today(s):
-    try:
-        h, m, sec = (int(v) for v in (s or '').split(':'))
-        return int(datetime.now(VN).replace(hour=h, minute=m, second=sec, microsecond=0).timestamp() * 1000)
-    except ValueError:
-        return now_ms()
+    return await tro_ly.hoi(q[:500], body.get('session'))
 
 
 # ------------------------------------------------------------------ điện thoại làm camera
@@ -433,7 +463,13 @@ async def edge_frame(request: Request, camera: str = Query(...), kind: str = Que
 
 @app.post('/api/edge/tables', dependencies=[Depends(edge_auth)])
 async def edge_tables(body: dict = Body(...)):
-    hub.edge_tables(body['camera'], body.get('tables') or [])
+    tables = body.get('tables') or []
+    if not isinstance(body.get('camera'), str) or not isinstance(tables, list) or             not all(isinstance(t, dict) and 'id' in t for t in tables):
+        raise HTTPException(400, 'cần camera (chuỗi) và tables là danh sách {id, state, people}')
+    try:
+        hub.edge_tables(body['camera'], tables)
+    except (TypeError, ValueError) as e:
+        raise HTTPException(400, f'trạng thái bàn sai dạng: {e}')
     return dict(ok=True)
 
 
@@ -446,5 +482,7 @@ async def spa(path: str):
         return JSONResponse({'detail': 'Chưa build web app: chạy npm run build trong easy-fnb'}, status_code=404)
     f = (DIST / path).resolve()
     if path and f.is_file() and DIST.resolve() in f.parents:
-        return FileResponse(f)
-    return FileResponse(DIST / 'index.html')
+        # tệp trong assets/ có mã băm trong tên nên giữ được lâu; các tệp khác hỏi lại mỗi lần
+        cache = 'public, max-age=31536000, immutable' if path.startswith('assets/') else 'no-cache'
+        return FileResponse(f, headers={'Cache-Control': cache})
+    return FileResponse(DIST / 'index.html', headers={'Cache-Control': 'no-cache'})

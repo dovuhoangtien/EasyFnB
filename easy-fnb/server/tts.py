@@ -18,7 +18,7 @@ HERE = Path(__file__).parent
 PIPER_PYTHON = Path(os.environ.get('PIPER_PYTHON', r'C:\fnb-tts\Scripts\python.exe'))
 MODEL = Path(os.environ.get('PIPER_MODEL', HERE / 'voices' / 'vi_VN-vais1000-medium.onnx'))
 VIENEU_PYTHON = Path(os.environ.get('VIENEU_PYTHON', r'C:\fnb-tts2\Scripts\python.exe'))
-VIENEU_VOICE = os.environ.get('VIENEU_VOICE', 'Thùy Dung')
+VIENEU_VOICE = os.environ.get('VIENEU_VOICE', 'Thiện Minh')
 TTS_ENGINE = os.environ.get('TTS_ENGINE', 'auto').strip().lower()
 MAX_CHARS = 200
 RETRY_AFTER = 300  # giây: bộ đọc khởi động lỗi thì nghỉ chừng này rồi mới thử lại
@@ -130,14 +130,17 @@ class Tts:
         async with self._lock:  # một câu một lúc; câu đã có sẵn không phải chờ
             return self._cached(text) or await asyncio.to_thread(self._render, text)
 
-    async def warm(self):
-        """Tổng hợp sẵn một câu lúc khởi động để tiến trình đọc sẵn sàng (VieNeu nạp model mất khoảng 15 giây)."""
+    async def warm(self, texts=()):
+        """Tổng hợp sẵn các cụm hay đọc lúc khởi động (VieNeu nạp model mất khoảng 15 giây).
+        App nhân viên đọc từng cụm một ("Bàn B2", rồi "gọi phục vụ"), nên làm sẵn tên bàn và tên việc
+        thì lời báo đầu tiên của ca cũng phát ngay."""
         if not self.enabled:
             return
-        try:
-            await self.wav('Bàn B1 gọi phục vụ')
-        except Exception:
-            pass
+        for t in ('gọi phục vụ', 'cần dọn', 'có khách mới', 'Gấp', *texts):
+            try:
+                await self.wav(t)
+            except Exception:
+                return
 
     def close(self):
         for e in self.engines:
