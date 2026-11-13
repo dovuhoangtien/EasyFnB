@@ -1,0 +1,14 @@
+# Chép thành terraform.tfvars rồi điền. File đó không được đưa lên git.
+project_id = "easy-fnb-demo"
+
+# Tùy chọn
+# region          = "asia-southeast1"
+# min_instances   = 1            # đổi 0 sau demo để khỏi tốn tiền
+# alert_email     = "ban@example.com"
+# billing_account = "012345-6789AB-CDEF01"
+# budget_usd      = 100
+# enable_vertex_ai = false
+
+# KHÔNG ghi khoá vào file này. Đặt bằng biến môi trường trước khi chạy terraform:
+#   $env:TF_VAR_gemini_api_key = "<khoá>"
+#   $env:TF_VAR_kie_api_key    = "<khoá>"

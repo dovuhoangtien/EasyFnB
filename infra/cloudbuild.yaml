@@ -1,0 +1,24 @@
+# Build image từ easy-fnb/Dockerfile, đẩy lên Artifact Registry, rồi cho Cloud Run chạy image mới.
+# Chạy bằng lệnh trong `terraform output deploy_command` (gcloud builds submit easy-fnb --config infra/cloudbuild.yaml ...).
+# Mỗi lần deploy là một lần khởi động lại: việc đang mở và nhật ký ca trong bộ nhớ sẽ mất (ADR-0003).
+substitutions:
+  _IMAGE: ''
+  _SERVICE: easy-fnb
+  _REGION: asia-southeast1
+
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args: ['build', '-t', '${_IMAGE}:${BUILD_ID}', '-t', '${_IMAGE}:latest', '.']
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: ['push', '--all-tags', '${_IMAGE}']
+
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args: ['run', 'services', 'update', '${_SERVICE}', '--region=${_REGION}', '--image=${_IMAGE}:${BUILD_ID}']
+
+options:
+  logging: CLOUD_LOGGING_ONLY

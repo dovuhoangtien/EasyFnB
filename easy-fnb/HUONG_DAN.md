@@ -154,6 +154,8 @@ kie.ai chậm hơn Gemini nhiều: mỗi lượt 20–80 giây vì model luôn s
 
 ## Đưa lên Cloud Run
 
+> Có cách làm bằng mã Terraform (khoá nằm trong Secret Manager, bucket dữ liệu, cảnh báo ngân sách): xem `infra/README.md` và `docs/infra-design.md`. Các lệnh `gcloud` dưới đây vẫn dùng được khi chỉ cần thử nhanh.
+
 Cần cài [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) và một project có bật thanh toán (tài khoản dùng thử có 300 USD). Không cần Docker trên máy: Cloud Build build giúp từ `Dockerfile`.
 
 Mở PowerShell trong thư mục `easy-fnb`:

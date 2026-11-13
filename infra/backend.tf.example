@@ -1,0 +1,7 @@
+# Chép thành backend.tf sau khi tạo bucket state (xem README.md, mục "State").
+terraform {
+  backend "gcs" {
+    bucket = "<PROJECT_ID>-easy-fnb-tfstate"
+    prefix = "easy-fnb"
+  }
+}
