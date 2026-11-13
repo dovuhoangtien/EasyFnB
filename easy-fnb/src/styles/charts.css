@@ -1,0 +1,309 @@
+/* Biểu đồ của trang "Ca hôm nay": cột theo giờ, thanh theo bàn, ô số khi chỉ vào. */
+
+.fx-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  min-width: 0;
+  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+}
+.fx-chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.fx-chart-title {
+  margin: 0;
+  font-size: var(--text-label-size);
+  font-weight: 600;
+}
+.fx-chart-note {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-supporting-size);
+}
+.fx-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-secondary);
+  font-size: var(--text-supporting-size);
+}
+.fx-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* ---------- cột xếp chồng theo giờ ---------- */
+.fx-plot {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 180px;
+  margin-top: 12px;
+  border-bottom: 1px solid var(--color-border-emphasized);
+}
+.fx-plot-grid,
+.fx-plot-cols {
+  position: absolute;
+  inset: 0 0 0 28px;
+}
+.fx-plot-grid {
+  pointer-events: none;
+}
+.fx-plot-tick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--color-border);
+}
+.fx-plot-tick b {
+  position: absolute;
+  left: -28px;
+  top: 0;
+  width: 20px;
+  transform: translateY(-50%);
+  text-align: right;
+  font-size: 0.75rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+.fx-plot-cols {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+.fx-col {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-radius: 4px 4px 0 0;
+  transition: background-color 120ms var(--ease-out);
+}
+.fx-col:hover,
+.fx-col:focus-visible {
+  background: var(--color-background-muted);
+}
+.fx-col:focus-visible,
+.fx-hbar:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+@keyframes fx-col-in {
+  from {
+    transform: scaleY(0);
+  }
+}
+.fx-col-stack {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  width: min(100%, 24px);
+  height: var(--h);
+  transform-origin: bottom;
+  animation: fx-col-in 600ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 30ms);
+  transition: opacity 180ms var(--ease-out);
+}
+.fx-col-stack i {
+  flex: 0 1 0;
+  min-height: 2px;
+}
+.fx-col-stack i[data-top] {
+  border-radius: 4px 4px 0 0;
+}
+.fx-col[data-dim] .fx-col-stack {
+  opacity: 0.4;
+}
+.fx-plot-axis {
+  display: flex;
+  gap: 4px;
+  padding-left: 28px;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+.fx-plot-axis span {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* ---------- ô số hiện ra khi chỉ vào cột hay thanh ---------- */
+.fx-tip {
+  position: absolute;
+  z-index: 5;
+  bottom: calc(var(--h, 100%) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 156px;
+  padding: 8px 12px;
+  border-radius: var(--radius-element);
+  border: 1px solid var(--color-border-emphasized);
+  background: var(--color-background-card);
+  box-shadow: 0 8px 24px -12px color-mix(in oklab, var(--color-text-primary) 45%, transparent);
+  font-size: var(--text-supporting-size);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.fx-tip[data-edge='start'] {
+  left: 0;
+  transform: none;
+}
+.fx-tip[data-edge='end'] {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+.fx-tip p {
+  margin: 0;
+}
+.fx-tip-total b {
+  font-size: var(--text-large-size);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.fx-tip ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 8px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--color-border);
+}
+.fx-tip li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fx-tip li span {
+  flex: 1 1 auto;
+}
+.fx-tip li b {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- thanh ngang xếp chồng ---------- */
+.fx-hbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 24px;
+  border-radius: 4px;
+}
+.fx-hbar-fill {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-width: 4px;
+}
+.fx-hbar-fill i {
+  flex: 0 1 0;
+  min-width: 2px;
+}
+.fx-hbar-fill i[data-end] {
+  border-radius: 0 4px 4px 0;
+}
+.fx-barlist {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 8px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fx-barlist li {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: center;
+}
+.fx-barlist-name {
+  font-weight: 500;
+  white-space: nowrap;
+}
+.fx-barlist-num {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.fx-barlist-end {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* ---------- trang ca: hai thẻ cạnh nhau, thẻ biểu đồ theo giờ rộng hơn ---------- */
+.fx-shift-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+@media (min-width: 60rem) {
+  .fx-shift-grid {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+  .fx-shift-grid[data-lead='end'] {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  }
+}
+.fx-staff-load {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 160px;
+}
+.fx-staff-load .fx-staff-num {
+  min-width: 1.5em;
+}
+/* Bảng nhân viên: màn rộng thì bảng vừa khít nên bỏ cuộn ngang để ô số không bị cắt;
+ * màn hẹp thì thu ngắn thanh và ẩn ô số, con số đã có sẵn ngay cạnh thanh. */
+@media (min-width: 40rem) {
+  .fx-staff-wrap {
+    overflow: visible;
+  }
+}
+@media (max-width: 40rem) {
+  .fx-staff-load {
+    min-width: 84px;
+    gap: 8px;
+  }
+  .fx-staff .fx-tip {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-col-stack {
+    animation: none;
+  }
+  .fx-col,
+  .fx-col-stack {
+    transition: none;
+  }
+}

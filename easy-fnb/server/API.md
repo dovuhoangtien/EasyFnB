@@ -215,8 +215,15 @@ interface State {
     done_s: { mean: number|null, median: number|null },                     // created -> done
     escalated: number,
     per_staff: { id: string, name: string, acked: number, done: number, mean_response_s: number|null,
-                 fast: number, ok: number, slow: number }[],
-    per_table: { table: string, calls: number, clearings: number, guests: number }[] }
+                 fast: number, ok: number, slow: number,
+                 kinds: Record<'call'|'needs_clearing'|'new_guest', number> }[],   // tasks this person picked up, by kind
+    per_table: { table: string, calls: number, clearings: number, guests: number,
+                 fast: number, ok: number, slow: number, missed: number }[],       // how fast this table was served
+    // the shift in equal time buckets (step_s seconds each, at least 6): tasks by kind and pick-up speed.
+    // null before the first task
+    timeline: { step_s: number,
+                points: { t: number, call: number, needs_clearing: number, new_guest: number,
+                          fast: number, ok: number, slow: number, missed: number }[] } | null }
   ```
 - `POST /api/report/summary` → `{ "text": string }` Vietnamese end-of-shift summary written by Gemini
   from `/api/report` and the log (or a plain template when Gemini is off).

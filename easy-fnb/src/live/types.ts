@@ -235,6 +235,14 @@ export interface AssistantAnswer {
   ms?: number;
 }
 
+export interface TimelinePoint extends Record<AlertKind, number> {
+  t: number;
+  fast: number;
+  ok: number;
+  slow: number;
+  missed: number;
+}
+
 export interface Report {
   from: number;
   to: number;
@@ -246,8 +254,21 @@ export interface Report {
   escalated: number;
   /** số việc được nhận nhanh, hơi chậm, chậm, và số việc không ai tới; máy chủ cũ không gửi */
   speed?: { fast: number; ok: number; slow: number; missed: number; fast_s: number; slow_s: number };
-  per_staff: { id: string; name: string; acked: number; done: number; mean_response_s: number | null; fast?: number; ok?: number; slow?: number }[];
-  per_table: { table: string; calls: number; clearings: number; guests: number }[];
+  per_staff: {
+    id: string;
+    name: string;
+    acked: number;
+    done: number;
+    mean_response_s: number | null;
+    fast?: number;
+    ok?: number;
+    slow?: number;
+    /** số việc đã nhận, chia theo loại việc */
+    kinds?: Partial<Record<AlertKind, number>>;
+  }[];
+  per_table: { table: string; calls: number; clearings: number; guests: number; fast?: number; ok?: number; slow?: number; missed?: number }[];
+  /** việc của ca chia theo từng quãng giờ: mỗi cột dài step_s giây, t là lúc cột bắt đầu */
+  timeline?: { step_s: number; points: TimelinePoint[] } | null;
   /** số việc camera thấy nhân viên tới bàn; số việc tự đóng mà không thấy ai tới */
   arrived?: number;
   no_arrival?: number;

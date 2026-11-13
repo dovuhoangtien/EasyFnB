@@ -730,6 +730,8 @@ class Hub:
     # Mốc xếp loại tốc độ nhận việc: tới FAST_S giây là nhanh, tới SLOW_S là hơi chậm, hơn nữa là chậm.
     # Màn hình hiện chữ (nhanh, chậm) thay cho số giây, nên mốc đặt ở một chỗ duy nhất là đây.
     FAST_S, SLOW_S = 30, 60
+    # Độ dài một cột của biểu đồ theo thời gian (giây): chọn cột nhỏ nhất mà cả ca vẫn gọn trong 12 cột.
+    BUCKETS_S = (60, 120, 300, 600, 900, 1800, 3600, 7200)
 
     def _speed(self, secs):
         return dict(fast=sum(1 for x in secs if x <= self.FAST_S),
@@ -759,6 +761,8 @@ class Hub:
                                       a['done_by'] == 'camera' and a['acked_by'] == s['id']
                                       and not (a.get('close_reason') or '').startswith('Tự đóng'))),
                                   mean_response_s=round(statistics.fmean(r), 1) if r else None,
+                                  # người này nhận những loại việc gì
+                                  kinds={k: sum(1 for a in mine if a['kind'] == k) for k in TASK_KINDS},
                                   **self._speed(r)))
         tables = sorted({a['table'] for a in al if a['table']})
         per_table = [dict(table=tb, calls=sum(1 for a in al if a['table'] == tb and a['kind'] == 'call'),
@@ -766,8 +770,32 @@ class Hub:
                           guests=sum(1 for a in al if a['table'] == tb and a['kind'] == 'new_guest'))
                      for tb in tables]
         st = stats(resp)
-        missed = sum(1 for a in al if a['status'] == 'done' and a['kind'] != 'needs_clearing'
-                     and not a.get('arrived_at') and a['done_by'] == 'camera')
+
+        def bo_lo(a):
+            return (a['status'] == 'done' and a['kind'] != 'needs_clearing' and not a.get('arrived_at')
+                    and a['done_by'] == 'camera')
+
+        def toc_do(xs):
+            # tốc độ của một nhóm việc: việc đã có người nhận xếp theo mốc, cộng số việc không ai tới
+            return dict(**self._speed([(a['acked_at'] - a['created_at']) / 1000 for a in xs if a['acked_at']]),
+                        missed=sum(1 for a in xs if bo_lo(a)))
+
+        missed = sum(1 for a in al if bo_lo(a))
+        for row in per_table:
+            row.update(toc_do([a for a in al if a['table'] == row['table']]))
+        # diễn biến ca theo từng khoảng thời gian: bao nhiêu việc mỗi loại, phục vụ nhanh hay chậm
+        song = [a for a in al if a['status'] != 'cancelled']
+        timeline = None
+        if song:
+            t0, t1 = min(a['created_at'] for a in song) // 1000, max(t // 1000, 1)
+            step = next((b for b in self.BUCKETS_S if (t1 - t0) / b < 12), self.BUCKETS_S[-1])
+            t0 -= t0 % step                                # mốc tròn: 12:00, 12:05, ...
+            cot = [[] for _ in range(max(6, (t1 - t0) // step + 1))]
+            for a in song:
+                cot[(a['created_at'] // 1000 - t0) // step].append(a)
+            timeline = dict(step_s=step, points=[
+                dict(t=(t0 + i * step) * 1000, **{k: sum(1 for a in xs if a['kind'] == k) for k in TASK_KINDS},
+                     **toc_do(xs)) for i, xs in enumerate(cot)])
         speed = dict(**self._speed(resp), missed=missed, fast_s=self.FAST_S, slow_s=self.SLOW_S)
         return {'from': min((a['created_at'] for a in al), default=t), 'to': t, **dict(
                     counts={k: sum(1 for a in al if a['kind'] == k) for k in TASK_KINDS},
@@ -776,6 +804,7 @@ class Hub:
                     unverified=sum(1 for a in al if a['verify']['state'] == 'unverified'),
                     response_s=st, speed=speed, done_s={k: v for k, v in stats(done).items() if k != 'p90'},
                     escalated=sum(1 for a in al if a['escalated']), per_staff=per_staff, per_table=per_table,
+                    timeline=timeline,
                     # thời gian phản hồi do camera đo (nhân viên có mặt ở bàn), không cần ai bấm nút
                     arrived=sum(1 for a in al if a.get('arrived_at')),
                     no_arrival=missed)}

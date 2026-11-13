@@ -177,6 +177,16 @@ class DieuPhoi(unittest.TestCase):
         self.assertEqual((sp['slow'], sp['missed']), (0, 0))
         lan = next(x for x in r['per_staff'] if x['id'] == 'lan')
         self.assertEqual(lan['fast'] + lan['ok'] + lan['slow'], lan['acked'])
+        self.assertEqual(sum(lan['kinds'].values()), lan['acked'])
+        # diễn biến theo thời gian: mọi việc chưa huỷ nằm trong một cột, tốc độ từng cột cộng lại bằng cả ca
+        tl = r['timeline']
+        self.assertGreaterEqual(len(tl['points']), 6)
+        self.assertEqual(sum(p['call'] + p['needs_clearing'] + p['new_guest'] for p in tl['points']),
+                         sum(1 for x in hub.alerts.values() if x['status'] != 'cancelled'))
+        self.assertEqual(sum(p['fast'] for p in tl['points']), sp['fast'])
+        b1 = next(x for x in r['per_table'] if x['table'] == 'B1')
+        self.assertGreaterEqual(b1['fast'], 1)
+        self.assertEqual(b1['missed'], 0)
 
     def test_staff_arrival_does_not_finish_clearing(self):
         hub = self.make()

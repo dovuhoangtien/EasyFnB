@@ -11,6 +11,7 @@
 @import "./styles/legacy.css" layer(legacy);
 @import "./styles/app.css" layer(components);
 @import "./styles/motion.css" layer(components);
+@import "./styles/charts.css" layer(components);
 @import "tailwindcss/utilities.css" layer(utilities);
 
 :root {
@@ -23,6 +24,12 @@
   --fx-ok-text: var(--color-text-warning);
   --fx-slow-text: light-dark(#b24c0d, #ffb37e);
   --fx-missed-text: var(--color-text-error);
+
+  /* Màu của ba loại việc trên biểu đồ: khách mới, gọi phục vụ, cần dọn bàn.
+   * Đã kiểm bằng validate_palette của bộ dataviz trên nền thẻ sáng và nền thẻ tối. */
+  --fx-k-guest: light-dark(#2a78d6, #3987e5);
+  --fx-k-call: light-dark(#e87ba4, #d55181);
+  --fx-k-clear: light-dark(#6250d6, #9085e9);
 }
 
 /* Chữ: Be Vietnam Pro hiện dấu tiếng Việt đẹp hơn phông mặc định của theme */
