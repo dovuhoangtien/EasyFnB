@@ -136,7 +136,8 @@ interface State {
 ## Reading
 
 - `GET /api/state` → `State`
-- `GET /api/info` → `{lan_ip: string | null, gemini: boolean, provider: string, model: string | null}`. `lan_ip` is the server's Wi-Fi address (null on Cloud Run), used to build staff phone links when the manager opened the app via localhost. `gemini` means "an LLM is enabled"; `provider` is the display name (`Gemini` or `kie.ai`).
+- `GET /api/manifest/nv/{id}` → Web App Manifest (`application/manifest+json`) for one staff member: `start_url` is `/nv/{id}`, `display` is `standalone`. The staff page points `<link rel="manifest">` here so "Add to Home Screen" opens that person's own app. 404 if the id is not in the staff list.
+- `GET /api/info` → `{lan_ip: string | null, https_port: number | null, gemini: boolean, provider: string, model: string | null}`. `lan_ip` is the server's Wi-Fi address (null on Cloud Run), used to build staff phone links when the manager opened the app via localhost. `https_port` is set only when the server runs with `--https`; Settings uses it for the phone-camera QR code (phones block the camera on plain http). `gemini` means "an LLM is enabled"; `provider` is the display name (`Gemini` or `kie.ai`).
 - `GET /api/stream` → Server-Sent Events. Optional query `staff=<id>` marks that staff member online
   while connected. Event names and `data` (JSON):
   - `snapshot` → `State` (sent first on every connect/reconnect)

@@ -21,6 +21,7 @@ import os
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib.parse import quote
 
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -118,7 +119,8 @@ def tro_ly_engine():
 async def info():
     """Tình trạng các phần của hệ thống, cho bảng "Hệ thống" trên thanh trên cùng và trang Cài đặt.
     lan_ip: địa chỉ wifi của máy chủ, để đưa link cho điện thoại (localhost thì điện thoại không mở được)."""
-    return dict(lan_ip=None if CLOUD else lan_ip(), gemini=gemini.enabled, provider=gemini.ten,
+    return dict(lan_ip=None if CLOUD else lan_ip(), https_port=int(os.environ.get('HTTPS_PORT') or 0) or None,
+                gemini=gemini.enabled, provider=gemini.ten,
                 model=gemini.model if gemini.enabled else None,
                 key_name='KIE_API_KEY' if isinstance(gemini, Llm) else 'GEMINI_API_KEY',
                 assistant=tro_ly_engine(), assistant_model=tro_ly.model if tro_ly_engine() == 'adk' else None,
@@ -249,6 +251,22 @@ async def manual(body: dict = Body(...)):
         return hub.manual(body.get('kind'), body.get('table'), body.get('camera'))
     except ValueError:
         raise HTTPException(400, 'kind phải là call, needs_clearing hoặc new_guest')
+
+
+@app.get('/api/manifest/nv/{sid}')
+async def staff_manifest(sid: str):
+    """Manifest riêng cho từng nhân viên: "Thêm vào màn hình chính" xong, chạm icon là vào đúng app của người đó."""
+    s = next((s for s in hub.staff if s['id'] == sid), None)
+    if s is None:
+        raise HTTPException(404, f'không có nhân viên {sid}')
+    start = f'/nv/{quote(sid, safe="")}'
+    icons = [dict(src='/icon-192.png', sizes='192x192', type='image/png'),
+             dict(src='/icon-512.png', sizes='512x512', type='image/png'),
+             dict(src='/icon-maskable-512.png', sizes='512x512', type='image/png', purpose='maskable')]
+    return JSONResponse(dict(id=start, name=f"Easy FnB, {s['name']}", short_name=s['name'], lang='vi',
+                             start_url=start, scope='/nv', display='standalone', orientation='portrait',
+                             background_color='#0a0a0a', theme_color='#0a0a0a', icons=icons),
+                        media_type='application/manifest+json', headers={'Cache-Control': 'no-cache'})
 
 
 # ------------------------------------------------------------------ cài đặt

@@ -99,6 +99,8 @@ export const getReport = () => request<Report>('GET', '/api/report');
 /** Tình trạng các phần của hệ thống (máy chủ, AI, giọng đọc) */
 export interface Info {
   lan_ip: string | null;
+  /** cổng https của máy chủ (chỉ khi chạy với --https), để camera điện thoại dùng được */
+  https_port?: number | null;
   gemini: boolean;
   provider?: string;
   model: string | null;

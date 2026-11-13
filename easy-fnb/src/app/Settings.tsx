@@ -22,6 +22,7 @@ import { live, useLive, useServerNow } from '../live/store';
 import { CAMERA_AGENT_CMD, cameraLive, ROLE_LABEL, slugify } from '../live/text';
 import { ROLES, type Role, type SettingsPatch, type Staff, type StaffInput, type StaffPhoto } from '../live/types';
 import { ZoneEditor } from '../live/ZoneEditor';
+import { QrCode } from './QrCode';
 import { SectionTitle, voiceText } from './ui';
 
 const TABS = [
@@ -240,12 +241,64 @@ function CameraCard({ info }: { info: Info | null }) {
           Để nối một camera, chạy lệnh này trên máy có camera, trong thư mục <code>vision-test</code>. Địa chỉ máy chủ đã điền sẵn.
         </Text>
         <CopyBlock text={cmd} label="Chép lệnh" />
-        <Text type="supporting" color="secondary" as="p">
-          Hoặc dùng điện thoại làm camera: mở trang <code>/phat</code> trên điện thoại.
-          {info?.edge_key ? ' Máy chủ đang yêu cầu khoá cho máy camera (EDGE_KEY).' : ''}
-        </Text>
+        <PhoneCameraQr info={info} />
+        {info?.edge_key && (
+          <Text type="supporting" color="secondary" as="p">
+            Máy chủ đang yêu cầu khoá cho máy camera chạy lệnh (EDGE_KEY).
+          </Text>
+        )}
       </div>
     </Card>
+  );
+}
+
+const PHONE_CAMS = ['cam1', 'cam2', 'cam3', 'cam4'];
+
+/** Địa chỉ trang /phat cho một camera. Camera điện thoại bắt buộc https: trên Cloud Run đã có sẵn, chạy ở quán thì cần cổng https của máy chủ. */
+function phoneCameraUrl(info: Info | null, cam: string) {
+  const path = `/phat?cam=${encodeURIComponent(cam)}`;
+  if (!LOCAL.has(location.hostname)) {
+    // mở dashboard bằng địa chỉ wifi qua http mà máy chủ có cổng https: mã QR phải trỏ sang cổng https đó
+    if (location.protocol !== 'https:' && info?.https_port) return { url: `https://${location.hostname}:${info.https_port}${path}`, secure: true };
+    return { url: `${location.origin}${path}`, secure: location.protocol === 'https:' };
+  }
+  const host = info?.lan_ip ?? 'localhost';
+  if (info?.https_port) return { url: `https://${host}:${info.https_port}${path}`, secure: true };
+  const port = import.meta.env.DEV ? '8080' : location.port || '80';
+  return { url: `http://${host}:${port}${path}`, secure: false };
+}
+
+function PhoneCameraQr({ info }: { info: Info | null }) {
+  const [cam, setCam] = useState(PHONE_CAMS[0]);
+  const { url, secure } = phoneCameraUrl(info, cam);
+  return (
+    <div className="flex flex-col gap-3">
+      <Text type="label" weight="semibold" as="p">
+        Dùng điện thoại làm camera
+      </Text>
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Chọn camera">
+        {PHONE_CAMS.map((c) => (
+          <Button key={c} label={c} size="sm" variant={c === cam ? 'primary' : 'secondary'} onClick={() => setCam(c)} />
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-4">
+        <QrCode value={url} size={150} label={`Mã QR mở điện thoại làm camera ${cam}`} />
+        <div className="flex min-w-0 flex-1 flex-col gap-2" style={{ minWidth: 200 }}>
+          <Text type="supporting" color="secondary" as="p">
+            Quét mã bằng điện thoại sẽ dùng, rồi bấm “Bắt đầu phát”. Dựng điện thoại cố định nhìn xuống các bàn và cắm sạc.
+          </Text>
+          <CopyBlock text={url} label="Chép link camera" />
+        </div>
+      </div>
+      {!secure && (
+        <Banner
+          status="warning"
+          title="Link này là http nên điện thoại sẽ chặn camera"
+          description="Chạy máy chủ với --https (cổng 8443, trình duyệt sẽ cảnh báo chứng chỉ tự ký), hoặc dùng bản đã triển khai trên Cloud Run."
+          collapsible={false}
+        />
+      )}
+    </div>
   );
 }
 
