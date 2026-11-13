@@ -1,6 +1,8 @@
 """Gọi Gemini qua REST (generateContent): kiểm tra ảnh cắt, trả lời câu hỏi về ca, viết tóm tắt ca.
 
 Đặt biến môi trường GEMINI_API_KEY (không bao giờ ghi khoá vào code). Đổi model bằng GEMINI_MODEL.
+Đặt GEMINI_VERIFY_MODEL=gemini-decision-1 thì việc kiểm tra ảnh dùng Gemini Decision (Decisions API):
+hỏi vài câu có/không, nhận xác suất, quyết định theo ngưỡng. Xem DECISION_QUESTIONS và _decide_probs().
 
 Thử nhanh khoá và model:
     python -m server.gemini                 # gọi một câu chữ
@@ -94,6 +96,53 @@ ANSWER_SCHEMA = {'type': 'object', 'properties': {
         'alert_id': {'type': 'string'}, 'table': {'type': 'string'}, 'time': {'type': 'string'}}}}},
     'required': ['answer']}
 
+# ---------------------------------------------------------------- Gemini Decision (Decisions API)
+# Đặt GEMINI_VERIFY_MODEL=gemini-decision-1 thì việc kiểm tra ảnh đi đường này thay cho generateContent:
+# gửi ảnh kèm vài câu hỏi có/không, nhận về xác suất "có" (0,01 đến 0,99) cho từng câu, không có chữ.
+# Trợ lý và tóm tắt ca vẫn dùng GEMINI_MODEL.
+DECISIONS_URL = 'https://generativelanguage.googleapis.com/v1beta/decisions'
+P_YES, P_NO = 0.7, 0.3          # từ P_YES trở lên coi là "có", từ P_NO trở xuống coi là "không"; ở giữa là chưa chắc
+Q_CLEAR = 'Ảnh có đủ sáng, đủ nét và không bị che khuất để trả lời chắc chắn các câu hỏi còn lại không?'
+DECISION_QUESTIONS = {
+    'call': {
+        'hand_above_head': dict(
+            instructions='Người cần xét có đang giơ tay ngang đầu hoặc cao hơn đầu, hướng ra quán để gọi nhân viên không?',
+            criteria=dict(true_description='Giơ tay để gọi nhân viên.',
+                          false_description=f'Không giơ tay, hoặc chỉ là: {LOAI_TRU_GOI}.')),
+        'held_or_waved_across_frames': dict(
+            instructions='Tay giơ có được giữ hoặc vẫy qua ít nhất 2 trong 4 khung của ảnh 1 không?'),
+        'wearing_staff_uniform': dict(
+            instructions='Người cần xét có phải nhân viên của quán (mặc đồng phục, bưng khay) không?'),
+        'image_clear': dict(instructions=Q_CLEAR),
+    },
+    'needs_clearing': {
+        'used_items_left': dict(
+            instructions='Trên bàn cần xét có còn chén đĩa, ly đã dùng, thức ăn thừa hoặc giấy bẩn không? '
+                         f'Đồ của quán không tính: {DO_CUA_QUAN}.'),
+        'people_at_table': dict(instructions='Có người đang ngồi ở bàn cần xét không?'),
+        'personal_belongings_present': dict(
+            instructions='Có túi, điện thoại, áo khoác hoặc ví của khách còn trên bàn cần xét hoặc ghế của bàn đó không?'),
+        'image_clear': dict(instructions=Q_CLEAR),
+    },
+}
+# Câu mô tả ảnh gửi kèm: (loại việc, có gói ảnh đầy đủ hay chỉ một ảnh cắt)
+DECISION_CONTEXT = {
+    ('call', True): 'Camera quán ăn báo có khách gọi phục vụ. Ảnh 1: 4 khung trong 1,5 giây (trái sang phải, '
+                    'trên xuống dưới), cắt quanh MỘT người. Ảnh 2: toàn cảnh, khung đỏ là người đó. '
+                    'Chỉ xét người trong khung đỏ.',
+    ('call', False): 'Camera quán ăn báo có khách gọi phục vụ. Chỉ có 1 ảnh cắt quanh MỘT người, '
+                     'người cần xét ở giữa ảnh.',
+    ('needs_clearing', True): 'Camera quán ăn báo bàn {ban} cần dọn. Ảnh 1: 4 khung trong 1,5 giây cắt quanh bàn đó. '
+                              'Ảnh 2: toàn cảnh, khung đỏ là bàn đó.{ref} Chỉ xét bàn trong khung đỏ.',
+    ('needs_clearing', False): 'Camera quán ăn báo bàn {ban} cần dọn. Chỉ có 1 ảnh cắt quanh bàn đó.',
+}
+Q_VI = {'hand_above_head': 'Giơ tay gọi', 'held_or_waved_across_frames': 'Giữ tay qua nhiều khung',
+        'wearing_staff_uniform': 'Là nhân viên', 'used_items_left': 'Còn đồ đã dùng',
+        'people_at_table': 'Còn người ngồi', 'personal_belongings_present': 'Còn đồ cá nhân',
+        'image_clear': 'Ảnh đủ rõ'}
+DECISION_VERDICT = {'call': {'confirm': 'GOI', 'reject': 'KHONG_GOI'},
+                    'needs_clearing': {'confirm': 'CAN_DON', 'reject': 'SACH'}}
+
 
 class GeminiError(RuntimeError):
     pass
@@ -105,6 +154,8 @@ class Gemini:
     def __init__(self):
         self.key = os.environ.get('GEMINI_API_KEY', '').strip()
         self.model = os.environ.get('GEMINI_MODEL', 'gemini-3.5-flash-lite')
+        # model riêng cho việc kiểm tra ảnh; tên bắt đầu bằng "gemini-decision" thì gọi Decisions API
+        self.verify_model = os.environ.get('GEMINI_VERIFY_MODEL', '').strip()
         self.client = httpx.AsyncClient(timeout=httpx.Timeout(25.0, connect=10.0))
         # trường nào API không nhận thì bỏ đi ở các lần sau (đổi phiên bản API vẫn chạy được)
         self.drop = set()
@@ -112,6 +163,11 @@ class Gemini:
     @property
     def enabled(self):
         return bool(self.key)
+
+    @property
+    def decision(self):
+        """True khi việc kiểm tra ảnh dùng Gemini Decision (hỏi có/không, nhận xác suất)."""
+        return self.verify_model.startswith('gemini-decision')
 
     def _body(self, parts, schema, image):
         gc = {}
@@ -160,6 +216,8 @@ class Gemini:
         Trả JSON của Gemini (verdict, checklist, image_quality, ...) kèm ms. Quyết định nằm ở decide()."""
         if isinstance(images, (bytes, bytearray)):
             images = [{'role': 'crop', 'jpeg': bytes(images)}]
+        if self.decision:
+            return await self._verify_decision(kind, images, table)
         t0 = time.perf_counter()
         package = any(im['role'] == 'strip' for im in images)
         prompt = (VERIFY_PROMPT if package else VERIFY_PROMPT_ONE)[kind]
@@ -174,6 +232,42 @@ class Gemini:
         d['reason'] = str(d.get('reason') or '')[:120]
         d['ms'] = int((time.perf_counter() - t0) * 1000)
         return d
+
+    async def _verify_decision(self, kind, images, table):
+        """Hỏi Gemini Decision các câu có/không của loại việc này trong một lượt. Trả cùng dạng với verify()
+        (verdict, checklist, image_quality, reason, ms) kèm `probs` là xác suất "có" của từng câu."""
+        if not self.enabled:
+            raise GeminiError('chưa đặt GEMINI_API_KEY')
+        t0 = time.perf_counter()
+        package = any(im['role'] == 'strip' for im in images)
+        has_ref = package and any(im['role'] == 'clean_ref' for im in images)
+        text = DECISION_CONTEXT[(kind, package)].format(ban=table or '', ref=REF_SENTENCE if has_ref else '')
+        blocks = [{'type': 'text', 'text': text}]
+        for im in images:
+            blocks.append({'type': 'image', 'mime_type': 'image/jpeg', 'data': base64.b64encode(im['jpeg']).decode(),
+                           'resolution': ROLE_RES.get(im['role'], 'LOW').lower()})
+        questions = {k: dict(type='noul', **q) for k, q in DECISION_QUESTIONS[kind].items()
+                     if package or k != 'held_or_waved_across_frames'}     # một ảnh thì không hỏi "qua nhiều khung"
+        r = await self.client.post(DECISIONS_URL, headers={'x-goog-api-key': self.key},
+                                   json={'model': self.verify_model, 'input': blocks, 'questions': questions})
+        if r.status_code != 200:
+            raise GeminiError(f'HTTP {r.status_code}: {r.text[:400]}')
+        resp = r.json()
+        block = (resp.get('prompt_feedback') or {}).get('block_reason')
+        if block:
+            raise GeminiError(f'Gemini Decision từ chối ảnh ({block})')
+        answers = resp.get('answers') or {}
+        probs = {k: float(v['noul']) for k, v in answers.items()
+                 if k in questions and isinstance(v, dict) and isinstance(v.get('noul'), (int, float))}
+        if not probs:
+            raise GeminiError('Gemini Decision không trả câu trả lời nào')
+        action, _, key = _decide_probs(kind, probs)
+        return dict(probs=probs, model=self.verify_model,
+                    verdict=DECISION_VERDICT[kind].get(action, 'KHONG_CHAC'),
+                    checklist={k: p >= 0.5 for k, p in probs.items() if k != 'image_clear'},
+                    image_quality='ok' if probs.get('image_clear', 1.0) >= 0.5 else 'mo',
+                    reason=f'{Q_VI[key]}: {probs[key]:.0%}' if key in probs else 'thiếu câu trả lời',
+                    ms=int((time.perf_counter() - t0) * 1000))
 
     async def answer(self, question, context):
         prompt = (
@@ -197,8 +291,10 @@ def decide(kind, d):
     """Luật quyết định từ JSON của Gemini. Trả (action, path); action: confirm | reject | unverified.
     Gọi phục vụ: chỉ rút khi KHONG_GOI + ảnh ok + checklist có lý do bác. Cần dọn: chỉ giao việc khi
     CAN_DON + ảnh ok + còn đồ đã dùng + không người + không đồ cá nhân; chỉ huỷ khi SACH + ok + checklist khớp.
-    Không dùng confidence."""
-    v, q, c = d.get('verdict'), d.get('image_quality'), d.get('checklist') or {}
+    Không dùng confidence. Kết quả của Gemini Decision (có `probs`) thì quyết định theo ngưỡng xác suất."""
+    if d.get('probs'):
+        return _decide_probs(kind, d['probs'])[:2]
+    v, q, c =d.get('verdict'), d.get('image_quality'), d.get('checklist') or {}
     if kind == 'call':
         if v == 'GOI':
             return 'confirm', 'confirmed'
@@ -222,6 +318,45 @@ def decide(kind, d):
             return 'reject', 'rejected'
         return 'unverified', 'inconsistent'
     return 'unverified', 'uncertain'
+
+
+def _decide_probs(kind, p):
+    """Luật quyết định theo xác suất "có" của từng câu hỏi. Trả (action, path, câu hỏi quyết định).
+    Cùng tinh thần với decide(): chỉ bác khi khá chắc là nhầm; lưng chừng hay ảnh kém thì vẫn báo nhân viên."""
+    if p.get('image_clear', 1.0) < 0.5:
+        return 'unverified', 'poor_image', 'image_clear'
+    if kind == 'call':
+        hand, held, staff = p.get('hand_above_head'), p.get('held_or_waved_across_frames'), \
+            p.get('wearing_staff_uniform', 0.0)
+        if hand is None:
+            return 'unverified', 'uncertain', 'hand_above_head'
+        if staff >= P_YES:
+            return 'reject', 'rejected', 'wearing_staff_uniform'
+        if hand <= P_NO:
+            return 'reject', 'rejected', 'hand_above_head'
+        if held is not None and held <= P_NO:
+            return 'reject', 'rejected', 'held_or_waved_across_frames'
+        if hand < P_YES:
+            return 'unverified', 'uncertain', 'hand_above_head'
+        if staff >= 0.5:
+            return 'unverified', 'uncertain', 'wearing_staff_uniform'
+        if held is not None and held < 0.5:
+            return 'unverified', 'uncertain', 'held_or_waved_across_frames'
+        return 'confirm', 'confirmed', 'hand_above_head'
+    used, people, bel = p.get('used_items_left'), p.get('people_at_table'), p.get('personal_belongings_present', 0.0)
+    if used is None or people is None:
+        return 'unverified', 'uncertain', 'used_items_left' if used is None else 'people_at_table'
+    if people >= P_YES:
+        return 'unverified', 'inconsistent', 'people_at_table'
+    if people > P_NO:
+        return 'unverified', 'uncertain', 'people_at_table'
+    if used <= P_NO:
+        return 'reject', 'rejected', 'used_items_left'
+    if used < P_YES:
+        return 'unverified', 'uncertain', 'used_items_left'
+    if bel >= 0.5:
+        return 'unverified', 'belongings', 'personal_belongings_present'
+    return 'confirm', 'confirmed', 'used_items_left'
 
 
 def _text(resp):
@@ -252,7 +387,7 @@ async def _main():
     g = Gemini()
     if not g.enabled:
         sys.exit('Chưa đặt GEMINI_API_KEY. Ví dụ (PowerShell): $env:GEMINI_API_KEY = "<khoá của bạn>"')
-    print('model:', g.model)
+    print('model:', g.model, '| kiểm tra ảnh:', g.verify_model or g.model)
     if len(sys.argv) >= 2:
         kind = sys.argv[2] if len(sys.argv) > 2 else 'call'
         r = await g.verify(kind, open(sys.argv[1], 'rb').read())

@@ -439,6 +439,18 @@ def ok_json(d):
     return httpx.Response(200, json={'candidates': [{'content': {'parts': [{'text': json.dumps(d)}]}}]})
 
 
+def decision_gemini(handler):
+    g = real_gemini(handler)
+    g.verify_model = 'gemini-decision-1'
+    return g
+
+
+def decision_json(**probs):
+    return httpx.Response(200, json={
+        'answers': {k: {'type': 'noul', 'noul': p, 'confidence': 0.9} for k, p in probs.items()},
+        'usage': {'total_input_tokens': 900, 'total_output_tokens': 0, 'total_tokens': 900}})
+
+
 class TestClient(unittest.IsolatedAsyncioTestCase):
     async def test_body_and_parse(self):
         seen = []
@@ -500,6 +512,93 @@ class TestClient(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(seen[1]['generationConfig']['mediaResolution'], 'MEDIA_RESOLUTION_MEDIUM')
         r = await g.verify('call', IMAGES)                    # lần sau gửi thẳng dạng đã lui, không thử lại
         self.assertEqual(len(seen), 3)
+
+    # ------------------------------------------------------------ Gemini Decision (Decisions API)
+    async def test_decision_request_and_confirm(self):
+        seen = []
+
+        def h(req):
+            seen.append((str(req.url), json.loads(req.content)))
+            return decision_json(hand_above_head=0.93, held_or_waved_across_frames=0.88,
+                                 wearing_staff_uniform=0.04, image_clear=0.97)
+        g = decision_gemini(h)
+        r = await g.verify('call', IMAGES)
+        url, body = seen[0]
+        self.assertTrue(url.endswith('/v1beta/decisions'))
+        self.assertEqual(sorted(body), ['input', 'model', 'questions'])     # API chỉ nhận đúng ba trường này
+        self.assertEqual(body['model'], 'gemini-decision-1')
+        self.assertEqual([(b['type'], b.get('resolution')) for b in body['input']],
+                         [('text', None), ('image', 'medium'), ('image', 'low')])
+        self.assertEqual(set(body['questions']), {'hand_above_head', 'held_or_waved_across_frames',
+                                                  'wearing_staff_uniform', 'image_clear'})
+        self.assertTrue(all(q['type'] == 'noul' for q in body['questions'].values()))
+        self.assertEqual((r['verdict'], r['image_quality'], r['model']), ('GOI', 'ok', 'gemini-decision-1'))
+        self.assertEqual(decide('call', r), ('confirm', 'confirmed'))
+
+    async def test_decision_single_crop_skips_frames_question(self):
+        seen = []
+
+        def h(req):
+            seen.append(json.loads(req.content))
+            return decision_json(used_items_left=0.9, people_at_table=0.05,
+                                 personal_belongings_present=0.1, image_clear=0.9)
+        g = decision_gemini(h)
+        r = await g.verify('needs_clearing', JPEG, 'B2')
+        self.assertIn('bàn B2', seen[0]['input'][0]['text'])
+        self.assertEqual(decide('needs_clearing', r), ('confirm', 'confirmed'))
+        await g.verify('call', JPEG)
+        self.assertNotIn('held_or_waved_across_frames', seen[1]['questions'])
+
+    def test_decision_rules(self):
+        call = dict(hand_above_head=0.9, held_or_waved_across_frames=0.9, wearing_staff_uniform=0.1, image_clear=0.9)
+        table = dict(used_items_left=0.9, people_at_table=0.1, personal_belongings_present=0.1, image_clear=0.9)
+        cases = [
+            ('call', {}, ('confirm', 'confirmed')),
+            ('call', dict(hand_above_head=0.12), ('reject', 'rejected')),
+            ('call', dict(wearing_staff_uniform=0.85), ('reject', 'rejected')),
+            ('call', dict(held_or_waved_across_frames=0.2), ('reject', 'rejected')),
+            ('call', dict(hand_above_head=0.5), ('unverified', 'uncertain')),          # lưng chừng: vẫn báo
+            ('call', dict(hand_above_head=0.1, image_clear=0.3), ('unverified', 'poor_image')),  # ảnh kém: không bác
+            ('needs_clearing', {}, ('confirm', 'confirmed')),
+            ('needs_clearing', dict(used_items_left=0.1), ('reject', 'rejected')),
+            ('needs_clearing', dict(personal_belongings_present=0.8), ('unverified', 'belongings')),
+            ('needs_clearing', dict(people_at_table=0.9), ('unverified', 'inconsistent')),
+            ('needs_clearing', dict(used_items_left=0.5), ('unverified', 'uncertain')),
+        ]
+        for kind, change, want in cases:
+            probs = dict(call if kind == 'call' else table, **change)
+            self.assertEqual(decide(kind, dict(probs=probs)), want, (kind, change))
+
+    async def test_decision_reject_through_hub(self):
+        def h(req):
+            return decision_json(hand_above_head=0.12, held_or_waved_across_frames=0.2,
+                                 wearing_staff_uniform=0.05, image_clear=0.95)
+        g = decision_gemini(h)
+        with tempfile.TemporaryDirectory() as d:
+            hub = Hub(Path(d), g, defaults=dict(hold_until_verified=['call', 'needs_clearing']))
+            aid = hub.edge_event(ev())
+            self.assertEqual(hub.alerts[aid]['status'], 'verifying')     # chờ hỏi xong mới báo nhân viên
+            await wait_verified(hub, aid)
+            a = hub.alerts[aid]
+            self.assertEqual((a['status'], a['verify']['state']), ('cancelled', 'rejected'))
+            self.assertEqual(a['verify']['reason'], 'Giơ tay gọi: 12%')
+            self.assertEqual(a['verify']['model'], 'gemini-decision-1')
+            self.assertEqual(a['verify']['probs']['hand_above_head'], 0.12)
+
+    async def test_decision_blocked_or_error_keeps_alert(self):
+        replies = [httpx.Response(200, json={'answers': {}, 'prompt_feedback': {'block_reason': 'image_safety'}}),
+                   httpx.Response(429, text='quota')]
+
+        def h(req):
+            return replies.pop(0)
+        g = decision_gemini(h)
+        with tempfile.TemporaryDirectory() as d:
+            hub = Hub(Path(d), g, defaults=dict(hold_until_verified=['call']))
+            for _ in range(2):
+                aid = hub.edge_event(ev(table=f'B{len(replies)}'))
+                await wait_verified(hub, aid)
+                a = hub.alerts[aid]
+                self.assertEqual((a['status'], a['verify']['path']), ('open', 'error'))
 
     async def test_real_client_hang_through_hub(self):
         async def h(req):

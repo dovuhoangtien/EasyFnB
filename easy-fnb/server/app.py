@@ -49,6 +49,9 @@ gemini = Llm() if os.environ.get('KIE_API_KEY', '').strip() else Gemini()
 if isinstance(gemini, Llm):
     hub = Hub(DATA, gemini, verify_timeout_s=100.0,
               defaults=dict(verify_kinds=[], hold_until_verified=[]))
+elif gemini.decision:
+    # Gemini Decision trả lời trong vài phần mười giây, nên mọi loại việc đều chờ kiểm tra xong mới báo nhân viên.
+    hub = Hub(DATA, gemini, defaults=dict(hold_until_verified=['call', 'needs_clearing']))
 else:
     hub = Hub(DATA, gemini)
 tts = Tts(DATA / 'tts')
@@ -62,7 +65,8 @@ async def lifespan(_app):
     if tro_ly.adk_wanted:            # nạp google-adk sẵn (vài giây) để câu hỏi đầu tiên không phải chờ
         asyncio.create_task(asyncio.to_thread(tro_ly.load_adk))
     khoa = 'KIE_API_KEY' if isinstance(gemini, Llm) else 'GEMINI_API_KEY'
-    hub.add_log('system', 'Máy chủ khởi động' + (f', {gemini.ten} bật ({gemini.model})' if gemini.enabled
+    kiem = f', kiểm tra ảnh bằng {gemini.verify_model}' if getattr(gemini, 'decision', False) else ''
+    hub.add_log('system', 'Máy chủ khởi động' + (f', {gemini.ten} bật ({gemini.model}{kiem})' if gemini.enabled
                                                   else f', {gemini.ten} tắt (chưa có {khoa})'))
     yield
     task.cancel()

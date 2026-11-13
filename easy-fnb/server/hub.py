@@ -551,6 +551,8 @@ class Hub:
         action, path = decide(a['kind'], r)
         a['verify'].update(verdict=r.get('verdict'), image_quality=r.get('image_quality'),
                            checklist=r.get('checklist'), reason=r.get('reason'), ms=r.get('ms'), path=path)
+        if r.get('probs'):                        # Gemini Decision: giữ xác suất của từng câu hỏi và tên model
+            a['verify'].update(probs=r['probs'], model=r.get('model') or a['verify']['model'])
         if action == 'unverified':
             return self._unverified(a, path, r.get('reason'))
         if action == 'confirm':
