@@ -1469,6 +1469,7 @@ textarea.input {
   color: var(--color-ink-2);
 }
 
+.visually-hidden,
 .visually-hidden-focusable:not(:focus-visible) {
   position: absolute;
   width: 1px;
@@ -2413,6 +2414,26 @@ textarea.input {
 
 .ez-draft {
   pointer-events: none;
+}
+
+.ez-table[data-selected] polygon {
+  cursor: move;
+}
+
+.ez-box {
+  pointer-events: none;
+  fill: color-mix(in oklab, var(--legacy-accent) 12%, transparent);
+  stroke: var(--legacy-accent);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+
+.zone-stage > svg {
+  touch-action: none;
+}
+
+.zone-renumber {
+  align-self: flex-start;
 }
 
 .ez-draft polyline {

@@ -167,7 +167,17 @@ interface State {
 - `GET /api/zones?camera=cam1` → `CameraZones` (empty `tables` if none)
 - `PUT /api/zones` body `CameraZones` → `CameraZones`
 - `GET /api/staff` → `Staff[]`
-- `PUT /api/staff` body `{ "staff": [{ "id", "name", "role" }] }` → `Staff[]`
+- `POST /api/zones/suggest` body `{ camera, frame_w, frame_h, box?: [x1,y1,x2,y2] }` → `{ frame_w, frame_h, tables: [{ polygon, score }] }`
+  The camera machine finds tables on its current frame (polygons in the camera's own frame size). With `box`
+  it looks only around that rough rectangle and returns at most one table. 409 if the camera is not
+  sending frames, 504 if it does not answer in 12 s.
+- `PUT /api/staff` body `{ "staff": [{ "id", "name", "role", "consent"? }] }` → `Staff[]`
+  `Staff` also carries `consent: boolean` and `photos: [{ id, kind: 'face'|'body', source: 'upload'|'camera' }]`.
+  Photos are kept when a person is edited and deleted when the person is removed.
+- `POST /api/staff/{id}/photos?kind=face|body` body: raw JPEG (max 3 MB, max 8 photos per person) → `Staff[]`
+- `POST /api/staff/{id}/photos/camera` body `{ camera }` → `Staff[]` (the camera crops the person nearest the
+  middle of its frame, saved as a `body` photo)
+- `GET /api/staff/{id}/photos/{photo}.jpg`, `DELETE /api/staff/{id}/photos/{photo}` → `Staff[]`
 - `PUT /api/settings` body `Partial<Pick<Settings, 'verify_kinds'|'hold_until_verified'|'escalate_s'|'dedup_s'>>` → `Settings`
 - `POST /api/reset` → `{}` clears alerts, log, table states, crops (keeps zones, staff, settings)
 
@@ -244,6 +254,11 @@ All edge requests send header `X-Edge-Key: <EDGE_KEY>` when the server has `EDGE
   (`Content-Type: image/jpeg`) → `{ ok: true }`
 - `POST /api/edge/tables` JSON `{ camera, tables: [{ id, state: 'trong'|'co_khach'|'can_don'|null, people, dirty }] }`
   → `{ ok: true }` (edge sends ~1 per second; Vietnamese states are mapped to TableState.state)
+- `GET /api/edge/jobs?camera=cam1` → `{ jobs: [{ id, kind: 'find_tables'|'staff_photo', ... }] }` setup work the
+  web asked this camera to do; each job is handed out once (the edge polls every second).
+  `POST /api/edge/jobs/{id}` body = the result (`{ frame_w, frame_h, tables }`, `{ jpeg_b64 }` or `{ error }`).
+- `GET /api/edge/staff-refs` → `{ version, refs: [{ staff, name, id, kind, url }] }` photos of staff who agreed;
+  the edge re-reads them when `version` changes (only with `--nv-theo-anh`).
 - `GET /api/zones?camera=cam1` (same as above) — the edge loads table polygons at start.
   If the server has none and the edge has local zones, the edge `PUT`s its local zones.
 

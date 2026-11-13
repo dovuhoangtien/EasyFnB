@@ -3,11 +3,13 @@ import type {
   AlertKind,
   AssistantAnswer,
   CameraZones,
+  Point,
   Report,
   Settings,
   SettingsPatch,
   Staff,
   StaffInput,
+  StaffPhoto,
   State,
 } from './types';
 
@@ -135,6 +137,33 @@ export const createAlert = (kind: AlertKind, table: string | null, camera: strin
 // ---------- cài đặt ----------
 export const putZones = (zones: CameraZones) => request<CameraZones>('PUT', '/api/zones', zones);
 export const putStaff = (staff: StaffInput[]) => request<Staff[]>('PUT', '/api/staff', { staff });
+
+/** Bàn do camera tự tìm, theo cỡ khung hình của camera */
+export interface TableSuggestion {
+  frame_w: number;
+  frame_h: number;
+  tables: { polygon: Point[]; score: number }[];
+}
+/** Nhờ camera tìm bàn. Có `box` [x1, y1, x2, y2] thì chỉ tìm bàn trong vùng vừa khoanh. */
+export const suggestZones = (body: { camera: string; frame_w: number; frame_h: number; box?: number[] }) =>
+  request<TableSuggestion>('POST', '/api/zones/suggest', body);
+
+// ---------- ảnh nhận dạng nhân viên ----------
+const staffPath = (sid: string) => `/api/staff/${encodeURIComponent(sid)}/photos`;
+export const staffPhotoUrl = (sid: string, pid: string) => apiUrl(`${staffPath(sid)}/${encodeURIComponent(pid)}.jpg`);
+export const shootStaffPhoto = (sid: string, camera: string) => request<Staff[]>('POST', `${staffPath(sid)}/camera`, { camera });
+export const deleteStaffPhoto = (sid: string, pid: string) => request<Staff[]>('DELETE', `${staffPath(sid)}/${encodeURIComponent(pid)}`);
+export async function uploadStaffPhoto(sid: string, kind: StaffPhoto['kind'], jpeg: Blob): Promise<Staff[]> {
+  let res: Response;
+  try {
+    res = await fetch(apiUrl(`${staffPath(sid)}?kind=${kind}`), { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: jpeg });
+  } catch {
+    throw new ApiError('Không kết nối được máy chủ. Kiểm tra mạng và máy chủ Easy FnB.', 0);
+  }
+  if (!res.ok) throw new ApiError(await errorText(res), res.status);
+  return (await res.json()) as Staff[];
+}
+
 export const putSettings = (patch: SettingsPatch) => request<Settings>('PUT', '/api/settings', patch);
 export const resetShift = () => request<Record<string, never>>('POST', '/api/reset');
 

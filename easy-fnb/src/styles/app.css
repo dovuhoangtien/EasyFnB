@@ -356,6 +356,84 @@
   align-items: end;
 }
 
+.fx-staff-photos {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fx-photo-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fx-photo-strip li {
+  position: relative;
+  width: 64px;
+}
+
+.fx-photo-strip img {
+  display: block;
+  width: 64px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-element);
+  background: var(--color-background-muted);
+}
+
+.fx-photo-strip span {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.fx-photo-strip button {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+  color: var(--color-background-card);
+  cursor: pointer;
+}
+
+.fx-photo-strip button:focus-visible,
+.fx-file-btn:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.fx-file-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-emphasized);
+  border-radius: var(--radius-element);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.fx-file-btn[data-busy] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* Text của Astryx luôn là inline; khi dùng làm đoạn hay tiêu đề thì phải xuống dòng */
 p.astryx-text,
 div.astryx-text,

@@ -4,6 +4,7 @@ Mọi thay đổi chạy trong vòng lặp asyncio của server (một luồng),
 Mỗi thay đổi được phát cho mọi trình duyệt đang nghe /api/stream.
 """
 import asyncio
+import uuid
 import json
 import statistics
 import time
@@ -16,10 +17,13 @@ from .gemini import decide
 VN = timezone(timedelta(hours=7))
 
 EDGE_KIND = {'goi_phuc_vu': 'call', 'can_don': 'needs_clearing', 'khach_moi': 'new_guest',
-             'khach_roi': 'guest_left', 'da_don': 'cleared', 'nv_den': 'staff_arrived'}
+             'khach_roi': 'guest_left', 'da_don': 'cleared', 'nv_den': 'staff_arrived',
+             'nhin_quanh': 'looking'}
+LOOKING_SURE = 0.9      # camera chấm dưới mức này thì hỏi thêm Gemini Decision (nếu bật) trước khi nhắc
 TASK_KINDS = ('call', 'needs_clearing', 'new_guest')
 KIND_VI = {'call': 'gọi phục vụ', 'needs_clearing': 'cần dọn', 'new_guest': 'có khách mới',
-           'guest_left': 'khách đã rời', 'cleared': 'đã dọn xong', 'staff_arrived': 'nhân viên tới bàn'}
+           'guest_left': 'khách đã rời', 'cleared': 'đã dọn xong', 'staff_arrived': 'nhân viên tới bàn',
+           'looking': 'có khách nhìn quanh, có thể đang cần hỗ trợ'}
 ROLES = {'call': ['serve', 'clean'], 'needs_clearing': ['clean', 'serve'], 'new_guest': ['serve', 'clean']}
 PRIORITY = {'call': 1, 'needs_clearing': 2, 'new_guest': 2}
 TABLE_STATE = {'trong': 'empty', 'co_khach': 'occupied', 'can_don': 'needs_clearing', None: 'unknown'}
@@ -116,6 +120,7 @@ class Hub:
         self.data = Path(data_dir)
         (self.data / 'crops').mkdir(parents=True, exist_ok=True)
         (self.data / 'evidence').mkdir(parents=True, exist_ok=True)
+        (self.data / 'staff').mkdir(parents=True, exist_ok=True)
         self.verify_timeout_s = verify_timeout_s
         self.gemini = gemini
         self.settings = dict(DEFAULT_SETTINGS, **(defaults or {}))
@@ -141,6 +146,8 @@ class Hub:
         self.last_assigned = {}
         self._seq_alert = 0
         self._seq_log = 0
+        self.jobs = {}       # id -> việc nhờ máy camera làm (tìm bàn, chụp nhân viên), chờ máy camera lấy
+        self._seq_job = 0
 
     @property
     def ten(self):
@@ -241,11 +248,79 @@ class Hub:
         self.publish('staff', self.staff_view())
 
     def set_staff(self, items):
-        self.staff = [dict(id=str(s['id']), name=str(s['name']), role=s['role']) for s in items]
+        old = {s['id']: s for s in self.staff}
+        # ảnh nhận dạng không đi theo danh sách gửi lên: giữ của người còn lại, xoá của người bị bỏ
+        self.staff = [dict(id=str(s['id']), name=str(s['name']), role=s['role'],
+                           consent=bool(s.get('consent', old.get(str(s['id']), {}).get('consent', False))),
+                           photos=old.get(str(s['id']), {}).get('photos', []))
+                      for s in items]
+        keep = {s['id'] for s in self.staff}
+        for sid, s in old.items():
+            if sid not in keep:
+                for p in s.get('photos', []):
+                    self.staff_photo_file(sid, p['id']).unlink(missing_ok=True)
         self._save_config()
         view = self.staff_view()
         self.publish('staff', view)
         return view
+
+    # ------------------------------------------------------------ ảnh nhận dạng nhân viên
+    def staff_photo_file(self, sid, pid):
+        safe = ''.join(ch for ch in f'{sid}_{pid}' if ch.isalnum() or ch in '_-')
+        return self.data / 'staff' / f'{safe}.jpg'
+
+    def add_staff_photo(self, sid, kind, source):
+        """Ghi nhận một ảnh vừa lưu (tệp do app.py ghi). kind: face | body; source: upload | camera."""
+        s = next(x for x in self.staff if x['id'] == sid)
+        pid = kind[0] + uuid.uuid4().hex[:8]
+        s.setdefault('photos', []).append(dict(id=pid, kind=kind, source=source))
+        return pid
+
+    def staff_photos_changed(self):
+        self._save_config()
+        view = self.staff_view()
+        self.publish('staff', view)
+        return view
+
+    def del_staff_photo(self, sid, pid):
+        s = next(x for x in self.staff if x['id'] == sid)
+        s['photos'] = [p for p in s.get('photos', []) if p['id'] != pid]
+        self.staff_photo_file(sid, pid).unlink(missing_ok=True)
+        return self.staff_photos_changed()
+
+    def staff_refs(self):
+        """Danh sách ảnh để máy camera nhận nhân viên. Chỉ ảnh của người đã đồng ý."""
+        refs = [dict(staff=s['id'], name=s['name'], id=p['id'], kind=p['kind'],
+                     url=f"/api/staff/{s['id']}/photos/{p['id']}.jpg")
+                for s in self.staff if s.get('consent') for p in s.get('photos', [])]
+        return dict(version='|'.join(f"{r['staff']}/{r['id']}" for r in refs), refs=refs)
+
+    # ------------------------------------------------------------ việc nhờ máy camera làm
+    def new_job(self, camera, kind, **args):
+        """Tạo một việc cho máy camera (nó hỏi GET /api/edge/jobs mỗi giây). Trả (id, future kết quả)."""
+        self._seq_job += 1
+        jid = f'j{self._seq_job}'
+        fut = asyncio.get_running_loop().create_future()
+        self.jobs[jid] = dict(id=jid, camera=camera, kind=kind, args=args, taken=False, fut=fut)
+        return jid, fut
+
+    def take_jobs(self, camera):
+        out = []
+        for j in self.jobs.values():
+            if j['camera'] == camera and not j['taken']:
+                j['taken'] = True
+                out.append(dict(id=j['id'], kind=j['kind'], **j['args']))
+        return out
+
+    def job_result(self, jid, result):
+        j = self.jobs.pop(jid, None)
+        if j and not j['fut'].done():
+            j['fut'].set_result(result)
+        return j is not None
+
+    def camera_live(self, cid):
+        c = self.cameras.get(cid)
+        return bool(c and c['last_frame_at'] and now_ms() - c['last_frame_at'] < 8000)
 
     def _staff_name(self, sid):
         return next((s['name'] for s in self.staff if s['id'] == sid), sid or 'quản lý')
@@ -364,6 +439,13 @@ class Hub:
         table = ev.get('table')
         if kind == 'staff_arrived':
             return self.staff_arrived(table, cam)
+        if kind == 'looking':   # tín hiệu mềm: chỉ nhắc trên màn hình quản lý, không tạo việc, không đọc loa
+            crop = ev.get('crop_jpeg')
+            if crop and getattr(self.gemini, 'decision', False) and float(ev.get('score') or 0) < LOOKING_SURE:
+                asyncio.get_running_loop().create_task(self._looking_check(table, cam, crop))
+            else:
+                self._looking(table, cam)
+            return None
         if kind in ('guest_left', 'cleared'):
             self.add_log(kind, f'{where(table, cam)} {KIND_VI[kind]}', table, cam)
             if kind == 'cleared':
@@ -421,6 +503,23 @@ class Hub:
             asyncio.get_running_loop().create_task(self._verify(aid))
         return aid
 
+    def _looking(self, table, cam, note=''):
+        self.add_log('looking', f'{where(table, cam)}: {KIND_VI["looking"]}{note}', table, cam)
+        tb = self.tables.get(f'{cam}/{table}')
+        if tb:
+            tb['looking_at'] = now_ms()
+            self.publish('table', tb)
+
+    async def _looking_check(self, table, cam, crop):
+        """Camera chưa chắc: hỏi Gemini Decision. Chỉ bỏ khi Gemini khá chắc là không phải; lỗi hay lưng chừng vẫn nhắc."""
+        try:
+            r = await asyncio.wait_for(self.gemini.verify('looking', crop, table), self.verify_timeout_s)
+        except Exception:
+            return self._looking(table, cam)
+        action = decide('looking', r)[0]
+        if action != 'reject':
+            self._looking(table, cam, f' ({self.ten} xác nhận)' if action == 'confirm' else '')
+
     def staff_arrived(self, table, cam):
         """Camera thấy nhân viên đứng ở bàn: đó là lúc khách được phục vụ thật, nên tính thời gian phản hồi
         tới lúc này. Việc gọi và khách mới đóng luôn; việc dọn bàn chỉ ghi "đang dọn", vì phải chờ camera
@@ -447,6 +546,11 @@ class Hub:
             else:
                 self._close(a, 'done', 'camera', f'Camera thấy nhân viên tới bàn sau {a["arrived_s"]:.0f} giây')
             closed.append(a['id'])
+        if not closed:    # không có việc nào để đóng: vẫn ghi một dòng (camera gửi lại mỗi vài giây nên giãn 60 giây)
+            seen = self.__dict__.setdefault('_nv_log', {})
+            if t - seen.get((cam, table), 0) > 60_000:
+                seen[(cam, table)] = t
+                self.add_log('arrived', f'Nhân viên tới {where_l(table, cam)}', table, cam)
         return closed[0] if closed else None
 
     # ------------------------------------------------------------ gói ảnh xác minh (tới sau sự kiện ~1-1.5 s)

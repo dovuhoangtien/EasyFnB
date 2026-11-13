@@ -1,5 +1,5 @@
-import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
-import { BellRing, BrushCleaning, Check, Plus, TriangleAlert, UserCheck, Users, Video, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { BellRing, BrushCleaning, Check, Plus, TriangleAlert, UserCheck, Users, Video, Volume2, VolumeX, X } from 'lucide-react';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -18,6 +18,7 @@ import { LiveCamera } from '../live/LiveCamera';
 import { live, useLive, useServerNow } from '../live/store';
 import { ageText, shiftText, byName, byUrgency, cameraLive, clockTime, isActive, isClosed, KIND_LABEL, ROLE_LABEL, statusText, TABLE_STATE_LABEL, tableText, waitWord } from '../live/text';
 import { ALERT_KINDS, type Alert, type AlertKind, type Staff } from '../live/types';
+import { speak, unlockAudio } from '../live/voice';
 import { AnimatedList, Roll } from './motion';
 import { SpeedMeter } from './SpeedMeter';
 import { alertMedia, KindBadge, SectionTitle, Shot } from './ui';
@@ -26,6 +27,20 @@ import { alertMedia, KindBadge, SectionTitle, Shot } from './ui';
 const lowerFirst = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
 /** Việc vừa tới trong khoảng này thì thẻ sáng lên một nhịp */
 const FRESH_MS = 4000;
+
+/** Đọc to mọi dòng nhật ký mới (khách gọi, nhân viên tới, bàn cần dọn...). Chỉ đọc dòng tới sau lúc bật. */
+function useSpeakLog(on: boolean, loaded: boolean) {
+  const log = useLive((s) => s.log);
+  const last = useRef<number | null>(null);
+  useEffect(() => {
+    if (!loaded) return;
+    const top = log[0]?.id ?? 0;
+    const from = last.current;
+    last.current = top;
+    if (!on || from === null) return;
+    for (const e of log.filter((x) => x.id > from).reverse()) speak(e.text.replace(/\s*\([^)]*\)/g, ''));
+  }, [log, on, loaded]);
+}
 const DAY = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
 
 // ---------- một việc đang mở ----------
@@ -208,6 +223,8 @@ export default function Now() {
   const staff = useLive((s) => s.staff);
   const settings = useLive((s) => s.settings);
   const now = useServerNow();
+  const [voiceOn, setVoiceOn] = useState(false);
+  useSpeakLog(voiceOn, loaded);
   const provider = settings?.provider ?? 'Gemini';
 
   const [camId, setCamId] = useState<string | null>(null);
@@ -274,7 +291,23 @@ export default function Now() {
           <h1>{headline}</h1>
           <p className="fx-head-sub">{sub}</p>
         </div>
-        <Clock now={now} />
+        <div className="flex items-center gap-3">
+          <Button
+            label={voiceOn ? 'Đang đọc mọi sự kiện' : 'Đọc mọi sự kiện'}
+            size="sm"
+            variant={voiceOn ? 'primary' : 'secondary'}
+            icon={voiceOn ? <Volume2 size={15} /> : <VolumeX size={15} />}
+            aria-pressed={voiceOn}
+            onClick={() => {
+              if (!voiceOn) {
+                unlockAudio();
+                speak('Đã bật đọc sự kiện');
+              }
+              setVoiceOn(!voiceOn);
+            }}
+          />
+          <Clock now={now} />
+        </div>
       </header>
 
       <div className="fx-strip">
@@ -377,8 +410,12 @@ export default function Now() {
                   {tableNames.map((id) => {
                     const st = stateOf(id);
                     const hot = calling.has(id);
+                    // khách nhìn quanh tìm nhân viên: nhắc nhẹ trong 1 phút, không tạo việc
+                    const look = !hot && !!st?.looking_at && now - st.looking_at < 60_000;
                     const text = hot
                       ? 'đang gọi'
+                      : look
+                        ? 'khách đang nhìn quanh'
                       : !st
                         ? 'chưa rõ'
                         : st.state === 'occupied'
@@ -387,7 +424,7 @@ export default function Now() {
                             : 'có khách'
                           : TABLE_STATE_LABEL[st.state].toLowerCase();
                     return (
-                      <li key={id} className="fx-table-chip" data-state={st?.state ?? 'unknown'} data-hot={hot || undefined}>
+                      <li key={id} className="fx-table-chip" data-state={st?.state ?? 'unknown'} data-hot={hot || undefined} data-look={look || undefined}>
                         <i className="fx-table-dot" aria-hidden="true" />
                         <b>{id}</b>
                         <span>{text}</span>

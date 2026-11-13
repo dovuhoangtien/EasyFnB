@@ -77,6 +77,10 @@ app = FastAPI(title='Easy FnB', lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'])
 
 
+STAFF_PHOTO_MAX = 3 * 1024 * 1024
+STAFF_PHOTOS_MAX = 8
+
+
 def edge_auth(x_edge_key: str | None = Header(default=None)):
     if EDGE_KEY and x_edge_key != EDGE_KEY:
         raise HTTPException(401, 'sai X-Edge-Key')
@@ -261,6 +265,36 @@ async def put_zones(body: dict = Body(...)):
         raise HTTPException(400, f'vùng bàn sai dạng: {e}')
 
 
+async def camera_job(cam, kind, wait_s=12.0, **args):
+    """Nhờ máy camera làm một việc trên khung hình nó đang có (tìm bàn, chụp nhân viên) rồi chờ kết quả."""
+    if not hub.camera_live(cam):
+        raise HTTPException(409, 'camera chưa chạy')
+    jid, fut = hub.new_job(cam, kind, **args)
+    try:
+        res = await asyncio.wait_for(fut, wait_s)
+    except asyncio.TimeoutError:
+        hub.jobs.pop(jid, None)
+        raise HTTPException(504, 'máy camera chưa trả lời')
+    if not isinstance(res, dict) or res.get('error'):
+        raise HTTPException(502, str((res or {}).get('error') if isinstance(res, dict) else 'kết quả sai dạng'))
+    return res
+
+
+@app.post('/api/zones/suggest')
+async def suggest_zones(body: dict = Body(...)):
+    """Camera tự tìm bàn. Có `box` [x1, y1, x2, y2] (theo frame_w x frame_h) thì chỉ tìm trong vùng đó."""
+    box = body.get('box')
+    try:
+        if box is not None:
+            box = [float(v) for v in box]
+            if len(box) != 4:
+                raise ValueError
+        fw, fh = float(body.get('frame_w') or 0), float(body.get('frame_h') or 0)
+    except (TypeError, ValueError):
+        raise HTTPException(400, 'box phải là [x1, y1, x2, y2]')
+    return await camera_job(str(body.get('camera') or 'cam1'), 'find_tables', box=box, frame_w=fw, frame_h=fh)
+
+
 @app.get('/api/staff')
 async def get_staff():
     return hub.staff_view()
@@ -273,6 +307,58 @@ async def put_staff(body: dict = Body(...)):
            for s in items):
         raise HTTPException(400, 'mỗi nhân viên cần id, name, role (serve, clean, cashier)')
     return hub.set_staff(items)
+
+
+def staff_of(sid):
+    s = next((x for x in hub.staff if x['id'] == sid), None)
+    if s is None:
+        raise HTTPException(404, f'không có nhân viên {sid!r}')
+    return s
+
+
+async def save_staff_photo(sid, kind, source, jpeg):
+    if kind not in ('face', 'body'):
+        raise HTTPException(400, 'kind phải là face hoặc body')
+    if jpeg[:2] != bytes([0xFF, 0xD8]) or len(jpeg) > STAFF_PHOTO_MAX:
+        raise HTTPException(400, 'cần ảnh JPEG dưới 3 MB')
+    if len(staff_of(sid).get('photos', [])) >= STAFF_PHOTOS_MAX:
+        raise HTTPException(400, f'mỗi người tối đa {STAFF_PHOTOS_MAX} ảnh')
+    pid = hub.add_staff_photo(sid, kind, source)
+    await asyncio.to_thread(hub.staff_photo_file(sid, pid).write_bytes, jpeg)
+    return hub.staff_photos_changed()
+
+
+@app.post('/api/staff/{sid}/photos')
+async def add_staff_photo(sid: str, request: Request, kind: str = Query('body')):
+    """Ảnh nhận dạng tải lên (JPEG, web đã thu nhỏ). kind: face (mặt) | body (cả người, thấy đồng phục)."""
+    staff_of(sid)
+    return await save_staff_photo(sid, kind, 'upload', await request.body())
+
+
+@app.post('/api/staff/{sid}/photos/camera')
+async def shoot_staff_photo(sid: str, body: dict = Body(...)):
+    """Chụp bằng camera quán: máy camera cắt người đứng gần giữa khung hình nhất."""
+    staff_of(sid)
+    res = await camera_job(str(body.get('camera') or 'cam1'), 'staff_photo')
+    try:
+        jpeg = base64.b64decode(res['jpeg_b64'])
+    except (KeyError, ValueError, TypeError):
+        raise HTTPException(502, 'máy camera không gửi ảnh')
+    return await save_staff_photo(sid, 'body', 'camera', jpeg)
+
+
+@app.get('/api/staff/{sid}/photos/{name}')
+async def staff_photo(sid: str, name: str):
+    f = hub.staff_photo_file(sid, name.removesuffix('.jpg'))
+    if not f.exists():
+        raise HTTPException(404)
+    return FileResponse(f, media_type='image/jpeg', headers={'Cache-Control': 'max-age=3600'})
+
+
+@app.delete('/api/staff/{sid}/photos/{pid}')
+async def del_staff_photo(sid: str, pid: str):
+    staff_of(sid)
+    return hub.del_staff_photo(sid, pid)
 
 
 @app.put('/api/settings')
@@ -475,6 +561,22 @@ async def edge_tables(body: dict = Body(...)):
     except (TypeError, ValueError) as e:
         raise HTTPException(400, f'trạng thái bàn sai dạng: {e}')
     return dict(ok=True)
+
+
+@app.get('/api/edge/jobs', dependencies=[Depends(edge_auth)])
+async def edge_jobs(camera: str = Query(...)):
+    """Việc web đang nhờ máy camera làm (máy camera hỏi mỗi giây)."""
+    return dict(jobs=hub.take_jobs(camera))
+
+
+@app.post('/api/edge/jobs/{jid}', dependencies=[Depends(edge_auth)])
+async def edge_job_result(jid: str, body: dict = Body(...)):
+    return dict(ok=hub.job_result(jid, body))
+
+
+@app.get('/api/edge/staff-refs', dependencies=[Depends(edge_auth)])
+async def edge_staff_refs():
+    return hub.staff_refs()
 
 
 # ------------------------------------------------------------------ web app đã build (một dịch vụ Cloud Run)

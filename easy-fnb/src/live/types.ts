@@ -76,6 +76,8 @@ export interface TableState {
   people: number;
   since: number;
   dirty: number | null;
+  /** lúc camera thấy khách bàn này nhìn quanh tìm nhân viên (tín hiệu mềm) */
+  looking_at?: number | null;
 }
 
 export type Point = [number, number];
@@ -108,10 +110,20 @@ export interface Camera {
 export type Role = 'serve' | 'clean' | 'cashier';
 export const ROLES: Role[] = ['serve', 'clean', 'cashier'];
 
+/** Ảnh để camera nhận ra nhân viên: mặt, hoặc cả người (thấy đồng phục) */
+export interface StaffPhoto {
+  id: string;
+  kind: 'face' | 'body';
+  source: 'upload' | 'camera';
+}
+
 export interface Staff {
   id: string;
   name: string;
   role: Role;
+  /** Người này đã đồng ý cho dùng ảnh để nhận dạng */
+  consent?: boolean;
+  photos?: StaffPhoto[];
   online: boolean;
   open_tasks: number;
   /** Điểm danh: lúc vào ca đầu tiên, lúc mở app lượt hiện tại (null nếu đã ra), và giây đã làm ở các lượt đã kết thúc */
@@ -120,9 +132,9 @@ export interface Staff {
   worked_s?: number;
 }
 
-export type StaffInput = Pick<Staff, 'id' | 'name' | 'role'>;
+export type StaffInput = Pick<Staff, 'id' | 'name' | 'role' | 'consent'>;
 
-export type LogKind = Kind | 'ack' | 'arrived' | 'done' | 'cancel' | 'escalate' | 'verify' | 'system';
+export type LogKind = Kind | 'ack' | 'arrived' | 'done' | 'cancel' | 'escalate' | 'verify' | 'system' | 'looking';
 
 export interface LogEntry {
   id: number;

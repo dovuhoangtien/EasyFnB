@@ -102,15 +102,20 @@ ANSWER_SCHEMA = {'type': 'object', 'properties': {
 # Trợ lý và tóm tắt ca vẫn dùng GEMINI_MODEL.
 DECISIONS_URL = 'https://generativelanguage.googleapis.com/v1beta/decisions'
 P_YES, P_NO = 0.7, 0.3          # từ P_YES trở lên coi là "có", từ P_NO trở xuống coi là "không"; ở giữa là chưa chắc
+P_NO_HAND = 0.2                 # bác "gọi phục vụ" phải chắc hơn: tay giơ bị che khuất từng chỉ được 25%
+P_CALL = 0.6                    # xác nhận "gọi phục vụ" khi trung bình hai câu về tay đạt mức này
 Q_CLEAR = 'Ảnh có đủ sáng, đủ nét và không bị che khuất để trả lời chắc chắn các câu hỏi còn lại không?'
 DECISION_QUESTIONS = {
     'call': {
+        # Câu ngắn, chỉ hỏi điều nhìn thấy được. Thử thật ngày 13/11/2026: câu cũ có "gọi nhân viên" kèm danh sách
+        # loại trừ dài luôn ra khoảng 10%, kể cả khi ảnh thấy rõ tay giơ; câu này ra 80% trở lên.
         'hand_above_head': dict(
-            instructions='Người cần xét có đang giơ tay ngang đầu hoặc cao hơn đầu, hướng ra quán để gọi nhân viên không?',
-            criteria=dict(true_description='Giơ tay để gọi nhân viên.',
-                          false_description=f'Không giơ tay, hoặc chỉ là: {LOAI_TRU_GOI}.')),
-        'held_or_waved_across_frames': dict(
-            instructions='Tay giơ có được giữ hoặc vẫy qua ít nhất 2 trong 4 khung của ảnh 1 không?'),
+            instructions='Người cần xét có đang giơ tay cao để gây chú ý hoặc gọi ai đó không?'),
+        # Câu thứ hai hỏi về hình dáng cánh tay, bổ sung cho câu trên: khi bàn tay bị che, câu trên ra thấp mà câu
+        # này vẫn cao; khi khách vuốt tóc, câu này ra 90% mà câu trên chỉ 22%. Phải được cả hai mới xác nhận.
+        # Không hỏi "giữ tay qua nhiều khung" nữa: camera đã tự đo thời gian giữ tay, hỏi lại chỉ làm lỡ khách gọi thật.
+        'arm_raised_high': dict(
+            instructions='Người cần xét có duỗi một cánh tay lên cao, bàn tay cao hơn hẳn đỉnh đầu không?'),
         'wearing_staff_uniform': dict(
             instructions='Người cần xét có phải nhân viên của quán (mặc đồng phục, bưng khay) không?'),
         'image_clear': dict(instructions=Q_CLEAR),
@@ -124,24 +129,38 @@ DECISION_QUESTIONS = {
             instructions='Có túi, điện thoại, áo khoác hoặc ví của khách còn trên bàn cần xét hoặc ghế của bàn đó không?'),
         'image_clear': dict(instructions=Q_CLEAR),
     },
+    # Tín hiệu mềm "khách nhìn quanh tìm nhân viên": camera chỉ thấy đầu quay, Gemini xem ảnh để loại trường hợp
+    # đang xem điện thoại, ăn, nói chuyện. Câu hỏi này CHƯA thử với Gemini thật.
+    'looking': {
+        'looking_around_for_someone': dict(
+            instructions='Người cần xét có đang ngẩng đầu nhìn ra xa khỏi bàn của mình như đang tìm ai đó không? '
+                         'Đang nhìn điện thoại, đồ ăn hoặc người ngồi cùng bàn thì trả lời là không.'),
+        'wearing_staff_uniform': dict(
+            instructions='Người cần xét có phải nhân viên của quán (mặc đồng phục, bưng khay) không?'),
+        'image_clear': dict(instructions=Q_CLEAR),
+    },
 }
 # Câu mô tả ảnh gửi kèm: (loại việc, có gói ảnh đầy đủ hay chỉ một ảnh cắt)
 DECISION_CONTEXT = {
-    ('call', True): 'Camera quán ăn báo có khách gọi phục vụ. Ảnh 1: 4 khung trong 1,5 giây (trái sang phải, '
-                    'trên xuống dưới), cắt quanh MỘT người. Ảnh 2: toàn cảnh, khung đỏ là người đó. '
-                    'Chỉ xét người trong khung đỏ.',
-    ('call', False): 'Camera quán ăn báo có khách gọi phục vụ. Chỉ có 1 ảnh cắt quanh MỘT người, '
-                     'người cần xét ở giữa ảnh.',
+    # Không viết "camera báo có khách gọi" ở đây: thử thật thấy câu đó kéo điểm lên cả với người chỉ vuốt tóc
+    # (73% so với 24% khi mô tả trung tính).
+    ('call', True): 'Ảnh 1: 4 khung liên tiếp trong 1,5 giây (trái sang phải, trên xuống dưới), cắt quanh MỘT người. '
+                    'Ảnh 2: toàn cảnh, khung đỏ là người đó. Chỉ xét người trong khung đỏ.',
+    ('call', False): 'Ảnh cắt quanh MỘT người trong quán ăn, người cần xét ở giữa ảnh.',
     ('needs_clearing', True): 'Camera quán ăn báo bàn {ban} cần dọn. Ảnh 1: 4 khung trong 1,5 giây cắt quanh bàn đó. '
                               'Ảnh 2: toàn cảnh, khung đỏ là bàn đó.{ref} Chỉ xét bàn trong khung đỏ.',
     ('needs_clearing', False): 'Camera quán ăn báo bàn {ban} cần dọn. Chỉ có 1 ảnh cắt quanh bàn đó.',
+    ('looking', False): 'Camera quán ăn thấy một khách ngồi quay đầu nhìn quanh. Chỉ có 1 ảnh cắt quanh MỘT người, '
+                        'người cần xét ở giữa ảnh.',
 }
-Q_VI = {'hand_above_head': 'Giơ tay gọi', 'held_or_waved_across_frames': 'Giữ tay qua nhiều khung',
+DECISION_CONTEXT[('looking', True)] = DECISION_CONTEXT[('looking', False)]
+Q_VI = {'hand_above_head': 'Giơ tay gọi', 'arm_raised_high': 'Duỗi tay lên cao', 'held_or_waved_across_frames': 'Giữ tay qua nhiều khung',
         'wearing_staff_uniform': 'Là nhân viên', 'used_items_left': 'Còn đồ đã dùng',
         'people_at_table': 'Còn người ngồi', 'personal_belongings_present': 'Còn đồ cá nhân',
-        'image_clear': 'Ảnh đủ rõ'}
+        'image_clear': 'Ảnh đủ rõ', 'looking_around_for_someone': 'Đang nhìn quanh tìm người'}
 DECISION_VERDICT = {'call': {'confirm': 'GOI', 'reject': 'KHONG_GOI'},
-                    'needs_clearing': {'confirm': 'CAN_DON', 'reject': 'SACH'}}
+                    'needs_clearing': {'confirm': 'CAN_DON', 'reject': 'SACH'},
+                    'looking': {'confirm': 'NHIN_QUANH', 'reject': 'KHONG'}}
 
 
 class GeminiError(RuntimeError):
@@ -246,8 +265,7 @@ class Gemini:
         for im in images:
             blocks.append({'type': 'image', 'mime_type': 'image/jpeg', 'data': base64.b64encode(im['jpeg']).decode(),
                            'resolution': ROLE_RES.get(im['role'], 'LOW').lower()})
-        questions = {k: dict(type='noul', **q) for k, q in DECISION_QUESTIONS[kind].items()
-                     if package or k != 'held_or_waved_across_frames'}     # một ảnh thì không hỏi "qua nhiều khung"
+        questions = {k: dict(type='noul', **q) for k, q in DECISION_QUESTIONS[kind].items()}
         r = await self.client.post(DECISIONS_URL, headers={'x-goog-api-key': self.key},
                                    json={'model': self.verify_model, 'input': blocks, 'questions': questions})
         if r.status_code != 200:
@@ -326,23 +344,26 @@ def _decide_probs(kind, p):
     if p.get('image_clear', 1.0) < 0.5:
         return 'unverified', 'poor_image', 'image_clear'
     if kind == 'call':
-        hand, held, staff = p.get('hand_above_head'), p.get('held_or_waved_across_frames'), \
-            p.get('wearing_staff_uniform', 0.0)
+        hand, staff = p.get('hand_above_head'), p.get('wearing_staff_uniform', 0.0)
         if hand is None:
             return 'unverified', 'uncertain', 'hand_above_head'
+        arm = p.get('arm_raised_high', hand)
         if staff >= P_YES:
             return 'reject', 'rejected', 'wearing_staff_uniform'
-        if hand <= P_NO:
+        if max(hand, arm) <= P_NO_HAND:                  # cả hai câu đều nói không mới bác
             return 'reject', 'rejected', 'hand_above_head'
-        if held is not None and held <= P_NO:
-            return 'reject', 'rejected', 'held_or_waved_across_frames'
-        if hand < P_YES:
-            return 'unverified', 'uncertain', 'hand_above_head'
         if staff >= 0.5:
             return 'unverified', 'uncertain', 'wearing_staff_uniform'
-        if held is not None and held < 0.5:
-            return 'unverified', 'uncertain', 'held_or_waved_across_frames'
+        if hand < 0.5 or (hand + arm) / 2 < P_CALL:
+            return 'unverified', 'uncertain', 'hand_above_head' if hand <= arm else 'arm_raised_high'
         return 'confirm', 'confirmed', 'hand_above_head'
+    if kind == 'looking':
+        look = p.get('looking_around_for_someone')
+        if p.get('wearing_staff_uniform', 0.0) >= P_YES:
+            return 'reject', 'rejected', 'wearing_staff_uniform'
+        if look is None or P_NO < look < P_YES:
+            return 'unverified', 'uncertain', 'looking_around_for_someone'
+        return ('confirm', 'confirmed', 'looking_around_for_someone') if look >= P_YES else             ('reject', 'rejected', 'looking_around_for_someone')
     used, people, bel = p.get('used_items_left'), p.get('people_at_table'), p.get('personal_belongings_present', 0.0)
     if used is None or people is None:
         return 'unverified', 'uncertain', 'used_items_left' if used is None else 'people_at_table'

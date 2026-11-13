@@ -519,7 +519,7 @@ class TestClient(unittest.IsolatedAsyncioTestCase):
 
         def h(req):
             seen.append((str(req.url), json.loads(req.content)))
-            return decision_json(hand_above_head=0.93, held_or_waved_across_frames=0.88,
+            return decision_json(hand_above_head=0.93, arm_raised_high=0.88,
                                  wearing_staff_uniform=0.04, image_clear=0.97)
         g = decision_gemini(h)
         r = await g.verify('call', IMAGES)
@@ -529,13 +529,13 @@ class TestClient(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(body['model'], 'gemini-decision-1')
         self.assertEqual([(b['type'], b.get('resolution')) for b in body['input']],
                          [('text', None), ('image', 'medium'), ('image', 'low')])
-        self.assertEqual(set(body['questions']), {'hand_above_head', 'held_or_waved_across_frames',
+        self.assertEqual(set(body['questions']), {'hand_above_head', 'arm_raised_high',
                                                   'wearing_staff_uniform', 'image_clear'})
         self.assertTrue(all(q['type'] == 'noul' for q in body['questions'].values()))
         self.assertEqual((r['verdict'], r['image_quality'], r['model']), ('GOI', 'ok', 'gemini-decision-1'))
         self.assertEqual(decide('call', r), ('confirm', 'confirmed'))
 
-    async def test_decision_single_crop_skips_frames_question(self):
+    async def test_decision_single_crop(self):
         seen = []
 
         def h(req):
@@ -547,17 +547,21 @@ class TestClient(unittest.IsolatedAsyncioTestCase):
         self.assertIn('bàn B2', seen[0]['input'][0]['text'])
         self.assertEqual(decide('needs_clearing', r), ('confirm', 'confirmed'))
         await g.verify('call', JPEG)
-        self.assertNotIn('held_or_waved_across_frames', seen[1]['questions'])
+        self.assertIn('arm_raised_high', seen[1]['questions'])
+        self.assertNotIn('held_or_waved_across_frames', seen[1]['questions'])     # camera đã tự đo thời gian giữ tay
 
     def test_decision_rules(self):
-        call = dict(hand_above_head=0.9, held_or_waved_across_frames=0.9, wearing_staff_uniform=0.1, image_clear=0.9)
+        call = dict(hand_above_head=0.9, arm_raised_high=0.9, wearing_staff_uniform=0.1, image_clear=0.9)
         table = dict(used_items_left=0.9, people_at_table=0.1, personal_belongings_present=0.1, image_clear=0.9)
         cases = [
             ('call', {}, ('confirm', 'confirmed')),
-            ('call', dict(hand_above_head=0.12), ('reject', 'rejected')),
+            ('call', dict(hand_above_head=0.12, arm_raised_high=0.11), ('reject', 'rejected')),   # cả hai đều không
             ('call', dict(wearing_staff_uniform=0.85), ('reject', 'rejected')),
-            ('call', dict(held_or_waved_across_frames=0.2), ('reject', 'rejected')),
-            ('call', dict(hand_above_head=0.5), ('unverified', 'uncertain')),          # lưng chừng: vẫn báo
+            ('call', dict(hand_above_head=0.62, arm_raised_high=0.63), ('confirm', 'confirmed')),  # tay bị che một phần
+            ('call', dict(hand_above_head=0.22), ('unverified', 'uncertain')),          # vuốt tóc: tay cao nhưng không gọi
+            ('call', dict(hand_above_head=0.28, arm_raised_high=0.34), ('unverified', 'uncertain')),  # gọi thật, ảnh khó
+            ('call', dict(wearing_staff_uniform=0.6), ('unverified', 'uncertain')),
+            ('call', dict(hand_above_head=0.4), ('unverified', 'uncertain')),          # lưng chừng: vẫn báo
             ('call', dict(hand_above_head=0.1, image_clear=0.3), ('unverified', 'poor_image')),  # ảnh kém: không bác
             ('needs_clearing', {}, ('confirm', 'confirmed')),
             ('needs_clearing', dict(used_items_left=0.1), ('reject', 'rejected')),
@@ -571,7 +575,7 @@ class TestClient(unittest.IsolatedAsyncioTestCase):
 
     async def test_decision_reject_through_hub(self):
         def h(req):
-            return decision_json(hand_above_head=0.12, held_or_waved_across_frames=0.2,
+            return decision_json(hand_above_head=0.12, arm_raised_high=0.2,
                                  wearing_staff_uniform=0.05, image_clear=0.95)
         g = decision_gemini(h)
         with tempfile.TemporaryDirectory() as d:

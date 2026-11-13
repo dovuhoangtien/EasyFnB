@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { useSearchParams } from 'react-router';
-import { Copy, PlugZap, Plus, RotateCcw, Trash } from 'lucide-react';
+import { Camera as CameraIcon, Copy, PlugZap, Plus, RotateCcw, Trash, Upload, X } from 'lucide-react';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -16,11 +16,11 @@ import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useToast } from '@astryxdesign/core/Toast';
-import { putSettings, putStaff, resetShift, testAi, type AiTest, type Info } from '../live/api';
+import { deleteStaffPhoto, putSettings, putStaff, resetShift, shootStaffPhoto, staffPhotoUrl, testAi, uploadStaffPhoto, type AiTest, type Info } from '../live/api';
 import { useInfo, useRun, useTitle } from '../live/hooks';
 import { live, useLive, useServerNow } from '../live/store';
 import { CAMERA_AGENT_CMD, cameraLive, ROLE_LABEL, slugify } from '../live/text';
-import { ROLES, type Role, type SettingsPatch, type StaffInput } from '../live/types';
+import { ROLES, type Role, type SettingsPatch, type Staff, type StaffInput, type StaffPhoto } from '../live/types';
 import { ZoneEditor } from '../live/ZoneEditor';
 import { SectionTitle, voiceText } from './ui';
 
@@ -40,12 +40,92 @@ interface Row {
 }
 let rowKey = 1000;
 
+/** Thu ảnh về tối đa 1024 điểm ảnh mỗi cạnh, dạng JPEG, trước khi gửi lên */
+async function toJpeg(file: File): Promise<Blob> {
+  const img = await createImageBitmap(file);
+  const scale = Math.min(1, 1024 / Math.max(img.width, img.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.width * scale);
+  canvas.height = Math.round(img.height * scale);
+  canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height);
+  img.close();
+  return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Không đọc được ảnh này.'))), 'image/jpeg', 0.88));
+}
+
+const PHOTO_LABEL: Record<StaffPhoto['kind'], string> = { body: 'Cả người', face: 'Mặt' };
+
+/** Ảnh để camera nhận ra một nhân viên: chụp bằng camera quán hoặc tải lên */
+function StaffPhotos({ person }: { person: Staff }) {
+  const staff = useLive((s) => s.staff);
+  const cameras = useLive((s) => s.cameras);
+  const now = useServerNow();
+  const { busy, run } = useRun();
+  const camera = cameras.find((c) => cameraLive(c, now));
+  const photos = person.photos ?? [];
+
+  const done = (out: Staff[] | undefined) => {
+    if (out) live.setStaff(out);
+  };
+  const setConsent = async (on: boolean) =>
+    done(await run('consent', () => putStaff(staff.map((s) => ({ id: s.id, name: s.name, role: s.role, consent: s.id === person.id ? on : s.consent })))));
+  const upload = (kind: StaffPhoto['kind']) => async (ev: ChangeEvent<HTMLInputElement>) => {
+    const file = ev.target.files?.[0];
+    ev.target.value = '';
+    if (file) done(await run(kind, async () => uploadStaffPhoto(person.id, kind, await toJpeg(file))));
+  };
+
+  return (
+    <div className="fx-staff-photos">
+      <Switch label="Cho camera nhận dạng" value={person.consent === true} isDisabled={busy === 'consent'} changeAction={(on) => void setConsent(on)} />
+      {person.consent && (
+        <>
+          {photos.length > 0 && (
+            <ul className="fx-photo-strip" aria-label={`Ảnh nhận dạng của ${person.name}`}>
+              {photos.map((p) => (
+                <li key={p.id}>
+                  <img src={staffPhotoUrl(person.id, p.id)} alt={`${PHOTO_LABEL[p.kind]} của ${person.name}`} loading="lazy" />
+                  <span>{PHOTO_LABEL[p.kind]}</span>
+                  <button type="button" aria-label={`Xoá ảnh ${PHOTO_LABEL[p.kind].toLowerCase()} của ${person.name}`} onClick={() => void run(p.id, () => deleteStaffPhoto(person.id, p.id)).then(done)}>
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              label="Chụp bằng camera quán"
+              variant="secondary"
+              size="sm"
+              icon={<CameraIcon size={15} />}
+              isLoading={busy === 'shoot'}
+              isDisabled={!camera}
+              onClick={() => camera && void run('shoot', () => shootStaffPhoto(person.id, camera.id)).then(done)}
+            />
+            <label className="fx-file-btn" data-busy={busy === 'body' || undefined}>
+              <Upload size={15} aria-hidden="true" />
+              Ảnh cả người
+              <input type="file" accept="image/*" capture="environment" className="visually-hidden" onChange={(ev) => void upload('body')(ev)} />
+            </label>
+            <label className="fx-file-btn" data-busy={busy === 'face' || undefined}>
+              <Upload size={15} aria-hidden="true" />
+              Ảnh mặt
+              <input type="file" accept="image/*" capture="user" className="visually-hidden" onChange={(ev) => void upload('face')(ev)} />
+            </label>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function StaffEditor() {
   const staff = useLive((s) => s.staff);
   const { busy, run } = useRun();
   const [rows, setRows] = useState<Row[] | null>(null);
   const view: Row[] = rows ?? staff.map((s, i) => ({ key: i, id: s.id, name: s.name, role: s.role }));
   const dirty = rows !== null;
+  const saved = (id: string | null) => staff.find((s) => s.id === id);
   const hasEmpty = view.some((r) => !r.name.trim());
   const update = (key: number, patch: Partial<Row>) => setRows(view.map((r) => (r.key === key ? { ...r, ...patch } : r)));
 
@@ -83,6 +163,7 @@ function StaffEditor() {
             <TextInput label="Tên" isLabelHidden placeholder="Tên, ví dụ Lan" value={r.name} onChange={(v) => update(r.key, { name: v.slice(0, 30) })} />
             <Selector label="Vai trò" isLabelHidden value={r.role} options={ROLES.map((role) => ({ value: role, label: ROLE_LABEL[role] }))} onChange={(v) => update(r.key, { role: v as Role })} />
             <IconButton label={`Bỏ ${r.name || 'dòng này'}`} tooltip="Bỏ" variant="ghost" icon={<Trash size={16} />} onClick={() => setRows(view.filter((x) => x.key !== r.key))} />
+            {saved(r.id) && <StaffPhotos person={saved(r.id) as Staff} />}
           </div>
         ))}
         {dirty && (

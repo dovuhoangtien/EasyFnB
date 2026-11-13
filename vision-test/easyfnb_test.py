@@ -26,6 +26,8 @@ import torch
 from PIL import Image, ImageDraw, ImageFont
 from ultralytics import YOLO
 
+import thiet_lap
+from nhin_quanh import NhinQuanh
 from fnb_common import (TILE, blur_faces, grow_box, make_overview, make_strip, pad_box,
                         rect_size, square)
 
@@ -64,6 +66,7 @@ EVENT_VI = {
     'can_don': 'Bàn cần dọn',
     'da_don': 'Bàn đã dọn',
     'nv_den': 'Nhân viên tới bàn',
+    'nhin_quanh': 'Khách nhìn quanh tìm nhân viên',
 }
 
 
@@ -658,9 +661,17 @@ def run_clip(path, zones, args, out_root, mc=None):
     if args.yoloe and yoloe_m is None:
         print(f'  không thấy YOLOE {args.yoloe_model}; dùng luật cũ')
     dump = []  # ghi chi tiết từng khung (--dump) để thử ngưỡng mà không phải chạy lại model
+    nq = NhinQuanh() if args.nhin_quanh else None   # khách nhìn quanh tìm nhân viên (tín hiệu mềm)
     kx = []    # khung xương từng người từng khung (--luu-khung-xuong), dữ liệu train lớp theo thời gian
     staff_m = load_small_model(args.staff_model)
     rtm = load_rtmpose(args.pose_refine, args.device)
+    nv_anh = None   # nhận nhân viên theo ảnh chụp ở trang Cài đặt (--nv-theo-anh)
+    if args.nv_theo_anh:
+        if mc is None or not hasattr(staff_m, 'features'):
+            print('  --nv-theo-anh cần --may-chu và model nhân viên loại CLIP/PE-Core; bỏ qua')
+        else:
+            nv_anh = thiet_lap.ThuVienNV(staff_m, args.nv_anh_lo, args.nv_anh_hi)
+            mc.want_refs = True
     hd = None   # tỉ lệ hành động từng người (--hanh-dong), dùng chung phần ảnh PE-Core với model giơ tay/nhân viên
     if args.hanh_dong:
         from hanh_dong import KEY as HD_KEY, HanhDong
@@ -759,6 +770,8 @@ def run_clip(path, zones, args, out_root, mc=None):
                     tb.reset(i / fps)
                 hist.clear()
                 weak_hist.clear()
+                if nq is not None:
+                    nq.clear()
                 rtm_cache.clear()
                 last_call.clear()
                 seen.clear()
@@ -847,6 +860,9 @@ def run_clip(path, zones, args, out_root, mc=None):
                     and boxes[k][0] > 3 and boxes[k][2] < W - 3]
             for k, v in zip(chon, class_probs(staff_m, [pcrops[k] for k in chon], 'nhan_vien')):
                 p_staff[k] = v
+            if nv_anh is not None and nv_anh.emb is not None:  # giống ảnh nhân viên chụp sẵn thì cũng là nhân viên
+                for k, g in zip(chon, nv_anh.probs([pcrops[k] for k in chon])):
+                    p_staff[k] = g if p_staff[k] is None else max(p_staff[k], g)
         if (hand_m or staff_m) and i >= 5 and len(boxes):
             ms_cls.append((time.perf_counter() - t0) * 1000)
 
@@ -954,6 +970,18 @@ def run_clip(path, zones, args, out_root, mc=None):
                     pending_ev.append(dict(t0=t, kind='goi_phuc_vu', ban=tb.name if tb else None,
                                            eid=eid, box=[round(float(v)) for v in b],
                                            poly=None, items=None))
+
+        # --- khách ngồi nhìn quanh tìm nhân viên: chỉ nhắc trên màn hình quản lý, không giao việc
+        if nq is not None:
+            for p, d, ly_do in nq.update(t, persons):
+                x1, y1, x2, y2 = p['box']
+                ev_seq += 1
+                events.append(dict(t=round(t, 2), loai='nhin_quanh', ban=p['table'].name if p['table'] else None,
+                                   nguoi=p['id'], chi_tiet=ly_do, box=[round(float(v)) for v in p['box']],
+                                   diem=round(d, 3), eid=f'{name}:{ev_seq}',
+                                   _crop=crop(frame, x1, y1, x2, y2, 0.15 * (y2 - y1))))
+                if mc is not None:
+                    mc.event(events[-1], crop(an_danh(), x1, y1, x2, y2, 0.15 * (y2 - y1)))
 
         # --- tỉ lệ hành động từng người: model ảnh-chữ mỗi N khung, gộp với khung xương, làm mượt
         if hd is not None and persons and i % args.hanh_dong_every == 0:
@@ -1067,6 +1095,11 @@ def run_clip(path, zones, args, out_root, mc=None):
                 tables = [Table(k, v, toc=toc) for k, v in nz.items()]
                 timeline = []  # thứ tự bàn đã đổi
                 last_tables = -1e9
+            for job in mc.take_jobs():  # trang Cài đặt nhờ tìm bàn hoặc chụp nhân viên trên khung này
+                mc.job_done(job['id'], thiet_lap.do_job(job, frame, boxes, det,
+                                                        dict(imgsz=det_sz, device=args.device, **fp16)))
+            if nv_anh is not None and (refs := mc.new_staff_refs()) is not None:
+                nv_anh.load(refs)
             if tables and now_w - last_tables >= 1.0:
                 mc.tables(tables)
                 last_tables = now_w
@@ -1117,7 +1150,8 @@ def run_clip(path, zones, args, out_root, mc=None):
                     stroke_width=3, stroke_fill=(0, 0, 0))
         for p in persons:
             x1, y1 = p['box'][:2]
-            tag = f"#{p['id']}" + (' GỌI' if p['calling'] else ' NV' if p['staff'] else ' đi' if p['walking'] else '')
+            tag = f"#{p['id']}" + (' GỌI' if p['calling'] else ' NV' if p['staff'] else ' đi' if p['walking']
+                                    else ' NHÌN QUANH' if nq is not None and nq.diem.get(p['id'], 0) >= nq.th else '')
             dr.text((x1 + 3, y1 + 2), tag, font=small, fill=(255, 255, 255), stroke_width=2, stroke_fill=(0, 0, 0))
             if hd is not None:
                 for k, (c, v) in enumerate(hd_top(hd.hien(p['id']), 2)):
@@ -1235,6 +1269,10 @@ def main():
     ap.add_argument('--table-every', type=int, default=4, help='chạy model bàn mỗi N khung')
     ap.add_argument('--staff-model', default=None,
                     help='model "nhân viên hay khách": file YOLO-cls hoặc nhanvien_clip_*.pt (CLIP + lớp nhỏ)')
+    ap.add_argument('--nv-theo-anh', action='store_true',
+                    help='nhận nhân viên thêm bằng ảnh cả người chụp ở trang Cài đặt (cần --may-chu, --staff-model CLIP)')
+    ap.add_argument('--nv-anh-lo', type=float, default=0.70, help='mức giống ảnh nhân viên tính là 0 điểm (chưa đo)')
+    ap.add_argument('--nv-anh-hi', type=float, default=0.90, help='mức giống ảnh nhân viên tính là 1 điểm (chưa đo)')
     ap.add_argument('--staff-win', type=float, default=10.0, help='nhớ kết quả nhân viên/khách trong bao nhiêu giây')
     ap.add_argument('--staff-on', type=float, default=0.40, help='điểm nhân viên trung bình để bật nhãn nhân viên')
     ap.add_argument('--staff-off', type=float, default=0.32, help='điểm trung bình dưới mức này thì tắt nhãn nhân viên')
@@ -1249,6 +1287,8 @@ def main():
                          'gan_vai: thêm người có cổ tay đã lên gần vai; '
                          'luot: tối đa --refine-k người mỗi khung theo lượt, người khác dùng lại khung xương lần trước')
     ap.add_argument('--refine-k', type=int, default=4, help='luot: số người chạy RTMPose mỗi khung')
+    ap.add_argument('--nhin-quanh', action='store_true',
+                    help='báo (mềm) khi khách ngồi quay đầu qua lại hoặc nhìn về phía nhân viên vài giây')
     ap.add_argument('--hanh-dong', action='store_true',
                     help='hiện tỉ lệ hành động từng người (ngồi ăn, uống, điện thoại, gọi, vươn vai, đi, đứng...)')
     ap.add_argument('--hanh-dong-every', type=int, default=10, help='tính tỉ lệ hành động mỗi N khung')

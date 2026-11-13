@@ -51,6 +51,13 @@ class MayChu:
         self._current = None         # vùng bàn camera đang dùng (dạng của máy chủ)
         self._zones_new = None       # vùng bàn mới từ máy chủ, chờ pipeline lấy
         self._last_poll = time.monotonic()
+        self._jobs = []              # việc thiết lập web nhờ làm (tìm bàn, chụp nhân viên), chờ pipeline lấy
+        self._jobs_every = 1.0
+        self._last_jobs = 0.0
+        self.want_refs = False       # pipeline bật khi chạy --nv-theo-anh
+        self._refs_ver = None
+        self._refs_new = None
+        self._last_refs = -1e9
         self.t = threading.Thread(target=self._run, daemon=True)
         self.t.start()
 
@@ -150,6 +157,60 @@ class MayChu:
             self._zones_new = z
         print(f"  vùng bàn trên web vừa đổi: {', '.join(t['id'] for t in z.get('tables') or []) or 'không còn bàn nào'}")
 
+    # ------------------------------------------------------------ việc thiết lập, ảnh nhân viên
+    def take_jobs(self):
+        with self.lock:
+            j, self._jobs = self._jobs, []
+        return j
+
+    def job_done(self, jid, result):
+        self._put(('POST', f'/api/edge/jobs/{jid}', result))
+
+    def new_staff_refs(self):
+        """[(mã nhân viên, kind, JPEG bytes)] nếu ảnh nhân viên trên web vừa đổi; None nếu không đổi."""
+        with self.lock:
+            r, self._refs_new = self._refs_new, None
+        return r
+
+    def _poll_jobs(self):
+        if time.monotonic() - self._last_jobs < self._jobs_every:
+            return
+        self._last_jobs = time.monotonic()
+        try:
+            r = self.s.get(f'{self.url}/api/edge/jobs', params=dict(camera=self.camera), timeout=3)
+            if r.status_code == 404:     # máy chủ bản cũ chưa có phần thiết lập: hỏi thưa lại
+                self._jobs_every = 30.0
+                return
+            jobs = (r.json().get('jobs') or []) if r.ok else []
+        except (requests.RequestException, ValueError):
+            return
+        self._jobs_every = 1.0
+        if jobs:
+            with self.lock:
+                self._jobs += jobs
+
+    def _poll_refs(self):
+        if not self.want_refs or time.monotonic() - self._last_refs < 30:
+            return
+        self._last_refs = time.monotonic()
+        try:
+            r = self.s.get(f'{self.url}/api/edge/staff-refs', timeout=5)
+            if not r.ok:
+                return
+            z = r.json()
+            if z.get('version') == self._refs_ver:
+                return
+            out = []
+            for ref in z.get('refs') or []:
+                img = self.s.get(self.url + ref['url'], timeout=10)
+                if img.ok:
+                    out.append((ref['staff'], ref['kind'], img.content))
+        except (requests.RequestException, ValueError, KeyError):
+            return
+        self._refs_ver = z.get('version')
+        with self.lock:
+            self._refs_new = out
+
     # ------------------------------------------------------------ gửi
     def event(self, e, crop_bgr=None):
         b64 = None
@@ -239,6 +300,8 @@ class MayChu:
                     sent = True
             if not self.stop.is_set():
                 self._poll_zones()
+                self._poll_jobs()
+                self._poll_refs()
             if not sent:
                 time.sleep(0.02)
 
