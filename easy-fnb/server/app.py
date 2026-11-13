@@ -256,7 +256,7 @@ async def staff_manifest(sid: str):
              dict(src='/icon-512.png', sizes='512x512', type='image/png'),
              dict(src='/icon-maskable-512.png', sizes='512x512', type='image/png', purpose='maskable')]
     return JSONResponse(dict(id=start, name=f"Easy FnB, {s['name']}", short_name=s['name'], lang='vi',
-                             start_url=start, scope='/nv/', display='standalone', orientation='portrait',
+                             start_url=start, scope='/nv', display='standalone', orientation='portrait',
                              background_color='#0a0a0a', theme_color='#0a0a0a', icons=icons),
                         media_type='application/manifest+json', headers={'Cache-Control': 'no-cache'})
 

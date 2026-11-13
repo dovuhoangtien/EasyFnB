@@ -110,6 +110,14 @@ function InstallHint() {
       </Text>
     );
   }
+  // Android qua http ở quán: trình duyệt không cho nút cài (chỉ https hợp lệ mới có), nhưng menu vẫn tạo được lối tắt
+  if (/android/i.test(navigator.userAgent)) {
+    return (
+      <Text type="supporting" color="secondary" as="p">
+        Để lần sau chạm một cái là vào: mở menu ⋮ của trình duyệt, chọn “Thêm vào màn hình chính”.
+      </Text>
+    );
+  }
   return null;
 }
 

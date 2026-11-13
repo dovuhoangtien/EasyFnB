@@ -176,7 +176,11 @@ const PHONE_CAMS = ['cam1', 'cam2', 'cam3', 'cam4'];
 /** Địa chỉ trang /phat cho một camera. Camera điện thoại bắt buộc https: trên Cloud Run đã có sẵn, chạy ở quán thì cần cổng https của máy chủ. */
 function phoneCameraUrl(info: Info | null, cam: string) {
   const path = `/phat?cam=${encodeURIComponent(cam)}`;
-  if (!LOCAL.has(location.hostname)) return { url: `${location.origin}${path}`, secure: location.protocol === 'https:' };
+  if (!LOCAL.has(location.hostname)) {
+    // mở dashboard bằng địa chỉ wifi qua http mà máy chủ có cổng https: mã QR phải trỏ sang cổng https đó
+    if (location.protocol !== 'https:' && info?.https_port) return { url: `https://${location.hostname}:${info.https_port}${path}`, secure: true };
+    return { url: `${location.origin}${path}`, secure: location.protocol === 'https:' };
+  }
   const host = info?.lan_ip ?? 'localhost';
   if (info?.https_port) return { url: `https://${host}:${info.https_port}${path}`, secure: true };
   const port = import.meta.env.DEV ? '8080' : location.port || '80';
