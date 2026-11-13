@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link as RouterLink, useParams } from 'react-router';
-import { BellRing, Check, ChevronRight, Footprints, ScanEye, TriangleAlert } from 'lucide-react';
+import { BellRing, Check, ChevronRight, Footprints, ScanEye, SquarePlus, TriangleAlert } from 'lucide-react';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -8,7 +8,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { ackAlert, doneAlert } from '../live/api';
+import { ackAlert, apiUrl, doneAlert } from '../live/api';
 import { useRun, useTitle } from '../live/hooks';
 import { createNotifier } from '../live/notifier';
 import { live, useLive, useLiveConnection, useServerNow } from '../live/store';
@@ -47,6 +47,70 @@ function PhoneFrame({ children }: { children: ReactNode }) {
       {children}
     </div>
   );
+}
+
+// ---------- thêm vào màn hình chính ----------
+interface InstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+/** Manifest riêng của người này: cài vào màn hình chính xong, chạm icon là mở đúng /nv/<mã> */
+function useStaffManifest(id: string) {
+  useEffect(() => {
+    const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    if (!link) return;
+    const before = link.getAttribute('href');
+    link.setAttribute('href', apiUrl(`/api/manifest/nv/${encodeURIComponent(id)}`));
+    return () => {
+      if (before) link.setAttribute('href', before);
+    };
+  }, [id]);
+}
+
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+/** Android/Chrome: một nút cài ngay. iPhone không có nút, chỉ hướng dẫn được. Đã cài rồi thì không hiện gì */
+function InstallHint() {
+  const [prompt, setPrompt] = useState<InstallPromptEvent | null>(null);
+  const [installed, setInstalled] = useState(isStandalone);
+  useEffect(() => {
+    const onPrompt = (e: Event) => {
+      e.preventDefault();
+      setPrompt(e as InstallPromptEvent);
+    };
+    const onInstalled = () => setInstalled(true);
+    window.addEventListener('beforeinstallprompt', onPrompt);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
+  if (installed) return null;
+  if (prompt) {
+    return (
+      <Button
+        label="Thêm vào màn hình chính"
+        variant="secondary"
+        size="lg"
+        icon={<SquarePlus size={18} />}
+        onClick={() => {
+          void prompt.prompt();
+          void prompt.userChoice.then(() => setPrompt(null));
+        }}
+      />
+    );
+  }
+  if (isIos()) {
+    return (
+      <Text type="supporting" color="secondary" as="p">
+        Để lần sau chạm một cái là vào: bấm nút Chia sẻ của Safari, chọn “Thêm vào MH chính”.
+      </Text>
+    );
+  }
+  return null;
 }
 
 // ---------- chọn tên ----------
@@ -148,6 +212,7 @@ interface Notice {
 
 function StaffShift({ id }: { id: string }) {
   const [started, setStarted] = useState(false);
+  useStaffManifest(id);
   useLiveConnection(started ? id : null);
   const status = useLive((s) => s.status);
   const loaded = useLive((s) => s.loaded);
@@ -278,6 +343,7 @@ function StaffShift({ id }: { id: string }) {
             </Text>
           )}
           <Button label="Bắt đầu ca" variant="primary" size="lg" icon={<BellRing size={18} />} isDisabled={!me} onClick={start} />
+          <InstallHint />
           <Text type="supporting" color="secondary" as="p">
             Không phải bạn? <Link href="/nv">Chọn tên khác</Link>
           </Text>

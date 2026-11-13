@@ -20,6 +20,10 @@ Hợp đồng giữa các phần: `server/API.md`.
 3. **Camera.** Bấm đúp `vision-test\chay_camera.bat`: chạy clip `01_phong_an_goc_cao.mp4` lặp lại như camera thật. Clip này có sẵn vùng bàn B1 đến B4 trong `zones.json`, camera tự đẩy lên máy chủ.
 4. **Màn hình quản lý.** Mở `http://localhost:8080/`: hình camera trực tiếp, trạng thái bàn, hàng việc.
 5. **Điện thoại nhân viên.** Mở `http://<địa chỉ wifi>:8080/nv/lan` (Lan, phục vụ); link đúng của từng người có sẵn ở trang Cài đặt, mục Nhân viên. Có sẵn `minh` (phục vụ) và `tu` (dọn bàn). Bấm **Bắt đầu ca** để điện thoại kêu, rung và đọc to khi có việc.
+
+   **Nối bằng mã QR.** Ở màn hình quản lý, bấm **App nhân viên**, bấm biểu tượng QR cạnh tên từng người rồi để họ quét bằng camera điện thoại. Lần đầu bấm **Thêm vào màn hình chính** (Android có nút ngay trên trang; iPhone dùng nút Chia sẻ của Safari), lần sau chạm icon là vào đúng app của người đó. Vẫn phải bấm **Bắt đầu ca** mỗi lần mở: trình duyệt chỉ cho phát tiếng chuông và giọng đọc sau một lần chạm của người dùng.
+
+   **Điện thoại làm camera.** Trang Cài đặt, mục Kết nối có mã QR cho `/phat?cam=cam1` (đổi sang cam2 đến cam4 bằng các nút). Trình duyệt chỉ cho dùng camera ở địa chỉ **https**: trên Cloud Run có sẵn; chạy ở quán thì khởi động máy chủ với `--https` (cổng 8443, trình duyệt cảnh báo chứng chỉ tự ký) để mã QR trỏ đúng cổng đó.
 6. **Trợ lý.** Hỏi về ca làm ("bàn nào chờ lâu nhất?", "nhân viên nào làm tốt nhất?", "giờ nào bận nhất?"). Câu trả lời kèm chỉ số, biểu đồ, ảnh sự kiện, bảng. Có `GEMINI_API_KEY` thì trợ lý chạy bằng Google ADK trên Gemini (kể cả khi đang đặt `KIE_API_KEY`); không có khoá thì máy chủ tự tính và trả lời không dùng AI, vẫn đủ các khối hiển thị.
 
 **Xem mọi thứ đã nối chưa.** Chấm **Trực tiếp** ở góc trên bên phải màn hình quản lý sáng xanh là trang đang nối được với máy chủ; mất kết nối thì chấm đổi màu và đầu trang hiện dòng báo. Trang **Cài đặt, mục Kết nối** có lệnh chạy camera đã điền sẵn địa chỉ máy chủ, và nút **Thử kết nối** gửi một câu hỏi thật tới Gemini để biết khoá có dùng được không. Máy khác muốn kiểm tra máy chủ còn sống thì gọi `GET /api/health`.
