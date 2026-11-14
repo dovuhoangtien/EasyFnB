@@ -49,6 +49,10 @@ DATA = Path(os.environ.get('DATA_DIR', HERE / 'data'))
 DEMO = HERE / 'du_lieu_demo'
 if DEMO.is_dir() and not (DATA / 'timeline.db').exists() and not os.environ.get('NO_DEMO_DATA'):
     shutil.copytree(DEMO, DATA, dirs_exist_ok=True)
+# Clip demo không nằm trong bản sao lưu: Cloud Run khôi phục lịch sử (đã có timeline.db) nên bước trên bỏ qua,
+# chép riêng clip còn thiếu để camera demo và xem lại vẫn chạy sau mỗi lần khởi động lại.
+elif (DEMO / 'video_demo').is_dir() and not os.environ.get('NO_DEMO_DATA'):
+    shutil.copytree(DEMO / 'video_demo', DATA / 'video_demo', dirs_exist_ok=True)
 EDGE_KEY = os.environ.get('EDGE_KEY', '').strip()
 CLOUD = bool(os.environ.get('K_SERVICE'))   # K_SERVICE có sẵn khi chạy trên Cloud Run
 STARTED = time.monotonic()
