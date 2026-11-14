@@ -384,6 +384,12 @@ resource "google_cloud_run_v2_service" "app" {
         value = "google"
       }
 
+      # Bản demo tự chạy: clip che mặt làm hình camera, việc và nhân viên ảo (server/phat_demo.py).
+      env {
+        name  = "DEMO_FEED"
+        value = var.demo_feed ? "1" : "0"
+      }
+
       env {
         name  = "GOOGLE_TTS_VOICE"
         value = var.tts_voice

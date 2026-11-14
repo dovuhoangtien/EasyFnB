@@ -88,6 +88,7 @@ export const TABLE_STATE_CHIP: Record<TableStateKind, string> = {
  * nên khi máy camera tắt, cờ online có thể không kịp về: xét thêm tuổi khung cuối.
  */
 export function cameraLive(c: Camera, now: number) {
+  if (c.demo) return true;
   return c.online && c.last_frame_at !== null && now - c.last_frame_at < 8000;
 }
 

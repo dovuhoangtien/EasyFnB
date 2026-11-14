@@ -919,3 +919,34 @@ h3.astryx-text {
   max-width: 260px;
   border-radius: var(--radius-container);
 }
+
+/* ---------- hướng dẫn từng bước (src/app/tour.tsx) ---------- */
+.fx-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+.fx-tour-dim {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.55);
+}
+.fx-tour-hole {
+  position: fixed;
+  border-radius: var(--radius-container);
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.55);
+  outline: 2px solid var(--color-accent);
+  pointer-events: none;
+  transition: left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease;
+}
+.fx-tour-card {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.3);
+}

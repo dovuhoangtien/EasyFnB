@@ -61,6 +61,12 @@ variable "backup_data" {
   default     = true
 }
 
+variable "demo_feed" {
+  description = "Bản demo tự chạy: phát clip đã che mặt làm hình camera, tự tạo việc và cho nhân viên ảo nhận việc. Tắt khi nối camera thật (có camera thật gửi hình thì máy chủ cũng tự dừng)."
+  type        = bool
+  default     = true
+}
+
 variable "backup_prefix" {
   description = "Thư mục trong bucket sao lưu. Đổi sang tên mới (ví dụ data2) rồi apply thì instance khởi động với thư mục dữ liệu trống và máy chủ nạp lại dữ liệu demo (server/du_lieu_demo)."
   type        = string

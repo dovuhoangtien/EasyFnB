@@ -35,6 +35,7 @@ from .gemini import Gemini, GeminiError
 from .hub import Hub, clock, now_ms
 from .llm import Llm
 from .net import lan_ip
+from .phat_demo import PhatDemo
 from .tro_ly import TroLy
 from .tts import Tts
 
@@ -71,11 +72,14 @@ clips = Clips(hub, DATA)             # clip video của từng việc và clip x
 tro_ly.clips = clips                 # để trợ lý trả lời kèm video (server/xem_lai.py)
 phong = Phong(hub, gemini, tro_ly)   # phòng chat của quán + ảnh thanh toán (server/chat.py)
 tro_ly.phong = phong                 # để trợ lý trả lời về tiền thu (server/doanh_thu_tro_ly.py)
+# Bản demo tự chạy: clip che mặt làm hình camera, việc và nhân viên ảo (server/phat_demo.py)
+phat_demo = PhatDemo(hub, DATA) if os.environ.get('DEMO_FEED', '').strip() in ('1', 'true') else None
 
 
 @asynccontextmanager
 async def lifespan(_app):
     task = asyncio.create_task(hub.tick_forever())
+    demo_task = asyncio.create_task(phat_demo.run()) if phat_demo else None
     asyncio.create_task(tts.warm([f"Bàn {t['id']}" for z in hub.zones.values() for t in z.get('tables', [])]))  # giọng đọc sẵn sàng ngay, câu đầu không phải chờ 3-4 giây khởi động Piper
     if tro_ly.adk_wanted:            # nạp google-adk sẵn (vài giây) để câu hỏi đầu tiên không phải chờ
         asyncio.create_task(asyncio.to_thread(tro_ly.load_adk))
@@ -85,6 +89,8 @@ async def lifespan(_app):
                                                   else f', {gemini.ten} tắt (chưa có {khoa})'))
     yield
     task.cancel()
+    if demo_task:
+        demo_task.cancel()
     tts.close()
     hub.close()                      # ghi nốt dòng thời gian
 
@@ -592,6 +598,15 @@ async def timeline(since: float | None = None, until: float | None = None, table
 @app.get('/api/timeline/days')
 async def timeline_days():
     return dict(days=await asyncio.to_thread(hub.timeline.days))
+
+
+@app.get('/api/demo/clip/{name}')
+async def demo_clip(name: str):
+    """Clip đã che mặt đang phát làm hình camera trong bản demo tự chạy."""
+    f = DATA / 'video_demo' / name
+    if not name.endswith('.mp4') or '/' in name or '\\' in name or '..' in name or not f.is_file():
+        raise HTTPException(404, 'không có clip này')
+    return FileResponse(f, media_type='video/mp4', headers={'Cache-Control': 'public, max-age=86400'})
 
 
 @app.get('/api/tables/{table}/snap.jpg')

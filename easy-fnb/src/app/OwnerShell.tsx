@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
-import { Copy, ExternalLink, LayoutGrid, MessageCircle as MessagesCircle, MessagesSquare, Moon, Sun, QrCode as QrIcon, ReceiptText, ScanEye, Settings as SettingsIcon, Shield, ShieldCheck, Smartphone } from 'lucide-react';
+import { CircleHelp, Copy, ExternalLink, LayoutGrid, MessageCircle as MessagesCircle, MessagesSquare, Moon, Sun, QrCode as QrIcon, ReceiptText, ScanEye, Settings as SettingsIcon, Shield, ShieldCheck, Smartphone } from 'lucide-react';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
@@ -18,6 +18,7 @@ import { live, useLive, useLiveConnection } from '../live/store';
 import { ROLE_LABEL } from '../live/text';
 import { RouteFade } from './motion';
 import { QrCode } from './QrCode';
+import { Tour, useTour } from './tour';
 import { Conn, usePhoneBase } from './ui';
 
 const TABS = [
@@ -138,6 +139,7 @@ export default function OwnerShell() {
   const status = useLive((s) => s.status);
   const dark = useTheme().mode === 'dark';
   const { setChoice } = useThemeChoice();
+  const tour = useTour();
 
   return (
     <AppShell
@@ -161,7 +163,10 @@ export default function OwnerShell() {
             <div className="fx-side-foot">
               <Conn status={status} />
               <GuardButton />
-              <Button label="App nhân viên" variant="secondary" size="sm" icon={<Smartphone size={15} />} onClick={() => setLinks(true)} />
+              <span data-tour="staff-app" className="flex flex-col">
+                <Button label="App nhân viên" variant="secondary" size="sm" icon={<Smartphone size={15} />} onClick={() => setLinks(true)} />
+              </span>
+              <Button label="Hướng dẫn" variant="ghost" size="sm" icon={<CircleHelp size={15} />} onClick={tour.start} />
               <Button label={dark ? 'Giao diện sáng' : 'Giao diện tối'} variant="ghost" size="sm" icon={dark ? <Sun size={15} /> : <Moon size={15} />} onClick={() => setChoice(dark ? 'light' : 'dark')} />
             </div>
           }
@@ -179,6 +184,7 @@ export default function OwnerShell() {
       <Dialog isOpen={links} onOpenChange={setLinks} width={440} padding={0}>
         <StaffLinks onClose={() => setLinks(false)} />
       </Dialog>
+      {tour.open && <Tour onClose={tour.stop} />}
     </AppShell>
   );
 }

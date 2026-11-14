@@ -363,7 +363,7 @@ export default function Now() {
         </div>
       </header>
 
-      <div className="fx-strip">
+      <div className="fx-strip" data-tour="strip">
         <StripCell
           ready={loaded}
           label="Việc đang chờ"
@@ -424,7 +424,7 @@ export default function Now() {
         {/* Cột trái: camera và bàn */}
         <div className="flex flex-col gap-4 min-w-0">
           <Card padding={3}>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3" data-tour="cam">
               <SectionTitle
                 end={
                   cameras.length > 1 && !wall ? (
@@ -545,7 +545,7 @@ export default function Now() {
         {/* Cột phải: việc và người */}
         <div className="fx-now-side flex flex-col gap-4 min-w-0">
           <Card padding={3}>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3" data-tour="tasks">
               <SectionTitle end={<Button label="Tạo việc" size="sm" variant="secondary" icon={<Plus size={15} />} onClick={() => setCreating(true)} />}>
                 Việc cần làm{active.length ? ` (${active.length})` : ''}
               </SectionTitle>

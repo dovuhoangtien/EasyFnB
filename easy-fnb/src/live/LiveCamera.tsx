@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiUrl, frameUrl } from './api';
-import { useServerNow } from './store';
+import { useLive, useServerNow } from './store';
 import { cameraLive, clockTime, TABLE_STATE_LABEL } from './text';
 import type { Alert, Camera, CameraZones, TableState } from './types';
 
@@ -80,6 +80,27 @@ function useLatestFrame(camera: string, version: number) {
   return { shown, failed };
 }
 
+/** Clip demo đang phát trên máy chủ: tua tới đúng chỗ để mọi người xem cùng một lúc như camera thật */
+function DemoVideo({ demo, name }: { demo: NonNullable<Camera['demo']>; name: string }) {
+  const offset = useLive((s) => s.offset);
+  return (
+    <video
+      key={demo.started_at}
+      className="live-cam-img"
+      src={apiUrl(demo.url)}
+      autoPlay
+      muted
+      playsInline
+      preload="auto"
+      aria-label={`Hình camera ${name} (clip demo đã che mặt)`}
+      onLoadedMetadata={(e) => {
+        const at = (Date.now() + offset - demo.started_at) / 1000;
+        if (at > 0.5 && at < e.currentTarget.duration) e.currentTarget.currentTime = at;
+      }}
+    />
+  );
+}
+
 function centroid(points: [number, number][]) {
   let x = 0;
   let y = 0;
@@ -129,7 +150,9 @@ export function LiveCamera({ camera, zones, tables, alerts }: Props) {
 
   return (
     <div className="live-cam" data-offline={!online || undefined} style={{ aspectRatio: `${w} / ${h}`, ['--cam-ar' as string]: w / h }}>
-      {shown ? (
+      {camera.demo ? (
+        <DemoVideo demo={camera.demo} name={camera.name} />
+      ) : shown ? (
         // hình AI làm hình chính (khung người, khung xương); chưa có thì tạm dùng hình gốc từ điện thoại
         <img className="live-cam-img" src={shown.src} alt={`Hình AI của ${camera.name}`} draggable={false} />
       ) : raw && online ? (
@@ -185,12 +208,12 @@ export function LiveCamera({ camera, zones, tables, alerts }: Props) {
       <div className="cam-hud cam-hud--top">
         <span className="hud-tag">
           {online ? <span className="live-dot" aria-hidden="true" /> : null}
-          {camera.name || camera.id}, {online ? 'trực tiếp' : 'mất tín hiệu'}
+          {camera.name || camera.id}, {camera.demo ? 'clip demo' : online ? 'trực tiếp' : 'mất tín hiệu'}
         </span>
         {camera.fps !== null && online && <span className="hud-tag measured">{camera.fps.toFixed(1)} khung/giây</span>}
       </div>
       <div className="cam-hud cam-hud--bottom">
-        {camera.source ? <span className="hud-tag hud-src">{phone ? `Điện thoại ${phone}` : camera.source}</span> : !shown && zoneList.length > 0 ? <span className="hud-tag">Chưa có hình, chỉ hiện vùng bàn</span> : <span />}
+        {camera.source ? <span className="hud-tag hud-src">{phone ? `Điện thoại ${phone}` : camera.source}</span> : !shown && !camera.demo && zoneList.length > 0 ? <span className="hud-tag">Chưa có hình, chỉ hiện vùng bàn</span> : <span />}
         {camera.last_frame_at !== null && <span className="hud-tag measured">{clockTime(camera.last_frame_at)}</span>}
       </div>
     </div>

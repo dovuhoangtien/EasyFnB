@@ -170,6 +170,8 @@ export interface Camera {
   frame_h: number | null;
   fps: number | null;
   source: string | null;
+  /** bản demo tự chạy: clip đã che mặt đang phát làm hình camera */
+  demo?: { file: string; url: string; started_at: number; duration_ms: number };
 }
 
 /** owner: chủ quán, chỉ nhận cảnh báo an ninh, không nhận việc phục vụ */
