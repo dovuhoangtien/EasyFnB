@@ -1,4 +1,4 @@
-"""Sao lưu các tệp không phải SQLite trong DATA_DIR lên Cloud Storage (bucket BACKUP_BUCKET, tiền tố tep/).
+"""Sao lưu các tệp không phải SQLite trong DATA_DIR lên Cloud Storage (bucket BACKUP_BUCKET, thư mục BACKUP_PREFIX/tep/).
 
     python sao_luu_tep.py restore   tải mọi tệp đã sao lưu về DATA_DIR (chạy trước khi máy chủ khởi động)
     python sao_luu_tep.py sync      cứ SYNC_S giây đẩy tệp mới hoặc đã đổi, xoá bản sao của tệp đã xoá
@@ -16,7 +16,7 @@ import httpx
 
 DATA = Path(os.environ.get('DATA_DIR') or '/tmp/easyfnb')
 BUCKET = os.environ['BACKUP_BUCKET']
-PREFIX = 'tep/'
+PREFIX = os.environ.get('BACKUP_PREFIX', 'data') + '/tep/'
 KEEP = ('config.json', 'staff', 'chat')   # cấu hình, ảnh nhận dạng nhân viên, ảnh trong nhóm chat
 SYNC_S = 10
 API = f'https://storage.googleapis.com/storage/v1/b/{BUCKET}/o'

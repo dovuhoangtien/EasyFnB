@@ -4,6 +4,8 @@
 set -e
 export DATA_DIR="${DATA_DIR:-/tmp/easyfnb}"
 mkdir -p "$DATA_DIR"
+# Thư mục trong bucket; đổi giá trị (biến backup_prefix của Terraform) để bắt đầu lại từ dữ liệu demo.
+export BACKUP_PREFIX="${BACKUP_PREFIX:-data}"
 SERVER="python -m server --host 0.0.0.0"
 
 if [ -z "$BACKUP_BUCKET" ]; then

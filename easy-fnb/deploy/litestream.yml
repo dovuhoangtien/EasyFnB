@@ -3,9 +3,9 @@
 dbs:
   - path: ${DATA_DIR}/timeline.db
     replicas:
-      - url: gcs://${BACKUP_BUCKET}/litestream/timeline.db
+      - url: gcs://${BACKUP_BUCKET}/${BACKUP_PREFIX}/litestream/timeline.db
         sync-interval: 5s
   - path: ${DATA_DIR}/quan.db
     replicas:
-      - url: gcs://${BACKUP_BUCKET}/litestream/quan.db
+      - url: gcs://${BACKUP_BUCKET}/${BACKUP_PREFIX}/litestream/quan.db
         sync-interval: 5s

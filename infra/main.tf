@@ -364,6 +364,14 @@ resource "google_cloud_run_v2_service" "app" {
         }
       }
 
+      dynamic "env" {
+        for_each = local.backup ? [1] : []
+        content {
+          name  = "BACKUP_PREFIX"
+          value = var.backup_prefix
+        }
+      }
+
       # Không persist_data thì DATA_DIR là /tmp (RAM): giới hạn clip để không làm đầy bộ nhớ.
       env {
         name  = "CLIPS_MAX_MB"
