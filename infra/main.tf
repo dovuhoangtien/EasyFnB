@@ -14,6 +14,7 @@ locals {
       "serviceusage.googleapis.com",
       "monitoring.googleapis.com",
       "texttospeech.googleapis.com",
+      "generativelanguage.googleapis.com",
     ],
     var.enable_vertex_ai ? ["aiplatform.googleapis.com"] : [],
     var.billing_account != "" ? ["billingbudgets.googleapis.com"] : [],
