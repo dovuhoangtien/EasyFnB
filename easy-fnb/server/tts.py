@@ -3,6 +3,7 @@
 Hai bộ đọc, chọn bằng biến môi trường TTS_ENGINE:
   vieneu  VieNeu-TTS v3 Turbo (mặc định khi đã cài ở C:\\fnb-tts2), giọng tự nhiên, 48 kHz, chạy CPU.
   piper   Piper vi_VN-vais1000-medium (cũ), tự dùng thay khi VieNeu chưa cài hoặc không khởi động được.
+  google  Google Cloud Text-to-Speech (GOOGLE_TTS_VOICE, mặc định vi-VN-Chirp3-HD-Aoede); tự chọn khi chạy trên Cloud Run.
   off     tắt giọng đọc.
 Không có bộ nào: app vẫn chạy, chỉ không có giọng.
 """
@@ -70,7 +71,59 @@ class _Engine:
             self.proc.terminate()
 
 
+class _GoogleEngine:
+    """Google Cloud Text-to-Speech qua REST. Trên Cloud Run lấy token của service account từ metadata
+    server nên không cần khoá; chạy ở máy thì cần GOOGLE_TTS_TOKEN (ví dụ `gcloud auth print-access-token`)."""
+
+    URL = 'https://texttospeech.googleapis.com/v1/text:synthesize'
+    TOKEN_URL = 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token'
+
+    def __init__(self, voice: str):
+        self.name, self.voice = 'google', voice
+        self.dead_until = 0.0
+        self._token, self._token_exp = None, 0.0
+
+    alive = _Engine.alive
+    key = _Engine.key
+
+    def _auth(self, client) -> str:
+        if os.environ.get('GOOGLE_TTS_TOKEN'):
+            return os.environ['GOOGLE_TTS_TOKEN']
+        if not self._token or time.monotonic() > self._token_exp:
+            r = client.get(self.TOKEN_URL, headers={'Metadata-Flavor': 'Google'}, timeout=5)
+            r.raise_for_status()
+            d = r.json()
+            self._token, self._token_exp = d['access_token'], time.monotonic() + d.get('expires_in', 300) - 60
+        return self._token
+
+    def render(self, text: str, out: Path):
+        import base64
+        import httpx
+        try:
+            with httpx.Client() as c:
+                h = {'Authorization': f'Bearer {self._auth(c)}'}
+                if os.environ.get('GOOGLE_CLOUD_PROJECT'):  # token người dùng (chạy ở máy) cần project tính quota
+                    h['x-goog-user-project'] = os.environ['GOOGLE_CLOUD_PROJECT']
+                r = c.post(self.URL, timeout=15, headers=h, json=dict(
+                    input=dict(text=text),
+                    voice=dict(languageCode='vi-VN', name=self.voice),
+                    audioConfig=dict(audioEncoding='LINEAR16', sampleRateHertz=24000)))
+                r.raise_for_status()
+                audio = base64.b64decode(r.json()['audioContent'])
+        except Exception as e:
+            self.dead_until = time.monotonic() + 60
+            raise RuntimeError(f'google tts lỗi: {e}')
+        tmp = out.with_suffix('.tmp.wav')
+        tmp.write_bytes(audio)  # LINEAR16 trả về sẵn header WAV
+        tmp.replace(out)
+
+    def close(self):
+        pass
+
+
 def _engines() -> list[_Engine]:
+    if TTS_ENGINE == 'google' or (TTS_ENGINE == 'auto' and os.environ.get('K_SERVICE')):
+        return [_GoogleEngine(os.environ.get('GOOGLE_TTS_VOICE', 'vi-VN-Chirp3-HD-Aoede'))]
     found = {}
     if VIENEU_PYTHON.exists() and (VIENEU_PYTHON.parent.parent / 'Lib' / 'site-packages' / 'vieneu').is_dir():
         # Thử không cần mạng trước (model đã tải về), không được mới cho tải từ Hugging Face.

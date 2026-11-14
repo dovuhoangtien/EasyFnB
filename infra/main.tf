@@ -13,6 +13,7 @@ locals {
       "cloudresourcemanager.googleapis.com",
       "serviceusage.googleapis.com",
       "monitoring.googleapis.com",
+      "texttospeech.googleapis.com",
     ],
     var.enable_vertex_ai ? ["aiplatform.googleapis.com"] : [],
     var.billing_account != "" ? ["billingbudgets.googleapis.com"] : [],
@@ -335,6 +336,17 @@ resource "google_cloud_run_v2_service" "app" {
       env {
         name  = "CLIPS_MAX_MB"
         value = tostring(var.clips_max_mb)
+      }
+
+      # Giọng đọc cho điện thoại nhân viên: Google Cloud Text-to-Speech, xác thực bằng service account.
+      env {
+        name  = "TTS_ENGINE"
+        value = "google"
+      }
+
+      env {
+        name  = "GOOGLE_TTS_VOICE"
+        value = var.tts_voice
       }
 
       dynamic "env" {

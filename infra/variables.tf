@@ -55,6 +55,12 @@ variable "clips_max_mb" {
   }
 }
 
+variable "tts_voice" {
+  description = "Giọng Google Cloud Text-to-Speech cho điện thoại nhân viên (GOOGLE_TTS_VOICE). Ví dụ vi-VN-Chirp3-HD-Aoede (nữ), vi-VN-Chirp3-HD-Charon (nam), vi-VN-Neural2-A (rẻ hơn)."
+  type        = string
+  default     = "vi-VN-Chirp3-HD-Aoede"
+}
+
 variable "gemini_model" {
   description = "Model Gemini cho trợ lý và tóm tắt ca (GEMINI_MODEL). Để trống thì dùng mặc định của máy chủ (gemini-3.5-flash-lite)."
   type        = string
