@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { Camera as CameraIcon, Film, ListOrdered, RefreshCw, Save, ScanSearch, Trash, Undo2 } from 'lucide-react';
-import { putZones, snapshotUrl, suggestZones } from './api';
+import { apiUrl, putZones, snapshotUrl, suggestZones } from './api';
 import { useRun } from './hooks';
 import { live, useLive } from './store';
 import { AREA_LABEL, byName } from './text';
@@ -139,6 +139,13 @@ function useBackground(camera: string) {
     };
   }, [camera, bust, mode]);
 
+  // ảnh chụp mới từ camera mỗi 3 giây: hình nền gần như trực tiếp (ảnh mới tải xong mới thay, không nháy)
+  useEffect(() => {
+    if (mode !== 'snapshot') return;
+    const t = window.setInterval(() => setBust(Date.now()), 3000);
+    return () => window.clearInterval(t);
+  }, [mode]);
+
   const pickFile = (ev: ChangeEvent<HTMLInputElement>) => {
     const file = ev.target.files?.[0];
     ev.target.value = '';
@@ -195,6 +202,8 @@ function useBackground(camera: string) {
 /** Trình vẽ vùng bàn cho một camera */
 function ZoneCanvas({ camera, stored, autoFind }: { camera: string; stored: CameraZones | undefined; autoFind?: boolean }) {
   const back = useBackground(camera);
+  // camera là điện thoại: hiện luồng hình trực tiếp (cùng cỡ với ảnh chụp nên vùng bàn không lệch)
+  const phone = useLive((s) => s.cameras.find((c) => c.id === camera)?.source?.match(/\/api\/phone\/([^/]+)\/mjpeg/)?.[1]);
   const { busy, run } = useRun();
   const [edit, setEdit] = useState<{ space: Size; tables: EditTable[] } | null>(null);
   const [draft, setDraft] = useState<Point[]>([]);
@@ -556,7 +565,15 @@ function ZoneCanvas({ camera, stored, autoFind }: { camera: string; stored: Came
 
       <div className="zone-layout">
         <div ref={stageRef} className="zone-stage" style={{ aspectRatio: `${space.w} / ${space.h}` }} data-drawing={drawing || undefined}>
-          {back.bg ? <img src={back.bg.src} alt={`Hình nền của ${camera} để vẽ vùng bàn`} draggable={false} /> : <div className="zone-blank">Chưa có hình nền</div>}
+          {back.bg ? (
+            <img
+              src={phone && back.mode === 'snapshot' ? apiUrl(`/api/phone/${encodeURIComponent(phone)}/mjpeg`) : back.bg.src}
+              alt={`Hình nền của ${camera} để vẽ vùng bàn`}
+              draggable={false}
+            />
+          ) : (
+            <div className="zone-blank">Chưa có hình nền</div>
+          )}
           <svg
             ref={svgRef}
             viewBox={`0 0 ${space.w} ${space.h}`}

@@ -55,6 +55,9 @@ DO_CA_NHAN_YOLOE = {'phone': 'điện thoại', 'bag': 'túi'}                  
 DO_CA_NHAN_CONF = 0.25   # ngưỡng nhận đồ cá nhân, bằng ngưỡng đồ trên bàn
 DO_CA_NHAN_LE = 0.35     # túi để trên ghế / dưới chân bàn: cách mép vùng bàn không quá bấy nhiêu lần cạnh ngắn của bàn
 NOSE, LSH, RSH, LEL, REL, LWR, RWR = 0, 5, 6, 7, 8, 9, 10
+# các đoạn xương COCO-17 để vẽ khung xương lên hình AI (vai, tay, thân, chân)
+XUONG = ((5, 6), (5, 7), (7, 9), (6, 8), (8, 10), (5, 11), (6, 12), (11, 12),
+         (11, 13), (13, 15), (12, 14), (14, 16), (0, 5), (0, 6))
 LHI, RHI, LKN, RKN, LAN, RAN = 11, 12, 13, 14, 15, 16   # hông, đầu gối, cổ chân (COCO)
 
 BGR = {
@@ -1509,10 +1512,10 @@ def run_clip(path, zones, args, out_root, mc=None):
                         bx1, by1, bx2, by2 = cv2.boundingRect(np.asarray(tb.poly, dtype=np.int32))
                         bx2, by2 = bx1 + bx2, by1 + by2
                         mc.table_snap(tb.name, crop(an_danh(), bx1, by1, bx2, by2, 0.35 * max(bx2 - bx1, by2 - by1)))
-            if now_w - last_raw >= 30:  # ảnh gốc không vẽ gì, để vẽ vùng bàn trên web
+            if now_w - last_raw >= 3:  # ảnh gốc không vẽ gì, để vẽ vùng bàn trên web (3 s: hình nền gần như trực tiếp)
                 mc.frame_raw(an_danh() if hien_che else frame, source=src_name)
                 last_raw = now_w
-            send_live = now_w - last_live >= 0.25
+            send_live = now_w - last_live >= 0.1   # hình AI là hình chính trên web: ~10 khung/giây
             # gói bằng chứng tới hạn (chờ đủ t+... để có khung t+0.5)
             if pending_ev and ev_buf and t - min(p['t0'] for p in pending_ev) >= EVIDENCE_DELAY_S:
                 buf = list(ev_buf)
@@ -1541,10 +1544,14 @@ def run_clip(path, zones, args, out_root, mc=None):
             col = (BGR['goi'] if p['calling'] else BGR['nv'] if p['staff'] else BGR['di'] if p['walking']
                    else BGR['co_khach'])
             cv2.rectangle(vis, (x1, y1), (x2, y2), col, 4 if p['calling'] else 3 if p['staff'] else 2)
-            if p['calling']:
-                for a, b_ in ((LSH, LEL), (LEL, LWR), (RSH, REL), (REL, RWR)):
-                    if p['kc'][a] > 0.4 and p['kc'][b_] > 0.4:
-                        cv2.line(vis, tuple(map(int, p['kp'][a])), tuple(map(int, p['kp'][b_])), BGR['goi'], 3)
+            # khung xương mọi người; người đang gọi vẽ dày hơn
+            for a, b_ in XUONG:
+                if p['kc'][a] > 0.4 and p['kc'][b_] > 0.4:
+                    cv2.line(vis, tuple(map(int, p['kp'][a])), tuple(map(int, p['kp'][b_])), col,
+                             3 if p['calling'] else 2, cv2.LINE_AA)
+            for k in range(min(17, len(p['kc']))):
+                if p['kc'][k] > 0.4:
+                    cv2.circle(vis, tuple(map(int, p['kp'][k])), 3, col, -1, cv2.LINE_AA)
         if hd is not None:
             from hanh_dong import LABELS as HD_LABELS, top as hd_top
         newest = [e for e in events if e['t'] > t - 2.5]

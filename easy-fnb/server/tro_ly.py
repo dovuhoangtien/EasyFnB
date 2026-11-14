@@ -307,6 +307,71 @@ def khoi_bang_ban(hub):
 
 
 # ====================================================================== đọc dữ liệu (dùng chung cho ADK và rules)
+LS_GHI_CHU = ('Ca trong bộ nhớ chưa có việc nào (máy chủ vừa khởi động lại); đây là số liệu của cả ngày hôm nay '
+              'đọc từ lịch sử đã lưu. Trả lời như số liệu hôm nay bình thường, không nói là chưa có gì.')
+LOAI_K = {'goi': 'call', 'goi_phuc_vu': 'call', 'call': 'call', 'can_don': 'needs_clearing', 'don': 'needs_clearing',
+          'needs_clearing': 'needs_clearing', 'khach_moi': 'new_guest', 'new_guest': 'new_guest'}
+
+
+def hom_nay_lich_su(hub):
+    """Ca trong RAM trống (máy chủ vừa khởi động, ví dụ Cloud Run) mà hôm nay đã có việc trong lịch sử: số liệu ca
+    lấy từ lịch sử, cùng dạng với so_lieu_ca. None nếu RAM đã có việc hoặc hôm nay chưa ghi gì."""
+    if viec(hub):
+        return None
+    day = xem_lai.hom_nay()
+    tk = xem_lai.tong_ket_ngay(hub, day)
+    if not tk['n']:
+        return None
+    sp = tk['speed']
+    theo_ban = {}
+    cot = {'call': 'goi', 'needs_clearing': 'can_don', 'new_guest': 'khach_moi'}
+    for r in tk['recs']:
+        if r['kind'] in cot:      # cảnh báo an ninh (ngoài giờ, lấy đồ...) không tính vào số liệu từng bàn
+            b = theo_ban.setdefault(r['ban'] or '?', dict(ban=r['ban'], goi=0, can_don=0, khach_moi=0))
+            b[cot[r['kind']]] += 1
+    try:
+        nv = nhieu_ngay.nhan_vien_ngay(hub, day)[2]
+    except Exception:  # noqa: BLE001  thiếu số liệu nhân viên thì vẫn trả phần còn lại
+        nv = []
+    return dict(ghi_chu=LS_GHI_CHU, so_lan=dict(goi_phuc_vu=tk['call'], can_don=tk['needs_clearing'],
+                                               khach_moi=tk['new_guest']),
+                toc_do_phuc_vu=dict(nhan_xet=MUC_VI.get(nhan_xet(sp)), viec_nhanh=sp['fast'], viec_hoi_cham=sp['ok'],
+                                    viec_cham=sp['slow'], viec_khong_ai_toi=sp['missed']),
+                bao_nham_da_huy=tk['huy'], gio_ban_nhat=f"{tk['dinh']:02d}:00" if tk['dinh'] is not None else None,
+                viec_dang_cho=0, theo_nhan_vien=nv, theo_ban=list(theo_ban.values()))
+
+
+def su_kien_lich_su(hub, loai='', ban='', nhan_vien='', tu_gio='', den_gio='', cho_hon_giay=0, sap_xep='moi_nhat',
+                    gioi_han=10):
+    """Như tim_su_kien nhưng đọc việc hôm nay từ lịch sử (khi ca trong RAM trống)."""
+    k = LOAI_K.get(bo_dau(loai).replace(' ', '_'))
+    ban_k = _khoa_ban(ban)
+    nv = bo_dau(nhan_vien)
+    out = []
+    for r in xem_lai.tong_ket_ngay(hub, xem_lai.hom_nay())['recs']:
+        if (k and r['kind'] != k) or (ban_k and not _cung_ban(ban_k, r['ban'])):
+            continue
+        if nv and nv not in (bo_dau(r['nv'] or ''), bo_dau(ten_nv(hub, r['nv']) or '')):
+            continue
+        gio = clock(r['t'])[:5]
+        if (tu_gio and gio < tu_gio[:5]) or (den_gio and gio > den_gio[:5]):
+            continue
+        if cho_hon_giay and (r['wait_s'] is None or r['wait_s'] <= cho_hon_giay):
+            continue
+        out.append(r)
+    if sap_xep == 'cho_lau_nhat':
+        out.sort(key=lambda r: -(r['wait_s'] or 0))
+    else:
+        out.sort(key=lambda r: -r['t'])
+    out = out[:max(1, min(30, int(gioi_han or 10)))]
+    kq = {'xong': 'đã xong', 'nhan': 'đã nhận', 'mo': 'đang chờ', 'bo_lo': 'không ai tới', 'huy': 'đã huỷ'}
+    return dict(ghi_chu=LS_GHI_CHU, tong=len(out), su_kien=[dict(
+        ma=r['aid'], loai=KIND_VI[r['kind']], ban=r['ban'], gio=clock(r['t']),
+        toc_do=MUC_VI.get(muc(r['wait_s'])) if r['wait_s'] is not None else None,
+        nhan_vien=ten_nv(hub, r['nv']) if r['nv'] else None, trang_thai=kq.get(r['ket']), ly_do_huy=r.get('ly_do'),
+        co_video=True) for r in out])
+
+
 def loc_su_kien(hub, loai='', ban='', nhan_vien='', tu_gio='', den_gio='', cho_hon_giay=0, sap_xep='moi_nhat',
                 gioi_han=10):
     t = now_ms()
@@ -347,9 +412,11 @@ def _khoa_ban(s):
 
 
 def _cung_ban(k, table):
-    """Khoá bàn người hỏi gõ có chỉ đúng bàn này không. Chỉ gõ số thì so theo số ('5' khớp 'B5')."""
+    """Khoá bàn người hỏi gõ có chỉ đúng bàn này không. Chỉ gõ số thì so theo số ('5' khớp 'B5'); bàn tên chỉ có
+    số thì gõ kèm chữ vẫn khớp ('B09' khớp '09', vì mô hình hay tự thêm chữ B)."""
     kb = _khoa_ban(table)
-    return bool(kb) and (kb == k or (k.isdigit() and re.sub(r'\D', '', kb) == k))
+    return bool(kb) and (kb == k or (k.isdigit() and re.sub(r'\D', '', kb) == k)
+                         or (kb.isdigit() and re.sub(r'\D', '', k) == kb))
 
 
 def _khop_ban(hub, cau):
@@ -780,6 +847,9 @@ class TroLy:
 
         def so_lieu_ca() -> dict:
             """Số liệu tổng của ca hôm nay: số lần khách gọi, bàn cần dọn, khách mới, tốc độ phục vụ (bao nhiêu việc nhanh, hơi chậm, chậm, không ai tới), báo nhầm, số liệu từng nhân viên và từng bàn."""
+            ls = hom_nay_lich_su(hub)
+            if ls is not None:
+                return ls
             r = hub.report()
             sp = r['speed']
             return dict(tu=clock(r['from']), den=clock(r['to']), so_lan=dict(
@@ -811,6 +881,8 @@ class TroLy:
                 sap_xep: moi_nhat hoặc cho_lau_nhat.
                 gioi_han: số sự kiện tối đa, nhiều nhất 30.
             """
+            if not viec(hub):
+                return su_kien_lich_su(hub, loai, ban, nhan_vien, tu_gio, den_gio, cho_hon_giay, sap_xep, gioi_han)
             got = loc_su_kien(hub, loai, ban, nhan_vien, tu_gio, den_gio, cho_hon_giay, sap_xep, gioi_han)
             return dict(tong=len(got), su_kien=[dict(
                 ma=a['id'], loai=KIND_VI[a['kind']], ban=a['table'], gio=clock(a['created_at']),

@@ -19,6 +19,7 @@ import { live, useLive, useServerNow } from '../live/store';
 import { ageText, shiftText, byName, byUrgency, cameraLive, clockTime, isActive, isClosed, KIND_LABEL, ROLE_LABEL, statusText, TABLE_STATE_LABEL, tableText, waitWord } from '../live/text';
 import { ALERT_KINDS, type Alert, type AlertKind, type LogEntry, type Staff } from '../live/types';
 import { speak, unlockAudio } from '../live/voice';
+import { CameraAiButton } from './cameraAi';
 import { AnimatedList, Roll } from './motion';
 import { SpeedMeter } from './SpeedMeter';
 import { SecurityAlerts } from './security';
@@ -469,8 +470,9 @@ export default function Now() {
                       </Text>
                     </div>
                   ) : (
-                    <div className="flex">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Button label="Sửa bàn" variant="ghost" size="sm" href={`/cai-dat?tab=vung-ban&cam=${encodeURIComponent(camera.id)}`} />
+                      <CameraAiButton live={cameraLive(camera, now)} />
                     </div>
                   )}
                 </>
@@ -486,7 +488,10 @@ export default function Now() {
                     <Text type="supporting" color="secondary" as="p">
                       Chạy máy camera, hoặc mở trang /phat trên một điện thoại để dùng nó làm camera. Hình sẽ hiện ở đây ngay khi có.
                     </Text>
-                    <Button label="Xem cách nối camera" variant="secondary" size="sm" href="/cai-dat?tab=camera" />
+                    <div className="flex items-center gap-2 flex-wrap" style={{ justifyContent: 'center' }}>
+                      <CameraAiButton live={false} />
+                      <Button label="Xem cách nối camera" variant="secondary" size="sm" href="/cai-dat?tab=camera" />
+                    </div>
                   </div>
                 </div>
               )}

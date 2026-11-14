@@ -12,8 +12,10 @@ const OUT_H = 540;
 /** ống kính góc siêu rộng (0.5×) trên iPhone/Android: tên thiết bị có chữ ultra, siêu rộng, 0.5 */
 const ULTRA = /ultra|siêu rộng|sieu rong|0[.,]5/i;
 type Lens = 'main' | 'wide';
-const QUALITY = 0.62;
-const MAX_PENDING = 1_200_000; // chờ gửi quá 1,2 MB thì bỏ khung, không dồn hàng đợi
+// chất lượng JPEG tự chỉnh theo mạng: nghẽn thì hạ (ảnh nhẹ hơn, đủ khung hơn), thông thì nâng dần lại
+const Q_MAX = 0.55;
+const Q_MIN = 0.35;
+const MAX_PENDING = 200_000; // chờ gửi quá ~3 ảnh thì bỏ khung: hình không trễ dồn, và báo để hạ chất lượng
 const MAX_POSTS = 3; // nếu không dùng được WebSocket thì gửi chồng 3 ảnh một lúc
 
 /** Dùng điện thoại làm camera: gửi từng khung JPEG lên máy chủ, pipeline đọc lại như camera IP. Mở bằng HTTPS (Safari chặn camera ở http). */
@@ -136,12 +138,16 @@ export default function PhoneCamera() {
     const v = video.current!;
     const canvas = document.createElement('canvas');
     let pending = 0;
+    let quality = Q_MAX;
     const timer = window.setInterval(() => {
       if (!v.videoWidth) return;
       const ws = socket.current;
       const live = ws?.readyState === WebSocket.OPEN;
-      if (!live && pending >= MAX_POSTS) return;
-      if (live && ws!.bufferedAmount > MAX_PENDING) return; // mạng chậm: bỏ khung cũ, không dồn
+      if ((!live && pending >= MAX_POSTS) || (live && ws!.bufferedAmount > MAX_PENDING)) {
+        quality = Math.max(Q_MIN, quality - 0.05); // mạng chậm: bỏ khung này, ảnh sau nhẹ hơn
+        return;
+      }
+      if (!live || ws!.bufferedAmount === 0) quality = Math.min(Q_MAX, quality + 0.01);
       if (canvas.width !== OUT_W) {
         canvas.width = OUT_W;
         canvas.height = OUT_H;
@@ -184,7 +190,7 @@ export default function PhoneCamera() {
           }
         },
         'image/jpeg',
-        QUALITY,
+        quality,
       );
     }, 1000 / FPS);
     return () => window.clearInterval(timer);

@@ -20,6 +20,7 @@ import json
 import os
 import time
 from contextlib import asynccontextmanager
+import shutil
 from pathlib import Path
 from urllib.parse import quote
 
@@ -27,6 +28,7 @@ from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Reques
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 
+from . import may_camera
 from .clips import Clips, router as clips_router
 from .chat import Phong, router as chat_router
 from .gemini import Gemini, GeminiError
@@ -39,6 +41,11 @@ from .tts import Tts
 HERE = Path(__file__).resolve().parent
 DIST = HERE.parent / 'dist'
 DATA = Path(os.environ.get('DATA_DIR', HERE / 'data'))
+# Dữ liệu demo (lịch sử, ảnh nhân viên, clip che mặt) đi kèm mã nguồn: thư mục dữ liệu chưa có lịch sử
+# (lần đầu chạy, Cloud Run khởi động với /tmp trống) thì chép vào. Đặt NO_DEMO_DATA=1 để chạy quán trống.
+DEMO = HERE / 'du_lieu_demo'
+if DEMO.is_dir() and not (DATA / 'timeline.db').exists() and not os.environ.get('NO_DEMO_DATA'):
+    shutil.copytree(DEMO, DATA, dirs_exist_ok=True)
 EDGE_KEY = os.environ.get('EDGE_KEY', '').strip()
 CLOUD = bool(os.environ.get('K_SERVICE'))   # K_SERVICE có sẵn khi chạy trên Cloud Run
 STARTED = time.monotonic()
@@ -530,6 +537,29 @@ async def phone_mjpeg(cam: str):
                     return
             await asyncio.sleep(0.05)
     return StreamingResponse(gen(), media_type='multipart/x-mixed-replace; boundary=frame')
+
+
+# ------------------------------------------------------------------ bật camera AI từ trang web
+@app.get('/api/camera-ai')
+async def camera_ai_status():
+    return may_camera.status()
+
+
+@app.post('/api/camera-ai/{action}')
+async def camera_ai(action: str, cam: str = 'cam1', x_owner_pin: str | None = Header(default=None)):
+    """Bật/tắt máy camera AI trên chính máy chủ (server/may_camera.py). Đã đặt PIN chủ quán thì phải gửi đúng PIN."""
+    if hub.settings.get('_owner_pin') and not hub.pin_ok(x_owner_pin):
+        raise HTTPException(403, 'Cần mã PIN chủ quán')
+    if action == 'stop':
+        return await asyncio.to_thread(may_camera.stop)
+    if action != 'start':
+        raise HTTPException(404, 'chỉ có start hoặc stop')
+    cur = phone_frames.get(cam)
+    live = bool(cur) and asyncio.get_event_loop().time() - cur['at'] < 3
+    try:
+        return await asyncio.to_thread(may_camera.start, cam, live)
+    except RuntimeError as e:
+        raise HTTPException(400, str(e))
 
 
 @app.get('/api/tts/status')

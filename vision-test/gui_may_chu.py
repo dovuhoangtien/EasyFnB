@@ -400,10 +400,24 @@ class MayChu:
                 pass
 
     def _run(self):
+        n_live, t_dem = 0, time.monotonic()
         while not self.stop.is_set() or not self.q.empty():
             sent = False
+            # hình trực tiếp gửi trước: hình mới ghi đè hình cũ, chờ hàng đợi việc thì hình bị bỏ (web thấy giật)
+            with self.lock:
+                fr, self._live = self._live, None
+                raw, self._raw = self._raw, None
+            for f in (raw, fr):
+                if f is not None:
+                    self._send('POST', '/api/edge/frame', data=f[0], params=f[1],
+                               headers={'Content-Type': 'image/jpeg'})
+                    sent = True
+            n_live += fr is not None
+            if time.monotonic() - t_dem >= 60:
+                print(f'  [máy chủ] gửi {n_live / (time.monotonic() - t_dem):.1f} hình/giây lên web', flush=True)
+                n_live, t_dem = 0, time.monotonic()
             try:
-                t_put, (method, path, body) = self.q.get(timeout=0.05)
+                t_put, (method, path, body) = self.q.get(timeout=0.01)
                 if qua_han(path, body, time.monotonic() - t_put):
                     self.bo_cu += 1
                     if self.bo_cu in (1, 10, 100):
@@ -413,14 +427,6 @@ class MayChu:
                 sent = True
             except queue.Empty:
                 pass
-            with self.lock:
-                fr, self._live = self._live, None
-                raw, self._raw = self._raw, None
-            for f in (raw, fr):
-                if f is not None:
-                    self._send('POST', '/api/edge/frame', data=f[0], params=f[1],
-                               headers={'Content-Type': 'image/jpeg'})
-                    sent = True
             if not self.stop.is_set():
                 self._poll_zones()
                 self._poll_jobs()

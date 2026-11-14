@@ -46,6 +46,14 @@ class Clips:
         self.req = {}        # id yêu cầu -> dict(id, status, camera, t_from, t_to, error, file, job)
         self._watch = None
         self._bg = set()
+        # clip có sẵn theo giờ (dữ liệu demo, đã che mặt): xin xem lại khoảng nào có clip thì trả luôn, không cần camera
+        self.demo_dir = Path(data_dir) / 'video_demo'
+        try:
+            import json
+            self.demo = [x for x in json.loads((self.demo_dir / 'index.json').read_text(encoding='utf-8'))
+                         if (self.demo_dir / x['file']).exists()]
+        except (OSError, ValueError, KeyError, TypeError):
+            self.demo = []
         for f in self.dir.glob('*.mp4'):    # việc nằm trong RAM: clip của lần chạy trước không còn ai trỏ tới
             self._unlink(f)
 
@@ -146,10 +154,18 @@ class Clips:
         r = dict(id='c' + uuid.uuid4().hex[:12], status='pending', camera=camera, t_from=t_from, t_to=t_to,
                  error=None, file=None, job=None, goc=bool(goc), at=time.time())
         self.req[r['id']] = r
+        d = self._tim_demo(camera, t_from, t_to)
+        if d is not None:
+            r.update(status='ready', file=self.demo_dir / d['file'], t_from=d['t_from'], t_to=d['t_to'], demo=True)
         for old in list(self.req)[:-MAX_REQ]:
-            if self.req[old]['file']:
+            if self.req[old]['file'] and not self.req[old].get('demo'):
                 self._unlink(self.req[old]['file'])
             del self.req[old]
+        if r['status'] == 'ready':
+            return self.view(r)
+        if not self.hub.camera_live(camera) and self.demo:
+            r.update(status='failed', error='Không có video lưu lại cho lúc đó.')
+            return self.view(r)
         if not self.hub.camera_live(camera):
             r.update(status='failed', error=f'Camera {camera} đang không chạy nên chưa lấy được clip.')
             return self.view(r)
@@ -170,6 +186,17 @@ class Clips:
         if r['status'] == 'pending':     # camera trả lỗi qua POST /api/edge/jobs/{id} (clip tốt thì đã là ready)
             err = res.get('error') if isinstance(res, dict) else None
             r.update(status='failed', error=str(err or 'Máy camera không gửi clip.')[:200])
+
+    def _tim_demo(self, camera, t_from, t_to):
+        """Clip demo của camera phủ khoảng [t_from, t_to] (ms) nhiều nhất; không có clip nào chạm khoảng đó thì None."""
+        best, phu = None, 0
+        for x in self.demo:
+            if x.get('camera', 'cam1') != camera:
+                continue
+            p = min(x['t_to'], t_to) - max(x['t_from'], t_from)
+            if p > phu:
+                best, phu = x, p
+        return best
 
     def add_job_clip(self, job, t_from, t_to, data):
         """Clip máy camera gửi cho việc `job`. Trả id yêu cầu, hoặc None nếu không còn yêu cầu nào chờ việc đó."""
