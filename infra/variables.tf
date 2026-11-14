@@ -39,9 +39,32 @@ variable "cpu" {
 }
 
 variable "memory" {
-  description = "RAM của instance. 1Gi vì google-adk (trợ lý) nạp thêm khá nhiều thư viện; HUONG_DAN.md dùng 512Mi khi chưa có trợ lý."
+  description = "RAM của instance. Khi persist_data = false, DATA_DIR nằm trong /tmp = RAM nên clip, ảnh cắt và hai file SQLite cũng tính vào đây: chừa chỗ cho clips_max_mb. Chưa đo với code mới; google-adk (trợ lý) cũng nạp khá nhiều thư viện."
   type        = string
-  default     = "1Gi"
+  default     = "2Gi"
+}
+
+variable "clips_max_mb" {
+  description = "Trần dung lượng thư mục clip xem lại (CLIPS_MAX_MB). Máy chủ nhận clip tối đa 40 MB mỗi cái và mặc định cho phép 2000 MB, quá lớn khi DATA_DIR là RAM. Phải nhỏ hơn nhiều so với memory."
+  type        = number
+  default     = 200
+
+  validation {
+    condition     = var.clips_max_mb >= 0
+    error_message = "clips_max_mb không được âm."
+  }
+}
+
+variable "gemini_model" {
+  description = "Model Gemini cho trợ lý và tóm tắt ca (GEMINI_MODEL). Để trống thì dùng mặc định của máy chủ (gemini-3.5-flash-lite)."
+  type        = string
+  default     = ""
+}
+
+variable "gemini_verify_model" {
+  description = "Model kiểm tra ảnh báo động (GEMINI_VERIFY_MODEL). Đặt gemini-decision-1 để dùng Gemini Decision (Decisions API, trả xác suất có/không). Để trống thì kiểm tra ảnh bằng generateContent như cũ."
+  type        = string
+  default     = ""
 }
 
 variable "allow_unauthenticated" {
@@ -51,9 +74,9 @@ variable "allow_unauthenticated" {
 }
 
 variable "persist_data" {
-  description = "Gắn bucket Cloud Storage làm DATA_DIR để vùng bàn, nhân viên, cài đặt, ảnh cắt sống qua lần khởi động lại (mỗi lần deploy là một lần khởi động lại). ADR-0003."
+  description = "Gắn bucket Cloud Storage (gcsfuse) làm DATA_DIR để vùng bàn, nhân viên, cài đặt, ảnh cắt sống qua lần khởi động lại. Mặc định TẮT vì server ghi hai file SQLite (timeline.db, quan.db) ở chế độ WAL, mà WAL cần bộ nhớ chia sẻ gcsfuse không hỗ trợ tốt (chưa kiểm). Tắt thì dữ liệu nằm trong /tmp (RAM) và mất khi instance khởi động lại. ADR-0003."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "data_retention_days" {

@@ -331,6 +331,28 @@ resource "google_cloud_run_v2_service" "app" {
         }
       }
 
+      # Không persist_data thì DATA_DIR là /tmp (RAM): giới hạn clip để không làm đầy bộ nhớ.
+      env {
+        name  = "CLIPS_MAX_MB"
+        value = tostring(var.clips_max_mb)
+      }
+
+      dynamic "env" {
+        for_each = var.gemini_model != "" ? [1] : []
+        content {
+          name  = "GEMINI_MODEL"
+          value = var.gemini_model
+        }
+      }
+
+      dynamic "env" {
+        for_each = var.gemini_verify_model != "" ? [1] : []
+        content {
+          name  = "GEMINI_VERIFY_MODEL"
+          value = var.gemini_verify_model
+        }
+      }
+
       dynamic "volume_mounts" {
         for_each = var.persist_data ? [1] : []
         content {

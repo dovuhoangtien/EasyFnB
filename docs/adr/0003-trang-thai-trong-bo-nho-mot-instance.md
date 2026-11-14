@@ -28,3 +28,11 @@
 - **Firestore làm nguồn sự thật:** đúng hướng khi nhiều quán/nhiều instance, nhưng phải viết lại `hub.py` và chuyển dashboard sang `onSnapshot`. Không kịp, và không cần cho một quán.
 - **Cloud SQL / Memorystore:** thêm tiền cố định và quản trị cho một dịch vụ không cần.
 - **Đĩa tạm `/tmp` (`DATA_DIR` mặc định trong Dockerfile):** đơn giản nhất nhưng mất cả cấu hình mỗi lần deploy.
+
+## Cập nhật 2026-11-14 (sau khi gộp gemini-decision)
+
+Code mới ghi thêm hai file SQLite vào `DATA_DIR` (`timeline.db`: lịch sử lâu dài, `quan.db`: sổ thanh toán), cả hai bật `journal_mode=WAL`, và nhận clip xem lại tối đa 40 MB mỗi cái vào `DATA_DIR/clips` (trần mặc định 2000 MB). Hệ quả với quyết định trên:
+
+- **`persist_data` mặc định chuyển sang `false`.** WAL cần bộ nhớ chia sẻ mà gcsfuse hỗ trợ kém. `timeline.py` bắt lỗi nên không sập, nhưng lịch sử có thể lặng lẽ không được ghi. Đây là suy đoán, **chưa kiểm** trên gcsfuse.
+- Không persist thì `DATA_DIR=/tmp` là RAM trên Cloud Run: clip và hai file SQLite tính vào bộ nhớ. IaC đặt `CLIPS_MAX_MB=200` và `memory=2Gi` (chưa đo).
+- **Cái giá:** lịch sử, vùng bàn và cài đặt mất khi instance khởi động lại. Chấp nhận cho demo. Lịch sử qua nhiều ngày cần tách `DB_DIR` sang đĩa riêng hoặc dùng Firestore (ADR-0013).

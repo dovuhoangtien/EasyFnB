@@ -20,8 +20,22 @@ run "mac_dinh_khong_co_khoa_llm" {
   }
 
   assert {
-    condition     = length(google_storage_bucket.data) == 1
-    error_message = "Mặc định phải có bucket dữ liệu."
+    condition     = length(google_storage_bucket.data) == 0
+    error_message = "Mặc định không gắn bucket dữ liệu (SQLite WAL trên gcsfuse chưa kiểm)."
+  }
+
+  assert {
+    condition     = google_cloud_run_v2_service.app.template[0].containers[0].resources[0].limits["memory"] == "2Gi"
+    error_message = "Mặc định 2Gi vì DATA_DIR là /tmp (RAM)."
+  }
+
+  assert {
+    condition = (
+      contains([for e in google_cloud_run_v2_service.app.template[0].containers[0].env : e.name], "CLIPS_MAX_MB") &&
+      !contains([for e in google_cloud_run_v2_service.app.template[0].containers[0].env : e.name], "DATA_DIR") &&
+      !contains([for e in google_cloud_run_v2_service.app.template[0].containers[0].env : e.name], "GEMINI_VERIFY_MODEL")
+    )
+    error_message = "Phải đặt CLIPS_MAX_MB; không đặt DATA_DIR (dùng /tmp) và không bật Gemini Decision khi chưa yêu cầu."
   }
 
   assert {
@@ -34,11 +48,14 @@ run "co_khoa_gemini_va_cac_tuy_chon" {
   command = plan
 
   variables {
-    gemini_api_key   = "khoa-gia"
-    persist_data     = false
-    alert_email      = "a@example.com"
-    billing_account  = "000000-000000-000000"
-    enable_vertex_ai = true
+    gemini_api_key      = "khoa-gia"
+    persist_data        = true
+    gemini_model        = "gemini-3.5-flash-lite"
+    gemini_verify_model = "gemini-decision-1"
+    clips_max_mb        = 50
+    alert_email         = "a@example.com"
+    billing_account     = "000000-000000-000000"
+    enable_vertex_ai    = true
   }
 
   assert {
@@ -47,8 +64,21 @@ run "co_khoa_gemini_va_cac_tuy_chon" {
   }
 
   assert {
-    condition     = length(google_storage_bucket.data) == 0
-    error_message = "persist_data = false thì không có bucket dữ liệu."
+    condition     = length(google_storage_bucket.data) == 1
+    error_message = "persist_data = true thì phải có bucket dữ liệu."
+  }
+
+  assert {
+    condition = alltrue([
+      for k, v in {
+        DATA_DIR            = null
+        CLIPS_MAX_MB        = "50"
+        GEMINI_MODEL        = "gemini-3.5-flash-lite"
+        GEMINI_VERIFY_MODEL = "gemini-decision-1"
+      } :
+      length([for e in google_cloud_run_v2_service.app.template[0].containers[0].env : e if e.name == k && (v == null || e.value == v)]) == 1
+    ])
+    error_message = "Thiếu biến môi trường DATA_DIR, CLIPS_MAX_MB, GEMINI_MODEL hoặc GEMINI_VERIFY_MODEL, hoặc sai giá trị."
   }
 
   assert {
