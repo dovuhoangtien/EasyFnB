@@ -329,6 +329,9 @@ def hom_nay_lich_su(hub):
         if r['kind'] in cot:      # cảnh báo an ninh (ngoài giờ, lấy đồ...) không tính vào số liệu từng bàn
             b = theo_ban.setdefault(r['ban'] or '?', dict(ban=r['ban'], goi=0, can_don=0, khach_moi=0))
             b[cot[r['kind']]] += 1
+    chu_y = [dict(ma=r['aid'], ban=r['ban'], gio=clock(r['t'])[:5], nhan_vien=ten_nv(hub, r['nv']),
+                  chuyen=f"Khách gọi, {ten_nv(hub, r['nv'])} bấm nhận trên điện thoại sau {r['wait_s']:.0f} giây "
+                         'nhưng không tới bàn; khách chờ rồi thôi gọi', co_video=True) for r in nghe_khong_toi(tk['recs'])]
     try:
         nv = nhieu_ngay.nhan_vien_ngay(hub, day)[2]
     except Exception:  # noqa: BLE001  thiếu số liệu nhân viên thì vẫn trả phần còn lại
@@ -338,7 +341,22 @@ def hom_nay_lich_su(hub):
                 toc_do_phuc_vu=dict(nhan_xet=MUC_VI.get(nhan_xet(sp)), viec_nhanh=sp['fast'], viec_hoi_cham=sp['ok'],
                                     viec_cham=sp['slow'], viec_khong_ai_toi=sp['missed']),
                 bao_nham_da_huy=tk['huy'], gio_ban_nhat=f"{tk['dinh']:02d}:00" if tk['dinh'] is not None else None,
-                viec_dang_cho=0, theo_nhan_vien=nv, theo_ban=list(theo_ban.values()))
+                viec_dang_cho=0, theo_nhan_vien=nv, theo_ban=list(theo_ban.values()),
+                can_chu_y=chu_y, nhac=('Có chuyện cần chủ quán biết: kể ngắn từng chuyện trong can_chu_y (giờ, bàn, ai) '
+                                       'và nói video đã hiện bên dưới.') if chu_y else None)
+
+
+def nghe_khong_toi(recs):
+    """Các việc nhân viên đã bấm nhận mà không tới bàn (camera đóng vì khách thôi gọi)."""
+    return [r for r in recs if r['ket'] == 'bo_lo' and r['wait_s'] is not None and r['nv']
+            and r['kind'] in ('call', 'new_guest')]
+
+
+def khoi_hom_nay_lich_su(hub):
+    """Ca trong RAM trống mà hôm nay đã có việc trong lịch sử: [ô chỉ số, cột số việc theo giờ]. [] nếu không."""
+    if viec(hub):
+        return []
+    return xem_lai.khoi_ngay(xem_lai.tong_ket_ngay(hub, xem_lai.hom_nay()))
 
 
 def su_kien_lich_su(hub, loai='', ban='', nhan_vien='', tu_gio='', den_gio='', cho_hon_giay=0, sap_xep='moi_nhat',
@@ -365,10 +383,12 @@ def su_kien_lich_su(hub, loai='', ban='', nhan_vien='', tu_gio='', den_gio='', c
         out.sort(key=lambda r: -r['t'])
     out = out[:max(1, min(30, int(gioi_han or 10)))]
     kq = {'xong': 'đã xong', 'nhan': 'đã nhận', 'mo': 'đang chờ', 'bo_lo': 'không ai tới', 'huy': 'đã huỷ'}
+    kq_nhan = 'đã bấm nhận nhưng không tới bàn'
     return dict(ghi_chu=LS_GHI_CHU, tong=len(out), su_kien=[dict(
         ma=r['aid'], loai=KIND_VI[r['kind']], ban=r['ban'], gio=clock(r['t']),
         toc_do=MUC_VI.get(muc(r['wait_s'])) if r['wait_s'] is not None else None,
-        nhan_vien=ten_nv(hub, r['nv']) if r['nv'] else None, trang_thai=kq.get(r['ket']), ly_do_huy=r.get('ly_do'),
+        nhan_vien=ten_nv(hub, r['nv']) if r['nv'] else None,
+        trang_thai=kq_nhan if r in nghe_khong_toi([r]) else kq.get(r['ket']), ly_do_huy=r.get('ly_do'),
         co_video=True) for r in out])
 
 
@@ -842,6 +862,9 @@ class TroLy:
             khoa = lambda x: (x.get('type'), [(i.get('alert_id'), i.get('t')) for i in x.get('items') or []])
             if b.get('type') in ('video', 'events', 'timeline') and any(khoa(x) == khoa(b) for x in box['blocks']):
                 return dict(ket_qua='Khối này đã hiện rồi, không hiện lại.')   # mô hình đôi khi gọi hai lần cùng một video
+            if any(x.get('type') == b.get('type') and x.get('title') == b.get('title') and x.get('title')
+                   for x in box['blocks']):
+                return dict(ket_qua='Khối này đã hiện rồi, không hiện lại.')   # hai công cụ cùng dựng một biểu đồ
             box['blocks'].append(b)
             return dict(ket_qua='Đã hiện cho chủ quán.')
 
@@ -866,6 +889,26 @@ class TroLy:
                                         for s in r['per_staff']],
                         theo_ban=[dict(ban=x['table'], goi=x['calls'], can_don=x['clearings'], khach_moi=x['guests'])
                                   for x in r['per_table']])
+
+        def hien_chu_y():
+            """Hôm nay có lần nhân viên bấm nhận mà không tới bàn: hiện video và dòng thời gian quanh lần gần nhất."""
+            rs = nghe_khong_toi(xem_lai.tong_ket_ngay(hub, xem_lai.hom_nay())['recs'])
+            if not rs:
+                return {}
+            r = rs[-1]
+            xin = xem_lai.Xin(hub, self.clips, self._loop)
+            ten = f"Bàn {r['ban']} lúc {clock(r['t'])[:5]}: {xem_lai.duoi_viec(hub, r)}"
+            _, bs = xem_lai.xem_su_kien(hub, '', r['ban'], xin, ids=[r['aid']])
+            for b in bs:
+                if b['type'] == 'video':
+                    them(dict(b, title=ten))
+            g = xem_lai.doc_gio(bo_dau(f"tu {clock(r['t'] - 240_000)[:5]} den {clock(r['t'] + 180_000)[:5]}"))
+            if g:
+                for b in xem_lai.ke_lai(hub, r['ban'], g, None, xin)[1]:
+                    them(b)
+            return dict(can_chu_y=[dict(gio=clock(x['t'])[:5], ban=x['ban'], nhan_vien=ten_nv(hub, x['nv']),
+                                        chuyen='bấm nhận trên điện thoại nhưng không tới bàn') for x in rs],
+                        da_hien_video=ten)
 
         def tim_su_kien(loai: str = '', ban: str = '', nhan_vien: str = '', tu_gio: str = '', den_gio: str = '',
                         cho_hon_giay: int = 0, sap_xep: str = 'moi_nhat', gioi_han: int = 10) -> dict:
@@ -899,6 +942,13 @@ class TroLy:
 
         def nhan_vien_va_cham_cong() -> dict:
             """Danh sách nhân viên: vai trò, có đang trong ca không, giờ vào ca đầu tiên, tổng thời gian làm, số việc đã nhận và đã xong, nhận việc nhanh hay chậm."""
+            if not viec(hub):
+                ans, _, rows = nhieu_ngay.nhan_vien_ngay(hub, xem_lai.hom_nay())
+                if rows:
+                    return dict(ghi_chu=LS_GHI_CHU, tom_tat=ans, nhan_vien=rows)
+            return _nhan_vien_va_cham_cong()
+
+        def _nhan_vien_va_cham_cong() -> dict:
             b = khoi_nhan_vien(hub) or dict(items=[])
             return dict(nhan_vien=[dict(ma=s['id'], ten=s['name'], vai_tro=ROLE_VI.get(s['role'], s['role']),
                                         dang_trong_ca=s['online'],
@@ -920,7 +970,11 @@ class TroLy:
             return them(goi_y.khoi_xep_ca(hub), 'Ca chưa có việc nào để xếp ca.')
 
         def hien_chi_so() -> dict:
-            """Hiện cho chủ quán một hàng ô chỉ số của ca (số lần gọi, cần dọn, khách mới, tốc độ phục vụ, bàn chờ lâu nhất, báo nhầm, việc đang chờ)."""
+            """Hiện cho chủ quán một hàng ô chỉ số của ca (số lần gọi, cần dọn, khách mới, tốc độ phục vụ, bàn chờ lâu nhất, báo nhầm, việc đang chờ). Hôm nay có lần nhân viên bấm nhận mà không tới bàn thì hiện luôn video và dòng thời gian lúc đó."""
+            ls = khoi_hom_nay_lich_su(hub)
+            if ls:      # ca trong bộ nhớ trống (máy chủ vừa khởi động): ô chỉ số và cột theo giờ của cả hôm nay
+                kq = [them(b) for b in ls]
+                return dict(kq[0], ghi_chu=LS_GHI_CHU, da_hien_them='biểu đồ số việc theo giờ', **hien_chu_y())
             return them(khoi_chi_so(hub))
 
         def hien_bieu_do(chu_de: str) -> dict:
@@ -933,6 +987,11 @@ class TroLy:
                  'cho_theo_ban': khoi_bieu_do_cho_theo_ban}.get(bo_dau(chu_de).replace(' ', '_'))
             if f is None:
                 return dict(ket_qua='chu_de phải là nhan_vien, ban, thoi_gian hoặc cho_theo_ban.')
+            ls = khoi_hom_nay_lich_su(hub)
+            if ls and f is khoi_bieu_do_thoi_gian:
+                return dict(them(ls[1]), ghi_chu=LS_GHI_CHU)
+            if ls and f is khoi_bieu_do_nhan_vien:
+                return hien_nhan_vien([])
             b = f(hub)
             kq = them(b, 'Chưa có số liệu cho biểu đồ này.')
             if b and b.get('points'):     # đưa lại số trong biểu đồ để câu trả lời không nói khác hình
@@ -956,6 +1015,10 @@ class TroLy:
             Args:
                 ma_nhan_vien: mã hoặc tên các nhân viên cần hiện. Danh sách rỗng là hiện mọi người.
             """
+            if not viec(hub):     # ca trong bộ nhớ trống: bảng nhân viên hôm nay đọc từ lịch sử
+                ans, bs, rows = nhieu_ngay.nhan_vien_ngay(hub, xem_lai.hom_nay())
+                if rows:
+                    return dict(them(bs[0]), tom_tat=ans, tung_nguoi=rows, ghi_chu=LS_GHI_CHU)
             return them(khoi_nhan_vien(hub, list(ma_nhan_vien or [])), 'Không có nhân viên nào khớp.')
 
         def hien_bang(tieu_de: str, cot: list[str], hang: list[str]) -> dict:

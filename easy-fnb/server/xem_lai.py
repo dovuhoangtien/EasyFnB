@@ -356,7 +356,7 @@ def duoi_viec(hub, rec):
     if rec['ket'] == 'huy':
         return 'báo nhầm, đã huỷ'
     if rec['ket'] == 'bo_lo':
-        return 'không ai tới'
+        return f'{nv} đã nhận nhưng không tới bàn' if rec['wait_s'] is not None and rec['nv'] else 'không ai tới'
     if rec['ket'] in ('nhan', 'xong') and rec['wait_s'] is not None:
         return f"{nv} nhận {MUC_VI[muc(rec['wait_s'])]}"
     return 'đã xong' if rec['ket'] == 'xong' else ''
@@ -498,7 +498,8 @@ def dong_thoi_gian(hub, since_s, until_s, ban=None, xin=None):
         except (TypeError, ValueError):
             return 0
 
-    rows = hub.timeline.query(since=since_s, until=until_s, table=ban, kinds=['stage', 'nudge', 'log'], limit=5000)
+    rows = hub.timeline.query(since=since_s, until=until_s, table=ban, kinds=['stage', 'nudge', 'log', 'table'],
+                              limit=5000)
     out = []
 
     def them(ts_ms, text, tone, tb, cam, loai, rec=None):
@@ -539,6 +540,10 @@ def dong_thoi_gian(hub, since_s, until_s, ban=None, xin=None):
                 them(ts, cau[:1].upper() + cau[1:], 'warn', tb, r['camera'], 'nhac')
         elif r['kind'] == 'log' and d.get('log_kind') == 'cleared' and tb:
             them(ts, 'Bàn đã dọn xong', 'good', tb, r['camera'], 'don')
+        elif r['kind'] == 'log' and d.get('log_kind') == 'looking' and tb:
+            them(ts, 'Khách nhìn quanh tìm nhân viên', 'warn', tb, r['camera'], 'nhin')
+        elif r['kind'] == 'table' and d.get('away') and tb:
+            them(ts, 'Khách tạm rời, còn để đồ ở bàn nên chưa báo dọn', None, tb, r['camera'], 'tam_roi')
     for rec in viec_trong_khoang(hub, since_s, until_s, ban):
         d = duoi_viec(hub, rec)
         them(rec['t'], VIEC_VI.get(rec['kind'], KIND_VI.get(rec['kind'], rec['kind'])) + (f', {d}' if d else ''), tone_viec(hub, rec), rec['ban'], rec['camera'],
@@ -747,7 +752,7 @@ def xem_su_kien(hub, q, ban=None, xin=None, ids=None, t=None):
     if lau_:
         a = viec_ram(hub, dau)
         muc_cho = chu_cho(a, wait_s(a, t)) if a is not None else (
-            'không ai tới' if dau['ket'] == 'bo_lo' else f"phục vụ {MUC_VI[muc(dau['wait_s'])]}")
+            duoi_viec(hub, dau) if dau['ket'] == 'bo_lo' else f"phục vụ {MUC_VI[muc(dau['wait_s'])]}")
         ans = (f"{where(dau['ban'], dau['camera'])} chờ lâu nhất, lúc {clock(dau['t'])[:5]} "
                f"({KIND_VI[dau['kind']]}): {muc_cho}.")
     else:

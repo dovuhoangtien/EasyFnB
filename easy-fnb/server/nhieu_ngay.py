@@ -128,7 +128,9 @@ def nhan_vien_ngay(hub, day, t=None):
         if r['nv'] and r['nv'] not in ('camera', 'gemini', 'manager'):
             v = viec.setdefault(r['nv'], dict(n=0, fast=0, ok=0, slow=0, missed=0))
             v['n'] += 1
-            if r['ket'] != 'bo_lo' and r['wait_s'] is not None:
+            if r['ket'] == 'bo_lo':
+                v['missed'] += 1
+            elif r['wait_s'] is not None:
                 v[muc(r['wait_s'])] += 1
     ten = xem_lai.ten_ngay(day, t)
     rows = []
@@ -136,7 +138,8 @@ def nhan_vien_ngay(hub, day, t=None):
         c, v = ca.get(sid, {}), viec.get(sid, dict(n=0, fast=0, ok=0, slow=0, missed=0))
         rows.append(dict(ten=c.get('ten') or ten_nv(hub, sid) or sid, vao_ca=hhmm(c['vao']) if c.get('vao') else None,
                          ra_ca=hhmm(c['ra']) if c.get('ra') else None, viec_nhan=v['n'], nhanh=v['fast'],
-                         hoi_cham=v['ok'], cham=v['slow'], toc_do=MUC_VI.get(nhan_xet(v))))
+                         hoi_cham=v['ok'], cham=v['slow'], nhan_ma_khong_toi=v['missed'],
+                         toc_do=MUC_VI.get(nhan_xet(v))))
     if not rows:
         return f'{ten.capitalize()} hệ thống không ghi được nhân viên nào vào ca hay nhận việc.', [], rows
     co_viec = [r for r in rows if r['viec_nhan']]
@@ -144,9 +147,13 @@ def nhan_vien_ngay(hub, day, t=None):
     if co_viec:
         tot = max(co_viec, key=lambda r: (r['nhanh'] / r['viec_nhan'], r['viec_nhan']))
         ans += f" {tot['ten']} nhận việc nhanh nhất: {tot['nhanh']} trong {tot['viec_nhan']} việc được nhận nhanh."
-    b = khoi_bang(f'Nhân viên {ten}', ['Nhân viên', 'Vào ca', 'Ra ca', 'Việc nhận', 'Nhanh', 'Hơi chậm', 'Chậm', 'Nhìn chung'],
+    bo = [r for r in rows if r['nhan_ma_khong_toi']]
+    if bo:
+        ans += ' ' + ', '.join(f"{r['ten']} có {r['nhan_ma_khong_toi']} lần nhận việc mà không tới bàn" for r in bo) + '.'
+    b = khoi_bang(f'Nhân viên {ten}', ['Nhân viên', 'Vào ca', 'Ra ca', 'Việc nhận', 'Nhanh', 'Hơi chậm', 'Chậm',
+                                        'Không tới', 'Nhìn chung'],
                   [[r['ten'], r['vao_ca'] or '', r['ra_ca'] or '', str(r['viec_nhan']), str(r['nhanh']), str(r['hoi_cham']),
-                    str(r['cham']), r['toc_do'] or 'chưa có'] for r in rows])
+                    str(r['cham']), str(r['nhan_ma_khong_toi']), r['toc_do'] or 'chưa có'] for r in rows])
     return ans, [b], rows
 
 
