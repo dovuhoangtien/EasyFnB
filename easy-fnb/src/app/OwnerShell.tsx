@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
-import { Copy, ExternalLink, LayoutGrid, MessagesSquare, ReceiptText, ScanEye, Settings as SettingsIcon, Smartphone } from 'lucide-react';
+import { Copy, ExternalLink, LayoutGrid, MessagesSquare, QrCode as QrIcon, ReceiptText, ScanEye, Settings as SettingsIcon, Smartphone } from 'lucide-react';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
@@ -13,6 +13,7 @@ import { TopNav, TopNavHeading, TopNavItem } from '@astryxdesign/core/TopNav';
 import { useLive, useLiveConnection } from '../live/store';
 import { ROLE_LABEL } from '../live/text';
 import { RouteFade } from './motion';
+import { QrCode } from './QrCode';
 import { Conn, usePhoneBase } from './ui';
 
 const TABS = [
@@ -26,6 +27,7 @@ function StaffLinks({ onClose }: { onClose: () => void }) {
   const staff = useLive((s) => s.staff);
   const base = usePhoneBase();
   const toast = useToast();
+  const [qr, setQr] = useState<string | null>(null);
   const copy = (url: string, name: string) => {
     navigator.clipboard
       .writeText(url)
@@ -34,7 +36,7 @@ function StaffLinks({ onClose }: { onClose: () => void }) {
   };
   return (
     <>
-      <DialogHeader title="App nhân viên" subtitle="Mỗi người mở link của mình trên điện thoại, cùng Wi-Fi với máy chủ." onOpenChange={onClose} />
+      <DialogHeader title="App nhân viên" subtitle="Mỗi người quét mã QR (hoặc mở link) của mình trên điện thoại. Chạy ở quán thì dùng cùng Wi-Fi với máy chủ." onOpenChange={onClose} />
       <div className="flex flex-col gap-1 p-4">
         {staff.length === 0 && (
           <EmptyState
@@ -46,20 +48,38 @@ function StaffLinks({ onClose }: { onClose: () => void }) {
         )}
         {staff.map((s) => {
           const url = `${base}/nv/${encodeURIComponent(s.id)}`;
+          const showQr = qr === s.id;
           return (
-            <div key={s.id} className="flex items-center gap-3 py-2">
-              <Avatar name={s.name} size="md" tooltip={false} />
-              <div className="min-w-0 flex-1">
-                <Text type="label" weight="semibold" as="p">
-                  {s.name}
-                </Text>
-                <Text type="supporting" color="secondary" as="p" maxLines={1}>
-                  {ROLE_LABEL[s.role]}
-                  {s.online ? ', đang mở app' : ''}
-                </Text>
+            <div key={s.id} className="flex flex-col">
+              <div className="flex items-center gap-3 py-2">
+                <Avatar name={s.name} size="md" tooltip={false} />
+                <div className="min-w-0 flex-1">
+                  <Text type="label" weight="semibold" as="p">
+                    {s.name}
+                  </Text>
+                  <Text type="supporting" color="secondary" as="p" maxLines={1}>
+                    {ROLE_LABEL[s.role]}
+                    {s.online ? ', đang mở app' : ''}
+                  </Text>
+                </div>
+                <IconButton
+                  label={showQr ? `Ẩn mã QR của ${s.name}` : `Hiện mã QR của ${s.name}`}
+                  tooltip="Mã QR"
+                  variant={showQr ? 'secondary' : 'ghost'}
+                  icon={<QrIcon size={16} />}
+                  onClick={() => setQr(showQr ? null : s.id)}
+                />
+                <IconButton label={`Chép link của ${s.name}`} tooltip="Chép link" variant="ghost" icon={<Copy size={16} />} onClick={() => copy(url, s.name)} />
+                <IconButton label={`Mở app của ${s.name}`} tooltip="Mở thử" variant="ghost" icon={<ExternalLink size={16} />} href={url} target="_blank" />
               </div>
-              <IconButton label={`Chép link của ${s.name}`} tooltip="Chép link" variant="ghost" icon={<Copy size={16} />} onClick={() => copy(url, s.name)} />
-              <IconButton label={`Mở app của ${s.name}`} tooltip="Mở thử" variant="ghost" icon={<ExternalLink size={16} />} href={url} target="_blank" />
+              {showQr && (
+                <div className="flex flex-col items-center gap-2 pb-3">
+                  <QrCode value={url} size={180} label={`Mã QR mở app của ${s.name}`} />
+                  <Text type="supporting" color="secondary" as="p" className="text-center">
+                    {s.name} quét bằng camera điện thoại, mở link, rồi bấm “Bắt đầu ca”.
+                  </Text>
+                </div>
+              )}
             </div>
           );
         })}

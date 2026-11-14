@@ -372,6 +372,15 @@ h3.astryx-text {
   max-width: 100%;
 }
 
+/* mã QR: nền trắng cố định để máy quét đọc được cả khi giao diện tối */
+.fx-qr {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: var(--radius-container);
+  background: #ffffff;
+}
+
 /* dòng chọn tên trên điện thoại */
 .fx-phone-pick {
   display: flex;

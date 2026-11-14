@@ -25,6 +25,7 @@ if args.https:
     from server.proxy import start_https
     from server.tls import ensure_cert
 
+    os.environ['HTTPS_PORT'] = str(args.https_port)   # để /api/info báo cho trang Cài đặt làm mã QR camera
     cert, key = ensure_cert(Path(os.environ.get('DATA_DIR') or '.data') / 'certs')
     start_https(cert, key, args.https_port, backend_port=args.port)
     if not os.environ.get('K_SERVICE'):
