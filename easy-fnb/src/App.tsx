@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useParams } from 'react-router';
 import OwnerShell from './app/OwnerShell';
 import Now from './app/Now';
 import Assistant from './app/Assistant';
+import TeamPage from './app/Team';
 import Shift from './app/Shift';
 import Settings from './app/Settings';
 import StaffPhone from './app/StaffPhone';
@@ -20,6 +21,7 @@ export default function App() {
       <Route element={<OwnerShell />}>
         <Route index element={<Now />} />
         <Route path="tro-ly" element={<Assistant />} />
+        <Route path="nhom" element={<TeamPage />} />
         <Route path="ca" element={<Shift />} />
         <Route path="cai-dat" element={<Settings />} />
       </Route>

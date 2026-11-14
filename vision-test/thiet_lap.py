@@ -9,9 +9,11 @@ nhân viên bằng chính phần ảnh của model nhân viên (PE-Core). Mức 
 và --nv-anh-hi; hai mốc này CHƯA đo trên clip thật.
 """
 import base64
+import time
 
 import cv2
 import numpy as np
+import torch
 
 
 def _reading_order(tables, H):
@@ -119,19 +121,41 @@ def do_job(job, frame, boxes, det, predict_kw=None):
 class ThuVienNV:
     """Ảnh cả người của nhân viên (đã đồng ý), để nhận nhân viên theo ảnh."""
 
+    HOC_TU, HOC_DEN = 0.86, 0.97    # giống ảnh mẫu cỡ này thì chắc là nhân viên, mà dáng đủ khác để đáng học thêm
+    HOC_GOC = 0.74                  # dáng học thêm vẫn phải giống ảnh gốc cỡ này (người khác đo được khoảng 0,68)
+    HOC_TOI_DA = 32                 # số dáng học thêm giữ lại (cũ nhất bị thay)
+    HOC_CACH_S = 1.0                # học thêm nhiều nhất một dáng mỗi giây
+
     def __init__(self, clip, lo=0.70, hi=0.90):
         self.clip, self.lo, self.hi = clip, lo, hi
         self.emb = None
+        self.goc = None             # ảnh mẫu chụp ở trang Cài đặt
+        self.them = []              # dáng học thêm từ chính camera: quay lưng, ngồi, bưng khay
+        self._hoc_luc = 0.0
 
     def load(self, refs):
         """refs: [(mã nhân viên, kind, JPEG bytes)]. Chỉ dùng ảnh cả người; ảnh mặt chưa dùng."""
         imgs = [cv2.imdecode(np.frombuffer(j, np.uint8), cv2.IMREAD_COLOR) for _, kind, j in refs if kind == 'body']
         imgs = [im for im in imgs if im is not None and im.size]
-        self.emb = self.clip.features(imgs) if imgs else None
+        self.goc = self.clip.features(imgs) if imgs else None
+        self.them = []              # ảnh mẫu đổi (thêm, xoá nhân viên): bỏ hết dáng đã học theo ảnh cũ
+        self.emb = self.goc
         print(f'  nhận nhân viên theo ảnh: {len(imgs)} ảnh cả người')
 
     def probs(self, crops):
         if self.emb is None or not crops:
             return [None] * len(crops)
-        sim = (self.clip.features(crops) @ self.emb.T).max(dim=1).values.cpu().tolist()
+        f = self.clip.features(crops)
+        sim = (f @ self.emb.T).max(dim=1).values.cpu().tolist()
+        # Ảnh mẫu chỉ có một dáng. Người đã rất giống ảnh mẫu thì nhớ thêm dáng hiện tại của họ,
+        # để lúc họ quay lưng, cúi dọn bàn hay bị che một phần vẫn nhận ra. Chỉ so với ẢNH GỐC khi học,
+        # nên dáng học thêm không tự kéo nhau trôi dần sang người khác.
+        now = time.monotonic()
+        if now - self._hoc_luc >= self.HOC_CACH_S:
+            goc = (f @ self.goc.T).max(dim=1).values.cpu().tolist()
+            k = max(range(len(crops)), key=lambda i: sim[i])
+            if goc[k] >= self.HOC_GOC and self.HOC_TU <= sim[k] < self.HOC_DEN:
+                self.them = (self.them + [f[k:k + 1]])[-self.HOC_TOI_DA:]
+                self.emb = torch.cat([self.goc, *self.them])
+                self._hoc_luc = now
         return [float(min(1.0, max(0.0, (s - self.lo) / (self.hi - self.lo)))) for s in sim]

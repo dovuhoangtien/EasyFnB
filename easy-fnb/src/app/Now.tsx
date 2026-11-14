@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { BellRing, BrushCleaning, Check, Plus, TriangleAlert, UserCheck, Users, Video, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, BellRing, BrushCleaning, Check, Plus, TriangleAlert, UserCheck, Users, Video, Volume2, VolumeX, X } from 'lucide-react';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -17,10 +17,11 @@ import { useReport, useRun, useTitle } from '../live/hooks';
 import { LiveCamera } from '../live/LiveCamera';
 import { live, useLive, useServerNow } from '../live/store';
 import { ageText, shiftText, byName, byUrgency, cameraLive, clockTime, isActive, isClosed, KIND_LABEL, ROLE_LABEL, statusText, TABLE_STATE_LABEL, tableText, waitWord } from '../live/text';
-import { ALERT_KINDS, type Alert, type AlertKind, type Staff } from '../live/types';
+import { ALERT_KINDS, type Alert, type AlertKind, type LogEntry, type Staff } from '../live/types';
 import { speak, unlockAudio } from '../live/voice';
 import { AnimatedList, Roll } from './motion';
 import { SpeedMeter } from './SpeedMeter';
+import { SecurityAlerts } from './security';
 import { alertMedia, KindBadge, SectionTitle, Shot } from './ui';
 
 /** Chỉ hạ chữ đầu, để tên người (Lan, Tú) giữ chữ hoa */
@@ -28,18 +29,59 @@ const lowerFirst = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
 /** Việc vừa tới trong khoảng này thì thẻ sáng lên một nhịp */
 const FRESH_MS = 4000;
 
+/** Bữa ăn của bàn tới đâu, và lời nhắc khi khách chờ lâu: một nhãn ngắn trên ô bàn */
+const STAGE_LABEL: Record<string, string | undefined> = {
+  seated: 'mới ngồi',
+  greeted: 'đã có người tiếp',
+  served: 'đã lên món',
+  finished: 'ăn xong',
+};
+const NUDGE_LABEL = { greet: 'chưa ai tiếp', food: 'chờ món lâu', bill: 'có thể chờ tính tiền' } as const;
+
+/** Câu sẽ đọc cho một dòng nhật ký, hoặc null nếu dòng đó không cần nghe (đã nhận, đã xong, huỷ, hệ thống,
+ * đang nhờ Gemini kiểm tra). Việc phải chờ Gemini thì đọc lúc Gemini xác nhận, bỏ chữ "Gemini xác nhận". */
+function spokenLine(e: LogEntry): string | null {
+  const text = e.text.replace(/\s*\([^)]*\)/g, '');
+  if (e.kind === 'verify') {
+    const m = /xác nhận:\s*(.+)$/.exec(text);
+    return m ? m[1].charAt(0).toUpperCase() + m[1].slice(1) : null;
+  }
+  if (e.kind === 'call' || e.kind === 'needs_clearing' || e.kind === 'new_guest') return text.includes('đang nhờ') ? null : text;
+  if (e.kind === 'done') return text.includes('nhân viên tới') ? text : null;
+  return e.kind === 'looking' || e.kind === 'arrived' || e.kind === 'guest_left' || e.kind === 'cleared' ? text : null;
+}
+
 /** Đọc to mọi dòng nhật ký mới (khách gọi, nhân viên tới, bàn cần dọn...). Chỉ đọc dòng tới sau lúc bật. */
 function useSpeakLog(on: boolean, loaded: boolean) {
   const log = useLive((s) => s.log);
+  const security = useLive((s) => s.security);
   const last = useRef<number | null>(null);
+  const said = useRef(new Map<string, number>());
   useEffect(() => {
     if (!loaded) return;
     const top = log[0]?.id ?? 0;
-    const from = last.current;
+    let from = last.current;
     last.current = top;
+    // máy chủ khởi động lại thì số thứ tự nhật ký và mã việc đếm lại từ đầu: quên những gì đã đọc
+    if (from !== null && top < from) {
+      said.current.clear();
+      from = 0;
+    }
     if (!on || from === null) return;
-    for (const e of log.filter((x) => x.id > from).reverse()) speak(e.text.replace(/\s*\([^)]*\)/g, ''));
-  }, [log, on, loaded]);
+    // cảnh báo an ninh không đọc to trên loa của quán (có thể buộc tội nhầm trước mặt khách)
+    const secIds = new Set(security.map((a) => a.id));
+    for (const e of log.filter((x) => x.id > from).reverse()) {
+      if (e.alert_id && secIds.has(e.alert_id)) continue;
+      const line = spokenLine(e);
+      if (!line) continue;
+      // mỗi việc chỉ đọc một lần; câu không gắn với việc thì 30 giây mới đọc lại
+      const key = e.alert_id ?? line;
+      const before = said.current.get(key);
+      if (before !== undefined && (e.alert_id || e.t - before < 30_000)) continue;
+      said.current.set(key, e.t);
+      speak(line);
+    }
+  }, [log, on, loaded, security]);
 }
 const DAY = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -181,7 +223,7 @@ function StripCell({
       <span className="fx-strip-value" data-tone={tone}>
         {ready ? value : <Skeleton width={56} height={30} />}
       </span>
-      <Text type="supporting" color="secondary" maxLines={1}>
+      <Text type="supporting" color="secondary" maxLines={2}>
         {ready ? note : 'Đang tải'}
       </Text>
     </div>
@@ -230,6 +272,8 @@ export default function Now() {
   const [camId, setCamId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const camera = cameras.find((c) => c.id === camId) ?? cameras.find((c) => cameraLive(c, now)) ?? cameras[0];
+  // nhiều camera: mặc định xem tất cả cùng lúc như màn hình CCTV, bấm một ô để xem to camera đó
+  const wall = cameras.length > 1 && (camId ?? 'all') === 'all';
 
   const active = useMemo(() => alerts.filter(isActive).sort(byUrgency), [alerts]);
   const closed = useMemo(
@@ -254,6 +298,8 @@ export default function Now() {
   const { report } = useReport();
   const speed = report?.speed && report.speed.fast + report.speed.ok + report.speed.slow + report.speed.missed > 0 ? report.speed : null;
   const camOn = cameras.some((c) => cameraLive(c, now));
+  // từng có camera gửi hình mà giờ im: khác với quán chưa nối camera lần nào
+  const camLost = !camOn && cameras.some((c) => c.last_frame_at !== null);
   const callers = [...calling].sort(byName);
   const headline = !loaded
     ? status === 'offline'
@@ -265,7 +311,9 @@ export default function Now() {
         ? `${callers.length} bàn đang gọi phục vụ`
         : active.length
           ? `${active.length} việc đang chờ`
-          : 'Mọi bàn đang ổn';
+          : camLost
+            ? 'Camera mất tín hiệu'
+            : 'Mọi bàn đang ổn';
   const sub = !loaded
     ? 'Số liệu sẽ hiện ngay khi nối được máy chủ.'
     : active.length
@@ -278,13 +326,17 @@ export default function Now() {
             : 'Việc vừa báo, đang chờ nhân viên nhận.'
       : camOn
         ? 'Camera đang theo dõi, có việc sẽ báo ngay cho nhân viên.'
-        : 'Chưa có camera gửi hình. Bạn vẫn tạo việc bằng tay được.';
+        : camLost
+          ? 'Camera không gửi hình nữa nên số bàn bên dưới có thể đã cũ. Kiểm tra máy camera, việc vẫn tạo bằng tay được.'
+          : 'Chưa có camera gửi hình. Bạn vẫn tạo việc bằng tay được.';
 
   return (
     <div className="fx-page">
       {status === 'offline' && (
         <Banner status="error" title="Mất kết nối tới máy chủ" description={error ?? 'Trang sẽ tự kết nối lại. Số liệu bên dưới có thể đã cũ.'} collapsible={false} />
       )}
+
+      <SecurityAlerts now={now} />
 
       <header className="fx-head">
         <div className="min-w-0">
@@ -350,7 +402,7 @@ export default function Now() {
           iconTone="warning"
           value={<Roll value={dirty} />}
           tone={dirty ? 'warn' : undefined}
-          note={dirty ? 'Đang chờ người dọn' : 'Không bàn nào cần dọn'}
+          note={dirty ? 'Đang chờ người dọn' : 'Bàn nào cũng sạch'}
         />
         <StripCell
           ready={loaded}
@@ -374,21 +426,54 @@ export default function Now() {
             <div className="flex flex-col gap-3">
               <SectionTitle
                 end={
-                  cameras.length > 1 && camera ? (
-                    <SegmentedControl label="Chọn camera" size="sm" value={camera.id} onChange={setCamId}>
-                      {cameras.map((c) => (
-                        <SegmentedControlItem key={c.id} value={c.id} label={c.name || c.id} />
-                      ))}
-                    </SegmentedControl>
+                  cameras.length > 1 && !wall ? (
+                    <Button label="Quay lại" variant="ghost" size="sm" icon={<ArrowLeft size={15} />} onClick={() => setCamId('all')} />
                   ) : undefined
                 }
               >
-                Camera
+                {cameras.length > 1 && !wall && camera ? `Camera, đang xem ${camera.name || camera.id}` : 'Camera'}
               </SectionTitle>
-              {camera ? (
-                <div className="fx-cam-frame">
-                  <LiveCamera camera={camera} zones={zones.find((z) => z.camera === camera.id)} tables={tables} alerts={active} />
-                </div>
+              {wall ? (
+                <ul className="fx-cam-wall" aria-label="Tất cả camera">
+                  {cameras.map((c) => (
+                    <li key={c.id}>
+                      <button type="button" className="fx-cam-tile" aria-label={`Phóng to ${c.name || c.id}`} onClick={() => setCamId(c.id)}>
+                        <LiveCamera camera={c} zones={zones.find((z) => z.camera === c.id)} tables={tables} alerts={active} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : camera ? (
+                <>
+                  <div className="fx-cam-frame">
+                    <LiveCamera camera={camera} zones={zones.find((z) => z.camera === camera.id)} tables={tables} alerts={active} />
+                  </div>
+                  {cameras.length > 1 && (
+                    <ul className="fx-cam-strip" aria-label="Các camera khác">
+                      {cameras
+                        .filter((c) => c.id !== camera.id)
+                        .map((c) => (
+                          <li key={c.id}>
+                            <button type="button" className="fx-cam-tile" aria-label={`Phóng to ${c.name || c.id}`} onClick={() => setCamId(c.id)}>
+                              <LiveCamera camera={c} zones={zones.find((z) => z.camera === c.id)} tables={tables} alerts={active} />
+                            </button>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                  {(zones.find((z) => z.camera === camera.id)?.tables.length ?? 0) === 0 ? (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button label="Tự tìm bàn" variant="primary" size="sm" href={`/cai-dat?tab=vung-ban&cam=${encodeURIComponent(camera.id)}&tim=1`} />
+                      <Text type="supporting" color="secondary">
+                        Camera này chưa có bàn. Bấm để camera tự khoanh bàn, rồi sửa tên hay chỉnh lại cho đúng.
+                      </Text>
+                    </div>
+                  ) : (
+                    <div className="flex">
+                      <Button label="Sửa bàn" variant="ghost" size="sm" href={`/cai-dat?tab=vung-ban&cam=${encodeURIComponent(camera.id)}`} />
+                    </div>
+                  )}
+                </>
               ) : !loaded ? (
                 <Skeleton height={320} />
               ) : (
@@ -412,22 +497,36 @@ export default function Now() {
                     const hot = calling.has(id);
                     // khách nhìn quanh tìm nhân viên: nhắc nhẹ trong 1 phút, không tạo việc
                     const look = !hot && !!st?.looking_at && now - st.looking_at < 60_000;
+                    const seated = st?.state === 'occupied';
+                    // bữa ăn tới đâu (AI xem ảnh bàn), và lời nhắc mềm khi khách chờ lâu
+                    const nudge = seated && !hot ? (st.nudge ?? null) : null;
+                    const stage = seated ? (nudge ? NUDGE_LABEL[nudge] : st.stage ? STAGE_LABEL[st.stage] : undefined) : undefined;
                     const text = hot
                       ? 'đang gọi'
                       : look
                         ? 'khách đang nhìn quanh'
                       : !st
                         ? 'chưa rõ'
+                        : st.away
+                          ? 'khách tạm rời, còn đồ'
                         : st.state === 'occupied'
                           ? st.people > 0
                             ? `${st.people} khách`
                             : 'có khách'
                           : TABLE_STATE_LABEL[st.state].toLowerCase();
                     return (
-                      <li key={id} className="fx-table-chip" data-state={st?.state ?? 'unknown'} data-hot={hot || undefined} data-look={look || undefined}>
+                      <li
+                        key={id}
+                        className="fx-table-chip"
+                        data-state={st?.away ? 'occupied' : (st?.state ?? 'unknown')}
+                        data-hot={hot || undefined}
+                        data-look={look || undefined}
+                        data-nudge={nudge ?? undefined}
+                      >
                         <i className="fx-table-dot" aria-hidden="true" />
                         <b>{id}</b>
                         <span>{text}</span>
+                        {stage && <em className="fx-table-stage">{stage}</em>}
                       </li>
                     );
                   })}

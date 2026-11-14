@@ -7,19 +7,24 @@ Giữ ~6 giây gần nhất của từng người rồi chấm điểm theo 2 đ
   B. quay đầu qua lại trái/phải nhiều lần mà không phải về phía người cùng bàn
 Đây là tín hiệu mềm: chỉ để nhắc trên màn hình quản lý, không giao việc, không đọc loa.
 Ngưỡng đặt theo suy luận hình học, CHƯA chỉnh trên clip quán thật.
+
+Quay hẳn người ra sau (mất mũi nhưng còn thấy hai vai) cũng là một "bên": khách xoay người tìm nhân viên
+phía sau lưng. Nhìn sang một bên rồi sang bên kia (2 lượt) đã đủ ngưỡng, 3 lượt là điểm tối đa.
 """
 from collections import defaultdict, deque
 
 import numpy as np
 
 NOSE, LEAR, REAR, LSH, RSH = 0, 3, 4, 5, 6
+SAU = 2                 # "bên" thứ ba: quay hẳn ra sau
 
 
 def huong_dau(kp, kc, box, th=0.35):
     """Trả (yaw, cui). yaw: -1 quay hẳn sang trái ảnh, 0 nhìn thẳng máy quay, +1 sang phải ảnh; None = không rõ
     (quay lưng, mất mũi). cui: mũi thấp hơn đường tai bao nhiêu lần bề ngang đầu (lớn = đang cúi)."""
     if kc[NOSE] < th:
-        return None, None
+        # không thấy mũi mà thấy rõ hai vai: người này đang quay lưng lại máy quay
+        return (SAU, 0.0) if kc[LSH] >= th and kc[RSH] >= th else (None, None)
     le, re = kc[LEAR] >= th, kc[REAR] >= th
     if not (le or re):
         return None, None
@@ -35,7 +40,7 @@ def huong_dau(kp, kc, box, th=0.35):
 
 
 class NhinQuanh:
-    def __init__(self, win=6.0, min_span=3.0, cooldown=30.0, th=0.6, yaw_on=0.45, yaw_off=0.25, cui_max=0.6):
+    def __init__(self, win=8.0, min_span=3.0, cooldown=30.0, th=0.6, yaw_on=0.45, yaw_off=0.25, cui_max=0.6):
         self.win, self.min_span, self.cooldown, self.th = win, min_span, cooldown, th
         self.yaw_on, self.yaw_off, self.cui_max = yaw_on, yaw_off, cui_max
         self.q = defaultdict(deque)      # id -> (t, bên, hướng về nhân viên, ngẩng)
@@ -71,6 +76,9 @@ class NhinQuanh:
             q = self.q[tid]
             if yaw is None:
                 q.append((t, None, False, False))
+            elif yaw == SAU:
+                self.ben[tid] = 0
+                q.append((t, SAU, False, True))
             else:
                 ben = self._ben(tid, yaw)
                 x, y = tam[tid]
@@ -82,7 +90,9 @@ class NhinQuanh:
                           (o['table'] is p['table'] if p['table'] is not None
                            else abs(tam[o['id']][0] - x) < 3 * w and abs(tam[o['id']][1] - y) < 1.5 * w)
                           for o in persons)
-                q.append((t, 0 if ban and not nv else ben, nv, cui <= self.cui_max))
+                # bên đó vừa có bạn cùng bàn vừa có nhân viên phía xa: nhiều khả năng đang nói chuyện với bạn,
+                # không tính là nhìn về phía nhân viên (clip thử: hai khách ngồi đối diện, nhân viên lau bàn phía sau)
+                q.append((t, 0 if ban else ben, nv and not ban, cui <= self.cui_max))
             while q and t - q[0][0] > self.win:
                 q.popleft()
             d, ly_do = self._cham(q)
@@ -108,11 +118,13 @@ class NhinQuanh:
         luot, bd = [], None
         for s in ro + [(ro[-1][0] + 1, 2, False, False)]:
             if bd is None or s[1] != bd[1]:
-                if bd is not None and bd[1] and truoc - bd[0] >= 0.3 and (not luot or luot[-1] != bd[1]):
+                # quay lưng phải giữ lâu hơn: người ngồi nghiêng hay bị mất mũi chập chờn vài khung
+                if (bd is not None and bd[1] and truoc - bd[0] >= (0.6 if bd[1] == SAU else 0.3)
+                        and (not luot or luot[-1] != bd[1])):
                     luot.append(bd[1])
                 bd = s
             truoc = s[0]
-        b = min(1.0, max(0, len(luot) - 1) / 2)                      # trái-phải-trái (2 lần đổi) là đủ điểm
+        b = {0: 0.0, 1: 0.0, 2: 0.6}.get(len(luot), 1.0)             # sang một bên rồi bên kia là vừa đủ ngưỡng
         if a >= b:
             return a, f'nhìn về phía nhân viên {ve_nv:.0%} thời gian'
         return b, f'quay đầu qua lại {len(luot)} lượt'

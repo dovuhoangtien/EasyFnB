@@ -50,3 +50,17 @@ class TestNhinQuanh(unittest.IsolatedAsyncioTestCase):
             hub.edge_event(look_ev(1.0))                     # camera đã chắc: không hỏi nữa
             self.assertEqual(len(asked), 1)
             self.assertTrue(hub.tables['cam1/B1']['looking_at'])
+
+
+class TestGopViecTrung(unittest.IsolatedAsyncioTestCase):
+    async def test_repeat_call_merges_while_open(self):
+        """Khách vẫn giơ tay sau thời gian gộp: vẫn là một việc, không giao thêm người khác."""
+        with tempfile.TemporaryDirectory() as d:
+            hub = Hub(Path(d), FakeGemini([]), defaults=dict(verify_kinds=[], dedup_s=0))
+            e = dict(ev(table=None, images=False), box=[100, 100, 200, 300])
+            a1 = hub.edge_event(e)
+            a2 = hub.edge_event(dict(e, box=[160, 100, 260, 300]))       # nhích sang bên một chút
+            a3 = hub.edge_event(dict(e, box=[500, 100, 600, 300]))       # người khác, ở chỗ khác
+            self.assertEqual(a1, a2)
+            self.assertNotEqual(a1, a3)
+            self.assertEqual(hub.alerts[a1]['repeats'], 1)

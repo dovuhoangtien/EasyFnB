@@ -34,6 +34,9 @@ easy-fnb/server/voices/so_sanh/
 !easy-fnb/public/**
 !easy-fnb/src/**
 
+# Video camera tự ghi (ghi_video.py)
+vision-test/ghi_hinh/
+
 # Kết quả chạy thử
 vision-test/out*/
 vision-test/out*.json
@@ -70,3 +73,6 @@ vision-test/thu_nghiem/**/ket_qua*/
 
 # Ý tưởng khác, không thuộc Easy FnB
 thuc-tap-ao.md
+
+# Dữ liệu chạy cục bộ: chứng chỉ https có khoá riêng
+easy-fnb/.data/

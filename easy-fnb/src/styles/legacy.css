@@ -1918,6 +1918,17 @@ textarea.input {
   height: 100%;
   object-fit: fill;
   user-select: none;
+  transition: filter 0.4s ease, opacity 0.4s ease;
+}
+
+/* camera mất tín hiệu: hình và vùng bàn là của lúc trước, làm mờ để chủ quán không tưởng là đang trực tiếp */
+.live-cam[data-offline] .live-cam-img {
+  filter: grayscale(0.85) brightness(0.6);
+}
+
+.live-cam[data-offline] .zones,
+.live-cam[data-offline] .zone-labels {
+  opacity: 0.45;
 }
 
 .live-cam .zones {
@@ -2379,6 +2390,23 @@ textarea.input {
   stroke: var(--color-cool);
   stroke-width: 2;
   cursor: pointer;
+}
+
+/* vùng không phải bàn (quầy, kho, giữ xe, cửa): màu cam, nét đứt để khác bàn */
+.ez-table[data-area] polygon {
+  fill: color-mix(in oklab, var(--color-text-warning, #d97706) 16%, transparent);
+  stroke: var(--color-text-warning, #d97706);
+  stroke-dasharray: 8 5;
+}
+.ez-table[data-area="kho"] polygon,
+.ez-table[data-area="quay"] polygon {
+  fill: color-mix(in oklab, var(--color-text-error, #dc2626) 14%, transparent);
+  stroke: var(--color-text-error, #dc2626);
+}
+.zone-type-tag {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--color-text-secondary, var(--color-muted));
+  white-space: nowrap;
 }
 
 .zone-stage[data-drawing] .ez-table polygon {

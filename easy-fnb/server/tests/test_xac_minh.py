@@ -230,6 +230,41 @@ class TestHubVerdicts(HubCase):
         hub, a, _ = await self.run_one(table_resp('CAN_DON', bel=True), 'can_don')
         self.assertEqual((a['status'], a['verify']['state'], a['verify']['path']), ('open', 'unverified', 'belongings'))
 
+    async def test_belongings_holds_table_instead_of_clearing(self):
+        # khách để máy ở bàn rồi đi vệ sinh: không giao việc dọn, vẫn là lượt khách cũ
+        from server import giai_doan
+        hub = self.make([table_resp('CAN_DON', bel=True)])
+        hub.edge_tables('cam1', [dict(id='B1', state='co_khach', people=1)])
+        seat = hub.stages.st['B1']['seat']
+        hub.edge_tables('cam1', [dict(id='B1', state='can_don', people=0)])
+        aid = hub.edge_event(ev('can_don'))
+        a = hub.alerts[aid]
+        await wait_verified(hub, aid)
+        self.assertEqual((a['status'], a['verify']['path'], a['assigned_to']), ('cancelled', 'belongings', None))
+        self.assertIn('để đồ', a['cancel_reason'])
+        self.assertTrue(hub.tables['cam1/B1']['away'])
+        self.clock.t += giai_doan.LEFT_GRACE_S + 5
+        hub.tick()
+        self.assertEqual(hub.stages.st['B1']['stage'], 'seated')
+        hub.edge_tables('cam1', [dict(id='B1', state='co_khach', people=1)])     # khách quay lại
+        self.assertEqual((hub.stages.st['B1']['seat'], hub.tables['cam1/B1']['away']), (seat, False))
+
+    async def test_belongings_hold_expires_then_clearing_task(self):
+        from server import giai_doan
+        hub = self.make([table_resp('CAN_DON', bel=True)])
+        hub.edge_tables('cam1', [dict(id='B1', state='co_khach', people=1)])
+        hub.edge_tables('cam1', [dict(id='B1', state='can_don', people=0)])
+        aid = hub.edge_event(ev('can_don'))
+        await wait_verified(hub, aid)
+        self.clock.t += giai_doan.HOLD_S + 1
+        hub.alerts[aid]['created_at'] -= int(giai_doan.HOLD_S * 1000)       # luật gộp trùng tính theo giờ thật
+        hub.tick()
+        self.assertEqual(hub.stages.st['B1']['stage'], 'left')
+        new = [x for x in hub.alerts.values() if x['id'] != aid and x['kind'] == 'needs_clearing']
+        self.assertEqual(len(new), 1)
+        await wait_verified(hub, new[0]['id'])
+        self.assertEqual(new[0]['status'], 'open')                          # lần này giao cho nhân viên
+
     async def test_images_reach_gemini(self):
         hub = self.make([table_resp('CAN_DON')])
         e = ev('can_don')

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
-import { Copy, ExternalLink, LayoutGrid, MessagesSquare, QrCode as QrIcon, ReceiptText, ScanEye, Settings as SettingsIcon, Smartphone } from 'lucide-react';
+import { Copy, ExternalLink, LayoutGrid, MessageCircle as MessagesCircle, MessagesSquare, Moon, Sun, QrCode as QrIcon, ReceiptText, ScanEye, Settings as SettingsIcon, Shield, ShieldCheck, Smartphone } from 'lucide-react';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
@@ -9,8 +9,12 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@astryxdesign/core/Toast';
-import { TopNav, TopNavHeading, TopNavItem } from '@astryxdesign/core/TopNav';
-import { useLive, useLiveConnection } from '../live/store';
+import { useTheme } from '@astryxdesign/core/theme';
+import { useThemeChoice } from './themeMode';
+import { SideNav, SideNavHeading, SideNavItem } from '@astryxdesign/core/SideNav';
+import { putSettings } from '../live/api';
+import { useRun } from '../live/hooks';
+import { live, useLive, useLiveConnection } from '../live/store';
 import { ROLE_LABEL } from '../live/text';
 import { RouteFade } from './motion';
 import { QrCode } from './QrCode';
@@ -19,6 +23,7 @@ import { Conn, usePhoneBase } from './ui';
 const TABS = [
   { href: '/', label: 'Quán lúc này', icon: LayoutGrid },
   { href: '/tro-ly', label: 'Trợ lý', icon: MessagesSquare },
+  { href: '/nhom', label: 'Nhắn nhóm', icon: MessagesCircle },
   { href: '/ca', label: 'Ca hôm nay', icon: ReceiptText },
 ];
 
@@ -88,36 +93,84 @@ function StaffLinks({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** Khung của chủ quán: thanh trên cùng với ba mục, không có thanh bên */
+/** Nút "Trông quán": bật tay là coi như quán đóng; ngoài giờ mở cửa thì máy chủ tự trông */
+function GuardButton() {
+  const settings = useLive((s) => s.settings);
+  const { busy, run } = useRun();
+  if (!settings) return null;
+  const manual = settings.guard_mode === true;
+  const byHours = settings.closed === true && !manual;
+  const on = manual || byHours;
+  const toggle = async () => {
+    const out = await run('guard', () => putSettings({ guard_mode: !manual }), manual ? 'Đã tắt trông quán' : 'Đang trông quán');
+    if (out) live.setSettings(out);
+  };
+  const note = byHours
+    ? `Ngoài giờ, tự trông tới ${settings.open_time ?? 'giờ mở cửa'}`
+    : manual
+      ? 'Đang trông: có người vào sẽ báo chủ quán'
+      : settings.close_time
+        ? `Tự bật lúc ${settings.close_time}`
+        : null;
+  return (
+    <div className="fx-guard" data-on={on || undefined}>
+      <Button
+        label={on ? 'Đang trông quán' : 'Trông quán'}
+        variant={on ? 'primary' : 'secondary'}
+        size="sm"
+        icon={on ? <ShieldCheck size={15} /> : <Shield size={15} />}
+        aria-pressed={on}
+        isDisabled={byHours}
+        tooltip={byHours ? 'Quán đang ngoài giờ mở cửa nên tự trông' : undefined}
+        isLoading={busy === 'guard'}
+        onClick={() => void toggle()}
+      />
+      {note && <span className="fx-guard-note">{note}</span>}
+    </div>
+  );
+}
+
+/** Khung của chủ quán: thanh bên với ba mục và Cài đặt; trên điện thoại thanh bên thành ngăn kéo */
 export default function OwnerShell() {
   useLiveConnection();
   const { pathname } = useLocation();
   const [links, setLinks] = useState(false);
   const status = useLive((s) => s.status);
+  const dark = useTheme().mode === 'dark';
+  const { setChoice } = useThemeChoice();
 
   return (
     <AppShell
       contentPadding={5}
-      topNav={
-        <TopNav
-          label="Điều hướng chính"
-          heading={<TopNavHeading logo={
+      sideNav={
+        <SideNav
+          aria-label="Điều hướng chính"
+          collapsible
+          header={
+            <SideNavHeading
+              icon={
                 <span className="fx-mark">
                   <ScanEye size={17} strokeWidth={2.4} aria-hidden="true" />
                 </span>
-              } logoLabel="Easy FnB" heading="Easy FnB" headingHref="/" />}
-          endContent={
-            <div className="flex items-center gap-2">
+              }
+              heading="Easy FnB"
+              headingHref="/"
+            />
+          }
+          footer={
+            <div className="fx-side-foot">
               <Conn status={status} />
+              <GuardButton />
               <Button label="App nhân viên" variant="secondary" size="sm" icon={<Smartphone size={15} />} onClick={() => setLinks(true)} />
-              <IconButton label="Cài đặt" tooltip="Cài đặt" variant={pathname === '/cai-dat' ? 'secondary' : 'ghost'} icon={<SettingsIcon size={18} />} href="/cai-dat" />
+              <Button label={dark ? 'Giao diện sáng' : 'Giao diện tối'} variant="ghost" size="sm" icon={dark ? <Sun size={15} /> : <Moon size={15} />} onClick={() => setChoice(dark ? 'light' : 'dark')} />
             </div>
           }
         >
           {TABS.map((t) => (
-            <TopNavItem key={t.href} href={t.href} label={t.label} icon={<t.icon size={16} aria-hidden="true" />} isSelected={pathname === t.href} />
+            <SideNavItem key={t.href} href={t.href} label={t.label} icon={<t.icon size={16} aria-hidden="true" />} isSelected={pathname === t.href} />
           ))}
-        </TopNav>
+          <SideNavItem href="/cai-dat" label="Cài đặt" icon={<SettingsIcon size={16} aria-hidden="true" />} isSelected={pathname === '/cai-dat'} />
+        </SideNav>
       }
     >
       <RouteFade id={pathname}>

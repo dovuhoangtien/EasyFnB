@@ -1,4 +1,4 @@
-import type { Alert, AlertKind, AlertStatus, Camera, Role, Staff, TableStateKind, Verify } from './types';
+import type { Alert, AlertKind, AlertStatus, AreaType, Camera, Role, SecurityAlert, SecurityKind, Staff, TableStateKind, Verify } from './types';
 
 /** Lệnh chạy máy camera (đường ống thị giác) gửi sự kiện về máy chủ. Sửa cờ ở đây là đủ. */
 export const CAMERA_AGENT_CMD =
@@ -29,7 +29,45 @@ export const KIND_RANK: Record<AlertKind, number> = { call: 0, needs_clearing: 1
 /** Vai trò nhận từng loại việc (khớp API.md) */
 export const KIND_ROLE: Record<AlertKind, Role> = { call: 'serve', needs_clearing: 'clean', new_guest: 'serve' };
 
-export const ROLE_LABEL: Record<Role, string> = { serve: 'Phục vụ', clean: 'Dọn bàn', cashier: 'Thu ngân' };
+export const ROLE_LABEL: Record<Role, string> = { serve: 'Phục vụ', clean: 'Dọn bàn', cashier: 'Thu ngân', owner: 'Chủ quán' };
+
+// ---------- an ninh ----------
+export const SECURITY_LABEL: Record<SecurityKind, string> = {
+  item_taken: 'Lấy đồ của khách',
+  after_hours: 'Có người ngoài giờ',
+  restricted: 'Vào khu cấm',
+};
+
+/** Nhãn của mọi loại sự kiện, kể cả an ninh */
+export const anyKindLabel = (kind: string) => (KIND_LABEL as Record<string, string>)[kind] ?? (SECURITY_LABEL as Record<string, string>)[kind] ?? kind;
+
+export const AREA_LABEL: Record<AreaType, string> = { quay: 'Quầy thu ngân', kho: 'Kho, bếp', giu_xe: 'Chỗ giữ xe', cua: 'Cửa' };
+
+/** Cảnh báo an ninh còn mở (chưa bấm Đã biết / Báo nhầm) */
+export const securityOpen = (a: SecurityAlert) => a.status === 'open' || a.status === 'acked';
+
+const hhmm = (t: number) => clockTime(t).slice(0, 5);
+
+/** Một dòng nói cảnh báo an ninh: "Có người lạ cầm túi xách ở bàn 3" */
+export function securityLine(a: SecurityAlert) {
+  switch (a.kind) {
+    case 'item_taken': {
+      const what = a.detail?.trim() || 'đồ';
+      return a.table ? `Có người lạ cầm ${what} ở bàn ${a.table}` : `Có người lạ cầm ${what} đi`;
+    }
+    case 'after_hours':
+      return a.area_name ? `Có người ở ${a.area_name} lúc ${hhmm(a.created_at)}` : `Có người trong quán lúc ${hhmm(a.created_at)}`;
+    case 'restricted':
+      return `Khách vào ${a.area_name || 'khu cấm'}`;
+  }
+}
+
+/** Câu đọc to (chỉ dùng cho after_hours): giờ đọc thành "23 giờ 10" */
+export function securitySpeech(a: SecurityAlert) {
+  const [h, m] = hhmm(a.created_at).split(':');
+  const at = `${Number(h)} giờ${Number(m) ? ` ${Number(m)}` : ''}`;
+  return a.area_name ? `Có người ở ${a.area_name}, lúc ${at}` : `Có người trong quán, lúc ${at}`;
+}
 
 export const TABLE_STATE_LABEL: Record<TableStateKind, string> = {
   empty: 'Trống',

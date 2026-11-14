@@ -18,6 +18,7 @@ import { BarList, KIND_SERIES, SPEED_SERIES, StackBar, TimeColumns, type BarRow,
 import { Roll } from './motion';
 import { SpeedBar, SpeedMeter } from './SpeedMeter';
 import { SectionTitle } from './ui';
+import { MoneySection } from './Revenue';
 
 interface Figure {
   label: string;
@@ -252,6 +253,8 @@ export default function Shift() {
           <Skeleton height={180} />
         </div>
       )}
+
+      <MoneySection />
 
       {report && !hasData ? (
         <Card padding={5}>

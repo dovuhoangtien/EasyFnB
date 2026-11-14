@@ -1,0 +1,428 @@
+/* Phòng chat của quán và màn quét ảnh thanh toán (src/app/Team.tsx, Scan.tsx). Chỉ dùng token Astryx;
+   chỉ animate transform và opacity; có bản không chuyển động cho prefers-reduced-motion. */
+
+.fx-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- màn quét: phủ cả màn hình trên điện thoại, hộp giữa màn trên máy tính ---------- */
+.fx-scan {
+  position: fixed;
+  inset: 0;
+  z-index: 300; /* trên thanh đầu của app điện thoại (z-index 200) */
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background-body);
+  outline: none;
+  animation: fx-scan-in var(--dur-short, 160ms) var(--ease-out, ease-out) both;
+}
+@media (min-width: 40rem) {
+  .fx-scan {
+    inset: 4vh max(16px, calc(50% - 260px));
+    border-radius: var(--radius-container);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 24px 64px color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+  }
+}
+.fx-scan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: max(10px, env(safe-area-inset-top)) 12px 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.fx-scan-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px 16px max(24px, env(safe-area-inset-bottom));
+}
+
+/* ảnh vừa chụp, vạch quét chạy từ trên xuống */
+.fx-scan-photo {
+  position: relative;
+  align-self: center;
+  width: min(100%, 360px);
+  max-height: 56dvh;
+  border-radius: var(--radius-container);
+  overflow: hidden;
+  background: var(--color-background-muted);
+  border: 1px solid var(--color-border);
+}
+.fx-scan-photo img {
+  display: block;
+  width: 100%;
+  max-height: 56dvh;
+  object-fit: contain;
+}
+.fx-scan-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-cam-bg, var(--color-background-body));
+  opacity: 0;
+  transition: opacity var(--dur-long, 400ms) var(--ease-out, ease-out);
+  pointer-events: none;
+}
+.fx-scan-photo[data-state='scanning']::after {
+  opacity: 0.35;
+}
+.fx-scan-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 22%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--color-accent) 22%, transparent) 70%,
+    color-mix(in srgb, var(--color-accent) 85%, transparent) 97%,
+    transparent
+  );
+  border-bottom: 2px solid var(--color-accent);
+  animation: fx-scan-beam 1400ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+.fx-scan-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(100%, 360px);
+  align-self: center;
+}
+.fx-scan-pct {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.fx-scan-spark {
+  display: inline-block;
+  vertical-align: -2px;
+  color: var(--color-icon-accent);
+  animation: fx-scan-pulse 1100ms ease-in-out infinite alternate;
+}
+
+/* màn kết quả */
+.fx-scan-result {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+.fx-scan-result > * {
+  animation: fx-scan-rise 280ms var(--ease-out, ease-out) both;
+}
+.fx-scan-result > :nth-child(2) { animation-delay: 60ms; }
+.fx-scan-result > :nth-child(3) { animation-delay: 120ms; }
+.fx-scan-result > :nth-child(4) { animation-delay: 180ms; }
+.fx-scan-result > :nth-child(n + 5) { animation-delay: 240ms; }
+.fx-scan-summary {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+.fx-scan-thumb {
+  width: 72px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--radius-element);
+  border: 1px solid var(--color-border);
+}
+.fx-scan-amount {
+  margin: 2px 0;
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+.fx-scan-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.fx-scan-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+.fx-scan-items summary {
+  cursor: pointer;
+  padding: 6px 0;
+}
+.fx-scan-items summary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.fx-scan-items ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0 0;
+}
+.fx-scan-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fx-scan-foot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-background-body);
+}
+.fx-scan-foot > :last-child {
+  width: 100%;
+}
+
+@keyframes fx-scan-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fx-scan-beam {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(455%); }
+}
+@keyframes fx-scan-pulse {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+@keyframes fx-scan-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- thẻ thanh toán trong phòng chat ---------- */
+.fx-pay {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+  max-width: 420px;
+}
+.fx-pay[data-void] {
+  opacity: 0.6;
+}
+.fx-pay[data-void] .fx-pay-amount {
+  text-decoration: line-through;
+}
+.fx-pay-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.fx-pay-amount {
+  font-size: 1.35rem;
+  line-height: 1.2;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+}
+.fx-pay-detail {
+  overflow-wrap: anywhere;
+}
+.fx-pay-match {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+.fx-pay-match[data-ok] {
+  color: var(--color-text-success);
+}
+.fx-ai-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+/* ---------- app nhân viên: phòng chat và thanh dưới ---------- */
+.fx-phone-room {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: calc(100dvh - 190px);
+  display: flex;
+  flex-direction: column;
+}
+.fx-phone-room > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.fx-phone-tabs-space {
+  height: 56px;
+  flex: none;
+}
+.fx-phone-tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr); /* thêm mục mới thì tự chia đều */
+  max-width: 480px;
+  margin-inline: auto;
+  padding: 6px 12px max(6px, env(safe-area-inset-bottom));
+  gap: 6px;
+  background: var(--color-background-body);
+  border-top: 1px solid var(--color-border);
+}
+.fx-phone-tabs button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: var(--radius-element);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  transition: background-color var(--dur-short, 120ms) var(--ease-out, ease-out), color var(--dur-short, 120ms) var(--ease-out, ease-out);
+}
+.fx-phone-tabs button:hover {
+  background: var(--color-overlay-hover);
+}
+.fx-phone-tabs button:active {
+  background: var(--color-overlay-pressed);
+}
+.fx-phone-tabs button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+.fx-phone-tabs button[aria-current='page'] {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+.fx-phone-tabs .fx-phone-tabs-shoot {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-weight: 600;
+}
+.fx-phone-tabs .fx-phone-tabs-shoot:hover {
+  background: var(--color-accent);
+  opacity: 0.92;
+}
+.fx-phone-tabs-count {
+  position: absolute;
+  top: 2px;
+  left: calc(50% + 6px);
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  line-height: 18px;
+  font-weight: 700;
+  background: var(--color-error);
+  color: var(--color-on-error);
+}
+
+/* ---------- Ca hôm nay: cần xem lại ---------- */
+.fx-review {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-card);
+}
+.fx-review li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+}
+.fx-review li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-scan,
+  .fx-scan-result > *,
+  .fx-scan-spark {
+    animation: none;
+  }
+  .fx-scan-beam {
+    display: none;
+  }
+}
+
+/* ---------- chọn bàn bằng một chạm (hoá đơn thường không in số bàn) ---------- */
+.fx-table-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.fx-table-pick legend {
+  padding: 0;
+  margin-bottom: 8px;
+}
+.fx-table-pick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fx-table-pick-row button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 48px;
+  padding: 6px 12px;
+  border-radius: var(--radius-element);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: background-color var(--dur-short, 120ms) var(--ease-out, ease-out), border-color var(--dur-short, 120ms) var(--ease-out, ease-out);
+}
+.fx-table-pick-row button[data-busy] {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-emphasized);
+}
+.fx-table-pick-row button:hover {
+  background: var(--color-overlay-hover);
+}
+.fx-table-pick-row button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.fx-table-pick-row button[aria-pressed='true'] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.fx-table-pick-note {
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.85;
+}

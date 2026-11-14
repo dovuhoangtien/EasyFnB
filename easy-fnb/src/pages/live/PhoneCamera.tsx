@@ -4,8 +4,14 @@ import { Camera, CameraOff } from 'lucide-react';
 import { useTitle } from '../../live/hooks';
 import { apiUrl } from '../../live/api';
 
-const FPS = 6;
-const WIDTH = 960;
+const FPS = 12; // mạng wifi trong quán chịu được; chủ quán xem hình gốc mượt hơn
+// Khung gửi đi luôn ngang và cùng một cỡ: xoay máy hay đổi ống kính giữa chừng thì camera AI vẫn nhận đúng cỡ cũ,
+// không vỡ hình, vùng bàn không lệch. Cầm dọc thì hình nằm giữa, hai bên viền đen.
+const OUT_W = 960;
+const OUT_H = 540;
+/** ống kính góc siêu rộng (0.5×) trên iPhone/Android: tên thiết bị có chữ ultra, siêu rộng, 0.5 */
+const ULTRA = /ultra|siêu rộng|sieu rong|0[.,]5/i;
+type Lens = 'main' | 'wide';
 const QUALITY = 0.62;
 const MAX_PENDING = 1_200_000; // chờ gửi quá 1,2 MB thì bỏ khung, không dồn hàng đợi
 const MAX_POSTS = 3; // nếu không dùng được WebSocket thì gửi chồng 3 ảnh một lúc
@@ -24,6 +30,8 @@ export default function PhoneCamera() {
   const [sent, setSent] = useState(0);
   const [fails, setFails] = useState(0);
   const [size, setSize] = useState('');
+  const [lens, setLens] = useState<Lens>('main');
+  const [note, setNote] = useState('');
 
   const stop = () => {
     stream.current?.getTracks().forEach((t) => t.stop());
@@ -35,16 +43,48 @@ export default function PhoneCamera() {
 
   useEffect(() => stop, []);
 
+  /** Mở camera sau. wide: tìm ống góc siêu rộng theo tên (tên chỉ đọc được sau lần cho phép đầu), không có thì thử zoom nhỏ nhất. */
+  const open = async (want: Lens) => {
+    const size = { width: { ideal: 1920 }, height: { ideal: 1080 } };
+    let c: MediaTrackConstraints = { facingMode: { ideal: 'environment' }, ...size };
+    let ultra: MediaDeviceInfo | undefined;
+    if (want === 'wide') {
+      ultra = (await navigator.mediaDevices.enumerateDevices()).find((d) => d.kind === 'videoinput' && ULTRA.test(d.label));
+      if (ultra) c = { deviceId: { exact: ultra.deviceId }, ...size };
+    }
+    stream.current?.getTracks().forEach((t) => t.stop());
+    const s = await navigator.mediaDevices.getUserMedia({ video: c, audio: false });
+    let got: Lens = want;
+    setNote('');
+    if (want === 'wide' && !ultra) {
+      const track = s.getVideoTracks()[0];
+      const zoom = (track.getCapabilities?.() as { zoom?: { min: number } } | undefined)?.zoom;
+      if (zoom && zoom.min < 1) {
+        await track.applyConstraints({ advanced: [{ zoom: zoom.min } as MediaTrackConstraintSet] }).catch(() => undefined);
+      } else {
+        got = 'main';
+        setNote('Máy này không cho trang web dùng ống 0.5×, đang dùng ống thường.');
+      }
+    }
+    stream.current = s;
+    const v = video.current!;
+    v.srcObject = s;
+    await v.play();
+    setLens(got);
+  };
+
+  const switchLens = async (want: Lens) => {
+    try {
+      await open(want);
+    } catch (e) {
+      setNote(`Không đổi được ống kính: ${(e as Error).message}`);
+      await open('main').catch(() => setState('error'));
+    }
+  };
+
   const start = async () => {
     try {
-      const s = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-        audio: false,
-      });
-      stream.current = s;
-      const v = video.current!;
-      v.srcObject = s;
-      await v.play();
+      await open('main');
       setState('live');
       void navigator.wakeLock?.request('screen').catch(() => {});
     } catch (e) {
@@ -102,14 +142,23 @@ export default function PhoneCamera() {
       const live = ws?.readyState === WebSocket.OPEN;
       if (!live && pending >= MAX_POSTS) return;
       if (live && ws!.bufferedAmount > MAX_PENDING) return; // mạng chậm: bỏ khung cũ, không dồn
-      const w = Math.min(WIDTH, v.videoWidth);
-      const h = Math.round((v.videoHeight * w) / v.videoWidth);
-      if (canvas.width !== w) {
-        canvas.width = w;
-        canvas.height = h;
-        setSize(`${w}×${h}`);
+      if (canvas.width !== OUT_W) {
+        canvas.width = OUT_W;
+        canvas.height = OUT_H;
       }
-      canvas.getContext('2d')!.drawImage(v, 0, 0, w, h);
+      // vừa khít khung ngang cố định, giữ đúng tỉ lệ; phần thừa tô đen
+      const k = Math.min(OUT_W / v.videoWidth, OUT_H / v.videoHeight);
+      const dw = Math.round(v.videoWidth * k);
+      const dh = Math.round(v.videoHeight * k);
+      const g = canvas.getContext('2d')!;
+      g.fillStyle = '#000';
+      g.fillRect(0, 0, OUT_W, OUT_H);
+      g.drawImage(v, (OUT_W - dw) / 2, (OUT_H - dh) / 2, dw, dh);
+      const portrait = v.videoHeight > v.videoWidth;
+      setSize((old) => {
+        const next = portrait ? 'dọc' : 'ngang';
+        return old === next ? old : next;
+      });
       pending += 1;
       canvas.toBlob(
         (blob) => {
@@ -146,15 +195,25 @@ export default function PhoneCamera() {
       <section className="panel phone-sound">
         <h1>Điện thoại làm camera {cam}</h1>
         <p className="small ink2">
-          Dựng điện thoại cố định nhìn xuống các bàn, cắm sạc, để màn hình sáng. Camera này gửi hình về máy chủ; không lưu video.
+          Dựng điện thoại cố định nhìn xuống các bàn, cắm sạc, để màn hình sáng. Quay ngang hay dọc đều được, ngang thấy nhiều bàn hơn.
         </p>
         <video ref={video} playsInline muted className="crop crop--lg" style={{ display: state === 'live' ? 'block' : 'none' }} />
         {state === 'live' ? (
           <>
             <p className="small amber" role="status">
-              Đang phát {size} · đã gửi {sent} khung{fails ? ` · lỗi ${fails}` : ''}
-              {carrier === 'http' ? ' · đang dùng đường dự phòng, hơi chậm' : ''}
+              Đang phát, đã gửi {sent} khung{fails ? `, lỗi ${fails}` : ''}
+              {carrier === 'http' ? '. Đang dùng đường dự phòng, hơi chậm' : ''}
             </p>
+            {size === 'dọc' && <p className="small ink2">Đang cầm dọc. Xoay ngang máy để thấy được nhiều bàn hơn.</p>}
+            <div className="flex gap-2" role="group" aria-label="Ống kính">
+              <button type="button" className={`btn${lens === 'wide' ? ' btn--primary' : ''}`} aria-pressed={lens === 'wide'} onClick={() => void switchLens('wide')}>
+                0.5×
+              </button>
+              <button type="button" className={`btn${lens === 'main' ? ' btn--primary' : ''}`} aria-pressed={lens === 'main'} onClick={() => void switchLens('main')}>
+                1×
+              </button>
+            </div>
+            {note && <p className="small ink2">{note}</p>}
             <button type="button" className="btn btn--lg" onClick={stop}>
               <CameraOff size={18} aria-hidden="true" />
               Dừng

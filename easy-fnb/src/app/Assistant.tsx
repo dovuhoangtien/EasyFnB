@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@astryxdesign/core/Button';
-import { ChatComposer, ChatLayout, ChatMessage, ChatMessageBubble, ChatMessageList } from '@astryxdesign/core/Chat';
+import { ChatComposer, ChatDictationButton, ChatLayout, ChatMessage, ChatMessageBubble, ChatMessageList, useSpeechRecognition } from '@astryxdesign/core/Chat';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Markdown } from '@astryxdesign/core/Markdown';
 import { Text } from '@astryxdesign/core/Text';
@@ -9,14 +9,18 @@ import { askAssistant, errorMessage } from '../live/api';
 import { useTitle } from '../live/hooks';
 import type { AssistantAnswer } from '../live/types';
 import { Blocks } from './blocks';
+import { SetupContext } from './setupBlocks';
 
 const STARTERS = [
+  'Cho xem lại lần khách chờ lâu nhất',
+  'Bàn nào đang chờ lâu?',
+  'Nên đổi gì cho ca sau?',
   'Hôm nay nhân viên làm việc thế nào?',
-  'Hôm nay có gì đáng chú ý không?',
-  'Khách phải chờ lâu nhất ở bàn nào?',
-  'Việc theo từng giờ trong ca',
-  'Ai vào ca lúc mấy giờ?',
+  'Hôm nay thu được bao nhiêu?',
 ];
+
+/** câu cài đặt: chữ chờ là "Đang làm…" (tìm bàn mất tới 12 giây) */
+const SETUP_WORDS = /cài|setup|thiết lập|nối camera|tìm bàn|thêm|bỏ nhân viên|mã qr|luật báo|chụp/i;
 
 interface Msg {
   id: number;
@@ -40,12 +44,6 @@ function sessionId() {
   }
 }
 
-function engineNote(a: AssistantAnswer) {
-  const took = a.ms != null ? `, ${(a.ms / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} giây` : '';
-  if (a.engine === 'adk') return `${a.model ?? 'Gemini'} qua Google ADK${took}`;
-  if (a.engine === 'rules') return 'Trả lời từ số liệu của ca, chưa dùng AI';
-  return undefined;
-}
 
 /** Hỏi đáp về ca làm: câu trả lời kèm số liệu, biểu đồ, sự kiện có hình, bảng */
 export default function Assistant() {
@@ -54,15 +52,20 @@ export default function Assistant() {
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState('');
   const seq = useRef(1);
+  /** việc vừa bấm Lưu trong khối cài đặt, gửi kèm câu hỏi kế tiếp để trợ lý biết dữ liệu đã đổi */
+  const notes = useRef<string[]>([]);
+  const [doing, setDoing] = useState(false);
 
   const ask = async (q: string) => {
     const question = q.trim();
     if (!question || busy) return;
     setDraft('');
     setBusy(true);
+    setDoing(SETUP_WORDS.test(question));
     setMsgs((m) => [...m, { id: seq.current++, role: 'user', text: question }]);
     try {
-      const answer = await askAssistant(question, sessionId());
+      const note = notes.current.splice(0).join('; ');
+      const answer = await askAssistant(question, sessionId(), note || undefined);
       setMsgs((m) => [...m, { id: seq.current++, role: 'assistant', text: answer.answer, answer }]);
     } catch (err) {
       setMsgs((m) => [...m, { id: seq.current++, role: 'assistant', text: errorMessage(err), failed: true }]);
@@ -72,16 +75,19 @@ export default function Assistant() {
   };
 
   const last = msgs.at(-1);
+  // hỏi bằng lời: nói xong một câu thì gửi luôn
+  const dictation = useSpeechRecognition({ lang: 'vi-VN', onResult: (text) => void ask(text) });
 
   return (
     <div className="fx-chat-page">
+      <SetupContext.Provider value={{ ask: (q) => void ask(q), saved: (n) => void notes.current.push(n) }}>
       <ChatLayout
-        composer={<ChatComposer value={draft} onChange={setDraft} onSubmit={(v) => void ask(v)} placeholder="Hỏi về ca hôm nay, ví dụ: bàn nào chờ lâu nhất?" isDisabled={busy} />}
+        composer={<ChatComposer value={draft} onChange={setDraft} onSubmit={(v) => void ask(v)} placeholder="Hỏi về ca hôm nay hoặc bất cứ chuyện gì của quán" isDisabled={busy} sendActions={<ChatDictationButton dictation={dictation} label="Hỏi bằng lời" isHiddenWhenUnsupported />} />}
         emptyState={
           <EmptyState
             icon={<Sparkles size={28} />}
-            title="Hỏi bất cứ điều gì về ca hôm nay"
-            description="Trợ lý xem lại toàn bộ việc camera đã ghi: ai làm gì, bàn nào chờ lâu, lúc nào đông. Câu trả lời kèm số liệu, biểu đồ và hình lúc xảy ra."
+            title="Hỏi gì cũng được"
+            description="Trợ lý xem lại mọi việc camera đã ghi, khuyên nên đổi gì cho ca sau, và trả lời cả chuyện quản lý quán. Câu trả lời về ca kèm số liệu, biểu đồ và hình lúc xảy ra."
             actions={
               <div className="fx-suggest justify-center">
                 {STARTERS.map((s) => (
@@ -100,7 +106,7 @@ export default function Assistant() {
                   <ChatMessageBubble>{m.text}</ChatMessageBubble>
                 </ChatMessage>
               ) : (
-                <ChatMessage key={m.id} sender="assistant" name="Trợ lý" metadata={m.answer ? engineNote(m.answer) : undefined}>
+                <ChatMessage key={m.id} sender="assistant" name="Trợ lý">
                   <ChatMessageBubble variant="ghost" width="100%">
                     <div className="flex flex-col gap-3 min-w-0">
                       {m.failed ? (
@@ -133,7 +139,7 @@ export default function Assistant() {
                       <i />
                     </span>
                     <Text type="body" color="secondary">
-                      Đang xem lại ca…
+                      {doing ? 'Đang làm…' : 'Đang xem lại ca…'}
                     </Text>
                   </span>
                 </ChatMessageBubble>
@@ -142,6 +148,7 @@ export default function Assistant() {
           </ChatMessageList>
         )}
       </ChatLayout>
+      </SetupContext.Provider>
     </div>
   );
 }

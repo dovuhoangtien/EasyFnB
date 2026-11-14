@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useToast } from '@astryxdesign/core/Toast';
-import { errorMessage, getInfo, getReport, type Info } from './api';
+import { errorMessage, getInfo, getReport, savedPin, type Info } from './api';
 import type { Report } from './types';
 
 /** Số liệu ca từ /api/report, tự làm mới theo chu kỳ */
@@ -95,4 +95,27 @@ export function useInfo(intervalMs = 15000) {
   }, [intervalMs, nonce]);
   const refresh = useCallback(() => setNonce((n) => n + 1), []);
   return { info, refresh };
+}
+
+/**
+ * Chạy một việc cần PIN chủ quán: đã nhập trong phiên này thì chạy luôn, chưa thì mở hộp hỏi PIN.
+ * Trả về withPin và pinProps để gắn vào <PinDialog {...pinProps} />.
+ */
+export function useOwnerPin() {
+  const [pending, setPending] = useState<{ fn: (pin: string) => void } | null>(null);
+  const withPin = useCallback((fn: (pin: string) => void) => {
+    const p = savedPin();
+    if (p) fn(p);
+    else setPending({ fn });
+  }, []);
+  const pinProps = {
+    isOpen: pending !== null,
+    onClose: () => setPending(null),
+    onOk: (pin: string) => {
+      const fn = pending?.fn;
+      setPending(null);
+      fn?.(pin);
+    },
+  };
+  return { withPin, pinProps };
 }
