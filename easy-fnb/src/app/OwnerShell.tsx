@@ -26,7 +26,7 @@ const TABS = [
   { href: '/tro-ly', label: 'Trợ lý', icon: MessagesSquare },
   { href: '/nhom', label: 'Nhắn nhóm', icon: MessagesCircle },
   { href: '/ca', label: 'Ca hôm nay', icon: ReceiptText },
-];
+].filter((t) => t.href !== '/nhom'); // tạm ẩn mục Nhắn nhóm: bỏ .filter này để hiện lại
 
 /** Link app điện thoại của từng nhân viên: chép hoặc mở thử */
 function StaffLinks({ onClose }: { onClose: () => void }) {
