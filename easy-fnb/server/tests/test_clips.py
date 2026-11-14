@@ -387,3 +387,39 @@ class TrongAppThat(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ClipDemo(Base):
+    """Dữ liệu demo: clip có sẵn theo giờ trong DATA_DIR/video_demo, xin xem lại thì trả luôn, không cần camera."""
+
+    def make_demo(self):
+        import json
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        d = Path(tmp.name) / 'video_demo'
+        d.mkdir()
+        (d / 'v1.mp4').write_bytes(mp4())
+        t = now_ms() - 3_600_000
+        (d / 'index.json').write_text(json.dumps([dict(file='v1.mp4', camera='cam1', t_from=t, t_to=t + 16_000)]))
+        self.dir = Path(tmp.name)
+        self.hub = Hub(self.dir, NoGemini())
+        self.clips = Clips(self.hub, self.dir)
+        return t
+
+    async def test_khoang_co_clip_demo_tra_ngay_khi_camera_khong_chay(self):
+        t = self.make_demo()
+        v = self.clips.request('cam1', t + 5000, t + 9000)
+        self.assertEqual(v['status'], 'ready')
+        self.assertEqual(self.clips.get(v['id'])['file'].read_bytes(), mp4())
+
+    async def test_khoang_khong_co_clip_demo_van_bao_camera_khong_chay(self):
+        t = self.make_demo()
+        v = self.clips.request('cam1', t + 60_000, t + 70_000)
+        self.assertEqual(v['status'], 'failed')
+        self.assertEqual(self.clips.request('cam2', t + 5000, t + 9000)['status'], 'failed')
+
+    async def test_don_yeu_cau_cu_khong_xoa_clip_demo(self):
+        t = self.make_demo()
+        for _ in range(clips_module.MAX_REQ + 5):
+            self.clips.request('cam1', t + 1000, t + 3000)
+        self.assertTrue((self.dir / 'video_demo' / 'v1.mp4').exists())

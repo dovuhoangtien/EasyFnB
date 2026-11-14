@@ -397,6 +397,8 @@ def loi_de_hieu(err):
         return 'Máy camera không trả lời nên chưa lấy được video.'
     if 'chua toi gio' in e:
         return 'Chưa tới giờ đó nên chưa có video.'
+    if 'khong co video luu' in e:
+        return 'Không có video lưu lại cho lúc đó.'
     return 'Chưa lấy được video lúc đó.'
 
 
@@ -539,7 +541,7 @@ def dong_thoi_gian(hub, since_s, until_s, ban=None, xin=None):
             them(ts, 'Bàn đã dọn xong', 'good', tb, r['camera'], 'don')
     for rec in viec_trong_khoang(hub, since_s, until_s, ban):
         d = duoi_viec(hub, rec)
-        them(rec['t'], VIEC_VI[rec['kind']] + (f', {d}' if d else ''), tone_viec(hub, rec), rec['ban'], rec['camera'],
+        them(rec['t'], VIEC_VI.get(rec['kind'], KIND_VI.get(rec['kind'], rec['kind'])) + (f', {d}' if d else ''), tone_viec(hub, rec), rec['ban'], rec['camera'],
              'viec_' + rec['kind'], rec)
         if rec['kind'] == 'needs_clearing' and rec['ket'] == 'xong' and rec['t_xong'] and rec['t_xong'] / 1000 <= until_s:
             them(rec['t_xong'], 'Bàn đã dọn xong', 'good', rec['ban'], rec['camera'], 'don')
@@ -710,6 +712,9 @@ def xem_su_kien(hub, q, ban=None, xin=None, ids=None, t=None):
     recs, ram = [], []
     if ids:
         ram = [hub.alerts[i] for i in ids if i in hub.alerts]
+        if not ram:     # mã lấy từ lịch sử (máy chủ đã khởi động lại): tìm việc hôm nay mang mã đó
+            d0 = dau_ngay_s(hom_nay(t))
+            recs = [r for r in viec_lich_su(hub, d0, t / 1000, ban) if r['aid'] in ids]
     elif viec(hub):
         got = loc_su_kien(hub, loai=loai, ban=ban or '', cho_hon_giay=FAST_S if lau_ and not nhat else 0,
                           sap_xep='cho_lau_nhat' if lau_ else 'moi_nhat', gioi_han=12)

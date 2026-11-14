@@ -40,7 +40,8 @@ def huong_dau(kp, kc, box, th=0.35):
 
 
 class NhinQuanh:
-    def __init__(self, win=8.0, min_span=3.0, cooldown=30.0, th=0.6, yaw_on=0.45, yaw_off=0.25, cui_max=0.6):
+    # nhạy hơn (14/11): quay đầu ít hơn vẫn tính một bên, 2 giây là đủ, báo lại sau 20 giây
+    def __init__(self, win=8.0, min_span=2.0, cooldown=20.0, th=0.6, yaw_on=0.35, yaw_off=0.18, cui_max=0.75):
         self.win, self.min_span, self.cooldown, self.th = win, min_span, cooldown, th
         self.yaw_on, self.yaw_off, self.cui_max = yaw_on, yaw_off, cui_max
         self.q = defaultdict(deque)      # id -> (t, bên, hướng về nhân viên, ngẩng)
@@ -107,10 +108,10 @@ class NhinQuanh:
 
     def _cham(self, q):
         ro = [s for s in q if s[1] is not None]
-        if len(q) < 5 or q[-1][0] - q[0][0] < self.min_span or len(ro) < 0.6 * len(q):
+        if len(q) < 4 or q[-1][0] - q[0][0] < self.min_span or len(ro) < 0.5 * len(q):
             return 0.0, ''
         ngang = float(np.mean([s[3] for s in ro]))
-        if ngang < 0.6:                                              # cúi nhiều: ăn, xem điện thoại
+        if ngang < 0.5:                                              # cúi nhiều: ăn, xem điện thoại
             return 0.0, ''
         ve_nv = float(np.mean([s[2] for s in ro]))                   # A: bao nhiêu phần thời gian hướng về nhân viên
         a = min(1.0, ve_nv / 0.5)
@@ -119,7 +120,7 @@ class NhinQuanh:
         for s in ro + [(ro[-1][0] + 1, 2, False, False)]:
             if bd is None or s[1] != bd[1]:
                 # quay lưng phải giữ lâu hơn: người ngồi nghiêng hay bị mất mũi chập chờn vài khung
-                if (bd is not None and bd[1] and truoc - bd[0] >= (0.6 if bd[1] == SAU else 0.3)
+                if (bd is not None and bd[1] and truoc - bd[0] >= (0.45 if bd[1] == SAU else 0.2)
                         and (not luot or luot[-1] != bd[1])):
                     luot.append(bd[1])
                 bd = s

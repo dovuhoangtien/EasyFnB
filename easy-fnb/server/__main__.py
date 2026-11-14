@@ -14,6 +14,7 @@ ap.add_argument('--https', action='store_true',
 ap.add_argument('--https-port', type=int, default=8443)
 ap.add_argument('--reload', action='store_true')
 args = ap.parse_args()
+os.environ['EASYFNB_PORT'] = str(args.port)   # để nút bật camera AI biết gửi về cổng nào
 
 if not os.environ.get('K_SERVICE'):          # K_SERVICE có sẵn khi chạy trên Cloud Run
     ip = lan_ip()

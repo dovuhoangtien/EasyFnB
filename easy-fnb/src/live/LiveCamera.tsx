@@ -129,14 +129,11 @@ export function LiveCamera({ camera, zones, tables, alerts }: Props) {
 
   return (
     <div className="live-cam" data-offline={!online || undefined} style={{ aspectRatio: `${w} / ${h}`, ['--cam-ar' as string]: w / h }}>
-      {raw && online ? (
-        <>
-          {/* hình gốc từ điện thoại, đủ khung/giây; hình AI vẽ khung người (chậm hơn) thu nhỏ ở góc */}
-          <img className="live-cam-img" src={raw} alt={`Hình trực tiếp của ${camera.name}`} draggable={false} />
-          {shown && <img className="live-cam-pip" src={shown.src} alt={`Hình AI đang xử lý của ${camera.name}`} draggable={false} />}
-        </>
-      ) : shown ? (
-        <img className="live-cam-img" src={shown.src} alt={`Khung hình mới nhất của ${camera.name}`} draggable={false} />
+      {shown ? (
+        // hình AI làm hình chính (khung người, khung xương); chưa có thì tạm dùng hình gốc từ điện thoại
+        <img className="live-cam-img" src={shown.src} alt={`Hình AI của ${camera.name}`} draggable={false} />
+      ) : raw && online ? (
+        <img className="live-cam-img" src={raw} alt={`Hình trực tiếp của ${camera.name}`} draggable={false} />
       ) : zoneList.length === 0 ? (
         <div className="cam-offline">
           <h3>{failed ? 'Chưa có khung hình từ camera này' : 'Đang chờ khung hình đầu tiên'}</h3>

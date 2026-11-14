@@ -413,7 +413,7 @@ class Hub:
             c['source'] = source
         if w and h:
             c['frame_w'], c['frame_h'] = w, h
-        if kind == 'raw' or t - self._cam_pub.get(cid, 0) >= 250:
+        if kind == 'raw' or t - self._cam_pub.get(cid, 0) >= 80:   # ~12 lần/giây: hình AI là hình chính trên web
             self._cam_pub[cid] = t
             self.publish('camera', c)
 

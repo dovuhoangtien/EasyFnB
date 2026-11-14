@@ -178,6 +178,11 @@ export async function uploadStaffPhoto(sid: string, kind: StaffPhoto['kind'], jp
 /** Đổi cài đặt. Tắt che mặt (blur_faces) cần PIN chủ quán: truyền pin để gửi kèm header X-Owner-Pin. */
 export const putSettings = (patch: SettingsPatch, pin?: string | null) =>
   request<Settings>('PUT', '/api/settings', patch, pin ? pinHeader(pin) : undefined);
+/** Máy camera AI chạy trên chính máy chủ (server/may_camera.py) */
+export type CameraAi = { available: boolean; running: boolean; source: 'phone' | 'video' | null; camera: string | null; started_at: number | null };
+export const getCameraAi = () => request<CameraAi>('GET', '/api/camera-ai');
+export const setCameraAi = (on: boolean, pin?: string | null) =>
+  request<CameraAi>('POST', `/api/camera-ai/${on ? 'start' : 'stop'}`, undefined, pin ? pinHeader(pin) : undefined);
 export const resetShift = () => request<Record<string, never>>('POST', '/api/reset');
 
 // ---------- Gemini ----------

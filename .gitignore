@@ -76,3 +76,7 @@ thuc-tap-ao.md
 
 # Dữ liệu chạy cục bộ: chứng chỉ https có khoá riêng
 easy-fnb/.data/
+
+# Dữ liệu demo đi kèm mã nguồn (lịch sử, ảnh nhân viên, clip đã che mặt): máy chủ tự chép vào khi thư mục dữ liệu trống
+!easy-fnb/server/du_lieu_demo/
+!easy-fnb/server/du_lieu_demo/**

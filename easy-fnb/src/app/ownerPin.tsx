@@ -5,7 +5,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { checkOwnerPin, errorMessage, isPinError, rememberPin } from '../live/api';
 
 /** Hỏi mã PIN chủ quán, kiểm với máy chủ rồi nhớ trong phiên (dùng cùng useOwnerPin) */
-export function PinDialog({ isOpen, onClose, onOk }: { isOpen: boolean; onClose: () => void; onOk: (pin: string) => void }) {
+export function PinDialog({ isOpen, onClose, onOk, subtitle = 'Chỉ chủ quán xem được video không che mặt.' }: { isOpen: boolean; onClose: () => void; onOk: (pin: string) => void; subtitle?: string }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -32,7 +32,7 @@ export function PinDialog({ isOpen, onClose, onOk }: { isOpen: boolean; onClose:
   };
   return (
     <Dialog isOpen={isOpen} onOpenChange={(o) => !o && close()} width={380} purpose="form">
-      <DialogHeader title="Nhập mã PIN chủ quán" subtitle="Chỉ chủ quán xem được video không che mặt." onOpenChange={(o) => !o && close()} />
+      <DialogHeader title="Nhập mã PIN chủ quán" subtitle={subtitle} onOpenChange={(o) => !o && close()} />
       <div className="flex flex-col gap-3" style={{ paddingInline: 16, paddingBottom: 12 }}>
         <TextInput
           label="Mã PIN"
