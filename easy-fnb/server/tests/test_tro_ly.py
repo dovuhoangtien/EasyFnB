@@ -333,7 +333,7 @@ class Adk(Base):
         cai_dat = {'noi_camera', 'tu_tim_ban', 'sua_nhan_vien', 'ma_qr_nhan_vien', 'doi_luat_bao', 'chup_anh_nhan_vien'}
         self.assertEqual(set(decl) - {'an_ninh'} - cai_dat, {'so_lieu_ca', 'tim_su_kien', 'trang_thai_ban', 'nhan_vien_va_cham_cong', 'phan_tich_ca', 'hien_goi_y', 'hien_xep_ca',
                                      'hien_chi_so', 'hien_bieu_do', 'hien_su_kien', 'hien_nhan_vien', 'hien_bang',
-                                     'xem_video', 'dong_thoi_gian', 'ban_dang_the_nao', 'so_sanh_ngay'})
+                                     'xem_video', 'dong_thoi_gian', 'ban_dang_the_nao', 'so_sanh_ngay', 'tim_dau_hieu'})
         self.assertIn('ma_su_kien', str(decl['hien_su_kien']))
         self.assertIn('cho_hon_giay', str(decl['tim_su_kien']))
 
