@@ -39,6 +39,8 @@ from .phat_demo import PhatDemo
 from .tro_ly import TroLy
 from .tts import Tts
 
+from . import demo_live
+
 HERE = Path(__file__).resolve().parent
 DIST = HERE.parent / 'dist'
 DATA = Path(os.environ.get('DATA_DIR', HERE / 'data'))
@@ -79,7 +81,11 @@ phat_demo = PhatDemo(hub, DATA) if os.environ.get('DEMO_FEED', '').strip() in ('
 @asynccontextmanager
 async def lifespan(_app):
     task = asyncio.create_task(hub.tick_forever())
-    demo_task = asyncio.create_task(phat_demo.run()) if phat_demo else None
+    demo_task = None
+    if demo_live.bat():              # camera demo: phát clip thật như camera đang chạy (server/demo_live.py)
+        _app.state.demo = asyncio.create_task(demo_live.DemoLive(hub, clips, DATA / 'video_demo').chay())
+    elif phat_demo:                  # bản demo cũ (phát clip trên trình duyệt), chỉ khi tắt camera demo
+        demo_task = asyncio.create_task(phat_demo.run())
     asyncio.create_task(tts.warm([f"Bàn {t['id']}" for z in hub.zones.values() for t in z.get('tables', [])]))  # giọng đọc sẵn sàng ngay, câu đầu không phải chờ 3-4 giây khởi động Piper
     if tro_ly.adk_wanted:            # nạp google-adk sẵn (vài giây) để câu hỏi đầu tiên không phải chờ
         asyncio.create_task(asyncio.to_thread(tro_ly.load_adk))

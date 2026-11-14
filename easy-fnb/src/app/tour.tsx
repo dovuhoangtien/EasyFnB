@@ -28,7 +28,7 @@ const STEPS: Step[] = [
     path: '/',
     target: '[data-tour="tasks"]',
     title: 'Việc tự hiện khi camera thấy',
-    body: 'Khách giơ tay gọi, khách mới vào, bàn cần dọn: máy chủ tạo việc và giao cho nhân viên rảnh. Trong demo, nhân viên ảo sẽ nhận rồi làm xong sau vài giây. Bạn cũng có thể bấm Xong, Chuyển người hay Tạo việc.',
+    body: 'Khách giơ tay gọi, khách mới vào, bàn cần dọn: máy chủ tạo việc và giao cho nhân viên rảnh. Trong demo, nhân viên trong clip nhận việc trên điện thoại rồi tới bàn, camera tự đóng việc. Bạn cũng có thể bấm Xong, Chuyển người hay Tạo việc.',
   },
   {
     path: '/',
@@ -40,13 +40,13 @@ const STEPS: Step[] = [
     path: '/',
     target: '[data-tour="staff-app"]',
     title: 'App trên điện thoại nhân viên',
-    body: 'Mở mục này, quét mã QR bằng điện thoại để làm nhân viên: máy rung và đọc to “Bàn 09 gọi phục vụ”, bấm Nhận rồi Xong. Việc giao cho bạn sẽ chờ bạn bấm.',
+    body: 'Mở mục này, quét mã QR bằng điện thoại để làm nhân viên: máy rung và đọc to “Bàn B6 gọi phục vụ”, bấm Nhận rồi Xong. Việc giao cho bạn sẽ chờ bạn bấm.',
   },
   {
     path: '/tro-ly',
     target: '.fx-chat-page',
     title: 'Hỏi trợ lý bằng tiếng Việt',
-    body: 'Thử hỏi: “Hôm nay quán thế nào?”, “Ai phục vụ nhanh nhất?”, “Cho xem video bàn 09 gọi”. Trợ lý dùng Gemini, trả lời kèm số liệu và clip.',
+    body: 'Thử hỏi: “Hôm nay quán thế nào?”, “Ai phục vụ nhanh nhất?”, “Có ai nhận việc mà không tới bàn không?”. Trợ lý dùng Gemini, trả lời kèm số liệu và clip.',
   },
   {
     path: '/ca',

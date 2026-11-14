@@ -3,3 +3,5 @@ uvicorn>=0.30
 httpx>=0.27
 # Trợ lý của chủ quán (server/tro_ly.py). Thiếu gói này máy chủ vẫn chạy, trợ lý trả lời không dùng AI.
 google-adk>=2.0
+# Camera demo (server/demo_live.py) đọc clip mp4. Thiếu gói này máy chủ vẫn chạy, chỉ không có camera demo.
+opencv-python-headless>=4.9
