@@ -2,7 +2,7 @@
 
 Thiết kế: [`../docs/infra-design.md`](../docs/infra-design.md). Lý do từng quyết định: [`../docs/adr/`](../docs/adr/README.md).
 
-Tạo: Cloud Run `easy-fnb`, hai service account, Secret Manager, Artifact Registry, hai bucket (dữ liệu, mã nguồn build), và tùy chọn: uptime check, cảnh báo email, budget.
+Tạo: Cloud Run `easy-fnb`, hai service account, Secret Manager, Artifact Registry, hai bucket (sao lưu hoặc dữ liệu, mã nguồn build), và tùy chọn: uptime check, cảnh báo email, budget.
 
 > **Trạng thái:** đã qua `terraform validate` và `terraform test` (provider giả). **Chưa apply lên project thật.** Lần apply đầu có thể lộ lỗi quyền hoặc quota; xem mục "Sự cố thường gặp".
 
@@ -45,7 +45,7 @@ Từ thư mục gốc của repo:
 terraform -chdir=infra output -raw deploy_command    # in ra lệnh, copy rồi chạy
 ```
 
-Lệnh `gcloud builds submit` build `easy-fnb/Dockerfile`, đẩy lên Artifact Registry và cập nhật Cloud Run. Deploy là một lần khởi động lại: việc đang mở và nhật ký ca mất (ADR-0003).
+Lệnh `gcloud builds submit` build `easy-fnb/Dockerfile`, đẩy lên Artifact Registry và cập nhật Cloud Run. Lệnh này đã bọc sẵn `--substitutions` trong nháy kép nên chạy được ngay trên PowerShell (không bị lỗi tách tham số ở dấu phẩy). Deploy là một lần khởi động lại: việc đang mở và cảnh báo trong RAM mất, nhưng lịch sử và cấu hình được khôi phục từ bucket sao lưu (ADR-0003).
 
 ## Kiểm tra
 
@@ -73,8 +73,10 @@ terraform destroy                        # xoá tất cả, kể cả dữ liệ
 | `region` | `asia-southeast1` | |
 | `min_instances` | `1` | Chỉ nhận 0 hoặc 1; luôn `max = 1` |
 | `memory` / `cpu` | `2Gi` / `1` | `DATA_DIR` là `/tmp` (RAM) khi không `persist_data`; chưa đo với code mới |
-| `persist_data` | `false` | Gắn bucket (gcsfuse) làm `DATA_DIR`. Mặc định tắt: `timeline.db` và `quan.db` dùng SQLite WAL, chưa kiểm trên gcsfuse. Tắt thì dữ liệu mất khi instance khởi động lại |
+| `persist_data` | `false` | Gắn bucket (gcsfuse) làm `DATA_DIR`. Mặc định tắt (dùng sao lưu Litestream thay thế). Bật lên thì bỏ qua `backup_data` |
+| `backup_data` | `true` | Sao lưu `DATA_DIR` lên bucket Cloud Storage: Litestream cho `timeline.db` và `quan.db` (5s), script đồng bộ cho `config.json`, `staff/`, `chat/` (10s). Khôi phục khi khởi động. Bỏ qua khi `persist_data = true` (ADR-0003) |
 | `clips_max_mb` | `200` | Trần thư mục clip (`CLIPS_MAX_MB`); mặc định của máy chủ là 2000, quá lớn khi `DATA_DIR` là RAM |
+| `tts_voice` | `vi-VN-Chirp3-HD-Aoede` | Giọng Google Cloud Text-to-Speech cho điện thoại nhân viên (`TTS_ENGINE=google`) |
 | `gemini_model`, `gemini_verify_model` | rỗng | `gemini_verify_model = "gemini-decision-1"` bật Gemini Decision để kiểm tra ảnh |
 | `gemini_api_key`, `kie_api_key` | rỗng | Truyền bằng `TF_VAR_*`, không ghi vào file |
 | `allow_unauthenticated` | `true` | Xem ADR-0007 |

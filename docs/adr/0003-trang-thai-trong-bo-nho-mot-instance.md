@@ -36,3 +36,22 @@ Code mới ghi thêm hai file SQLite vào `DATA_DIR` (`timeline.db`: lịch sử
 - **`persist_data` mặc định chuyển sang `false`.** WAL cần bộ nhớ chia sẻ mà gcsfuse hỗ trợ kém. `timeline.py` bắt lỗi nên không sập, nhưng lịch sử có thể lặng lẽ không được ghi. Đây là suy đoán, **chưa kiểm** trên gcsfuse.
 - Không persist thì `DATA_DIR=/tmp` là RAM trên Cloud Run: clip và hai file SQLite tính vào bộ nhớ. IaC đặt `CLIPS_MAX_MB=200` và `memory=2Gi` (chưa đo).
 - **Cái giá:** lịch sử, vùng bàn và cài đặt mất khi instance khởi động lại. Chấp nhận cho demo. Lịch sử qua nhiều ngày cần tách `DB_DIR` sang đĩa riêng hoặc dùng Firestore (ADR-0013).
+
+## Cập nhật 2026-11-14 (2): sao lưu bằng Litestream
+
+Để giải quyết việc mất dữ liệu mà không vướng lỗi WAL trên gcsfuse, hệ thống chuyển sang cơ chế sao lưu liên tục từ RAM lên bucket Cloud Storage:
+
+- `DATA_DIR` vẫn giữ ở `/tmp/easyfnb` (RAM).
+- Tiến trình khởi động (`easy-fnb/deploy/start.sh`) khôi phục dữ liệu từ bucket `<project>-easy-fnb-backup` (`BACKUP_BUCKET`), sau đó sao lưu liên tục:
+  - Litestream 0.3.13 sao chép `timeline.db` và `quan.db` lên bucket mỗi 5 giây (`deploy/litestream.yml`).
+  - `deploy/sao_luu_tep.py` tải lên `config.json`, thư mục `staff/` và `chat/` mỗi 10 giây; khôi phục khi bật instance.
+- Terraform thêm:
+  - Biến `backup_data` (mặc định `true`, bỏ qua khi `persist_data = true`).
+  - Bucket `google_storage_bucket.backup` và quyền `roles/storage.objectAdmin` cho service account chạy Cloud Run.
+  - Biến môi trường `BACKUP_BUCKET` trên Cloud Run.
+- **Đã kiểm chứng thực tế:** lịch sử timeline vẫn còn sau khi khởi động lại instance.
+- **Phần chưa bao phủ / giới hạn:**
+  - Việc và cảnh báo đang mở trong RAM vẫn mất khi khởi động lại.
+  - Clip trong `bang_chung/` và ảnh cắt/bằng chứng (`crops/`, `evidence/`) không được sao lưu.
+  - Các thay đổi tệp trong vòng dưới 10 giây trước khi instance tắt có thể bị mất.
+
