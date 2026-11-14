@@ -33,6 +33,7 @@ easy-fnb/server/voices/so_sanh/
 *.npz
 !easy-fnb/public/**
 !easy-fnb/src/**
+!docs/architecture/*.png
 
 # Kết quả chạy thử
 vision-test/out*/
