@@ -109,6 +109,8 @@ def lau(x):
 
 def viec(hub):
     """Việc phục vụ của ca (không gồm cảnh báo an ninh: chúng không vào số liệu ca)."""
+    if getattr(hub, 'demo_live', False):    # camera demo đang phát: số liệu đọc cả ngày từ lịch sử, không chỉ vài việc trong RAM
+        return []
     return [a for a in hub.alerts.values() if a['kind'] in TASK_KINDS]
 
 
@@ -791,6 +793,7 @@ Cách làm việc:
    - Hỏi nên đổi gì, cải thiện gì, lời khuyên cho ca sau: đọc phan_tich_ca rồi hien_goi_y. Hỏi xếp ca, thiếu hay thừa người, nên thêm mấy người, giờ nào cần ai: đọc phan_tich_ca rồi hien_xep_ca.
    - Hệ thống có lưu video camera. Hễ câu hỏi có ý muốn xem (xem, xem lại, video, clip, quay lại, lúc đó ra sao, chuyện gì xảy ra lúc mấy giờ, lần nào đó thế nào): gọi xem_video để video hiện ngay trong câu trả lời. Biết mã sự kiện (từ tim_su_kien) thì đưa mã; hỏi theo giờ hoặc theo bàn thì đưa giờ, bàn; hỏi lần khách chờ lâu nhất thì đặt cho_lau_nhat. Không bao giờ nói là không xem được video khi chưa gọi xem_video; công cụ báo không có video thì nói lại đúng lý do nó đưa.
    - Kể lại chuyện của một bàn hoặc một quãng giờ (khách vào lúc nào, ai ra tiếp, món lên, ăn xong, rời bàn, dọn bàn): gọi dong_thoi_gian, nó hiện từng bước kèm video.
+   - Hỏi có lúc nào khách nhìn quanh tìm nhân viên, hoặc khách tạm rời bàn còn để đồ (để laptop, túi) mà chưa báo dọn: gọi tim_dau_hieu.
    - Bàn nào đang chờ, đang chờ món, chờ tính tiền, chưa ai ra tiếp, bữa ăn tới đâu: gọi ban_dang_the_nao.
    - Hỏi về ngày khác (hôm qua, thứ hai, ngày 12/11) hoặc so hai ngày: gọi so_sanh_ngay. Các công cụ còn lại chỉ đọc ca hôm nay.
    - Hỏi về nhiều ngày (tuần này, tuần trước, 7 ngày qua, tháng này, tháng trước, từ ngày này đến ngày kia, xu hướng, ngày nào đông nhất, hệ thống lưu những ngày nào): gọi nhieu_ngay. Lịch sử được lưu lâu dài, không được nói là hệ thống chỉ lưu hôm nay.
@@ -909,6 +912,32 @@ class TroLy:
             return dict(can_chu_y=[dict(gio=clock(x['t'])[:5], ban=x['ban'], nhan_vien=ten_nv(hub, x['nv']),
                                         chuyen='bấm nhận trên điện thoại nhưng không tới bàn') for x in rs],
                         da_hien_video=ten)
+
+        def tim_dau_hieu(loai: str = '') -> dict:
+            """Tìm những lúc hôm nay khách nhìn quanh tìm nhân viên, hoặc khách tạm rời bàn mà còn để đồ nên hệ thống chưa báo dọn. Hai chuyện này không phải là việc giao cho nhân viên nên tim_su_kien không thấy. Hiện luôn dòng thời gian kèm video của lần gần nhất.
+
+            Args:
+                loai: nhin_quanh hoặc tam_roi. Bỏ trống là cả hai.
+            """
+            muon = bo_dau(loai).replace(' ', '_')
+            ten = {'nhin_quanh': 'khách nhìn quanh tìm nhân viên', 'tam_roi': 'khách tạm rời, còn để đồ ở bàn nên chưa báo dọn'}
+            got = []
+            for r in hub.timeline.query(since=xem_lai.dau_ngay_s(xem_lai.hom_nay()), kinds=['log', 'table'], limit=5000):
+                d = r['data']
+                k = ('nhin_quanh' if r['kind'] == 'log' and d.get('log_kind') == 'looking' else
+                     'tam_roi' if r['kind'] == 'table' and d.get('away') else None)
+                if k and r['table'] and muon in ('', k):
+                    got.append(dict(t=int(r['ts'] * 1000), ban=r['table'], loai=k))
+            if not got:
+                return dict(tong=0, ket_qua='Hôm nay chưa ghi nhận lần nào.')
+            x = got[-1]
+            g = xem_lai.doc_gio(bo_dau(f"tu {clock(x['t'] - 60_000)[:5]} den {clock(x['t'] + 120_000)[:5]}"))
+            if g:
+                for b in xem_lai.ke_lai(hub, x['ban'], g, None, xem_lai.Xin(hub, self.clips, self._loop))[1]:
+                    them(b)
+            return dict(tong=len(got), cac_lan=[dict(gio=clock(y['t'])[:5], ban=y['ban'], chuyen=ten[y['loai']])
+                                                for y in got[-10:]],
+                        da_hien=f"dòng thời gian và video bàn {x['ban']} lúc {clock(x['t'])[:5]}")
 
         def tim_su_kien(loai: str = '', ban: str = '', nhan_vien: str = '', tu_gio: str = '', den_gio: str = '',
                         cho_hon_giay: int = 0, sap_xep: str = 'moi_nhat', gioi_han: int = 10) -> dict:
@@ -1142,7 +1171,7 @@ class TroLy:
 
         ds = [so_lieu_ca, tim_su_kien, trang_thai_ban, nhan_vien_va_cham_cong, phan_tich_ca,
               hien_goi_y, hien_xep_ca, hien_chi_so, hien_bieu_do, hien_su_kien, hien_nhan_vien, hien_bang,
-              xem_video, dong_thoi_gian, ban_dang_the_nao, so_sanh_ngay, an_ninh_ca,
+              xem_video, dong_thoi_gian, tim_dau_hieu, ban_dang_the_nao, so_sanh_ngay, an_ninh_ca,
               *cai_dat_cu]
         if self.phong is not None:
             ds += nhieu_ngay.cong_cu(hub, self.phong, them)            # cả tuần, cả tháng, nhân viên ngày cũ
