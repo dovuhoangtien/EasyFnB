@@ -35,7 +35,7 @@ output "deploy_command" {
     gcloud builds submit easy-fnb --project ${var.project_id} --config infra/cloudbuild.yaml `
       --service-account projects/${var.project_id}/serviceAccounts/${google_service_account.build.email} `
       --gcs-source-staging-dir gs://${google_storage_bucket.build_src.name}/src `
-      --substitutions _IMAGE=${local.image_repo},_SERVICE=${var.service_name},_REGION=${var.region}
+      "--substitutions=_IMAGE=${local.image_repo},_SERVICE=${var.service_name},_REGION=${var.region}"
   EOT
 }
 
