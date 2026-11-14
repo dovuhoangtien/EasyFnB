@@ -1,0 +1,459 @@
+{
+ "ghi_chu": "Nhãn sự kiện để đo do_chinh_xac.py. Giờ tính theo giây của TỆP video (bộ chấm tự cộng bat_dau_s của zones.json). Mỗi nhãn: tu..den = khoảng mà sự kiện được phép báo (cộng thêm 'tre_toi_da', mặc định 1 s); ban = bàn, x = khoảng ngang của người giơ tay (pixel video gốc). tuy_chon = người gán không chắc nên có báo hay không (khớp thì không tính đúng cũng không tính nhầm). tu_tre = mốc tính độ trễ nếu khác 'tu'. bo_qua = bàn/khoảng giờ không chấm. khong_cham = loại sự kiện không chấm ở clip này. cham_den = bỏ phần cuối tệp. am_tinh = cử chỉ dễ nhầm (chỉ để ghi chú vào báo nhầm). Nguồn: giơ tay clip 10, 12 và trạng thái bàn clip 01 lấy từ danh_gia/dap_an.json (người gán từng khung). Các clip m.. do AI xem khung hình 1 khung/giây (lưới 3x3 thu nhỏ 640x360) rồi gán: mốc giờ sai số khoảng ±2 s, cử chỉ nhanh dưới 1 s có thể bị sót; 'tin_cay' ghi theo từng clip. khach_roi và nhin_quanh không có nhãn nên không chấm. Bộ này KHÔNG dùng để chỉnh ngưỡng.",
+ "clip": {
+  "01_phong_an_goc_cao": {
+   "tep": "clips/01_phong_an_goc_cao.mp4",
+   "goi_phuc_vu": [],
+   "tin_cay": "vừa: suy từ mốc trạng thái bàn 0,5 s một lần của dap_an.json; clip tua nhanh 30 lần nên 0,5 s video = 15 s thật",
+   "ghi_chu": "Tua nhanh (toc 30). Bàn B3 và B2 chỉ bẩn-không-khách 0,5-1 s video (15-30 s thật).",
+   "can_don": [
+    {
+     "ban": "B3",
+     "tu": 2.25,
+     "den": 3.25
+    },
+    {
+     "ban": "B2",
+     "tu": 5.75,
+     "den": 6.75
+    },
+    {
+     "ban": "B1",
+     "tu": 0,
+     "den": 1.0,
+     "tuy_chon": true
+    },
+    {
+     "ban": "B4",
+     "tu": 0,
+     "den": 1.0,
+     "tuy_chon": true
+    }
+   ],
+   "khach_moi": [
+    {
+     "ban": "B3",
+     "tu": 3.25,
+     "den": 3.75
+    },
+    {
+     "ban": "B4",
+     "tu": 8.25,
+     "den": 9.25
+    }
+   ],
+   "da_don": [
+    {
+     "ban": "B1",
+     "tu": 0.25,
+     "den": 1.25
+    },
+    {
+     "ban": "B4",
+     "tu": 0.75,
+     "den": 1.25
+    },
+    {
+     "ban": "B2",
+     "tu": 6.25,
+     "den": 7.25
+    }
+   ],
+   "nv_den": [],
+   "khong_cham": [
+    "nv_den"
+   ]
+  },
+  "02_quan_ngoai_troi_nhieu_ban": {
+   "tep": "clips/02_quan_ngoai_troi_nhieu_ban.mp4",
+   "goi_phuc_vu": [],
+   "tin_cay": "cao (dap_an.json: không ai giơ tay)",
+   "can_don": [],
+   "khach_moi": [],
+   "da_don": [],
+   "khong_cham": [
+    "nv_den"
+   ],
+   "ghi_chu": "Ba bàn có khách suốt clip: không có sự kiện bàn nào. Nhân viên chưa xem kỹ nên không chấm nv_den."
+  },
+  "03_ban_an_xong_tu_tren": {
+   "tep": "clips/03_ban_an_xong_tu_tren.mp4",
+   "goi_phuc_vu": [],
+   "tin_cay": "cao (dap_an.json: không ai giơ tay)"
+  },
+  "04_phuc_vu_toi_khach_moi": {
+   "tep": "clips/04_phuc_vu_toi_khach_moi.mp4",
+   "goi_phuc_vu": [],
+   "tin_cay": "cao (dap_an.json: không ai giơ tay)"
+  },
+  "05_khach_vao_quan": {
+   "tep": "clips/05_khach_vao_quan.mp4",
+   "goi_phuc_vu": [],
+   "tin_cay": "cao (dap_an.json: không ai giơ tay)"
+  },
+  "06_phuc_vu_ghi_order": {
+   "tep": "clips/06_phuc_vu_ghi_order.mp4",
+   "goi_phuc_vu": [],
+   "tin_cay": "cao (dap_an.json: không ai giơ tay)"
+  },
+  "07_khach_tinh_tien": {
+   "tep": "clips/07_khach_tinh_tien.mp4",
+   "goi_phuc_vu": [],
+   "tin_cay": "cao (dap_an.json: không ai giơ tay)"
+  },
+  "08_quan_cafe_nhieu_nguoi": {
+   "tep": "clips/08_quan_cafe_nhieu_nguoi.mp4",
+   "goi_phuc_vu": [],
+   "tin_cay": "cao (dap_an.json: không ai giơ tay)"
+  },
+  "09_nhom_ban_tron": {
+   "tep": "clips/09_nhom_ban_tron.mp4",
+   "goi_phuc_vu": [],
+   "tin_cay": "cao (dap_an.json: không ai giơ tay)"
+  },
+  "10_thay_the_gio_tay_lop_hoc_a": {
+   "tep": "clips/10_thay_the_gio_tay_lop_hoc_a.mp4",
+   "goi_phuc_vu": [
+    {
+     "ai": "em áo xanh đậm cuối lớp, cạnh bảng",
+     "tu": 16.5,
+     "den": 21.5,
+     "x": [
+      1020,
+      1240
+     ],
+     "kho": "de"
+    },
+    {
+     "ai": "em áo xanh dương phía trước",
+     "tu": 17.0,
+     "den": 21.5,
+     "x": [
+      700,
+      960
+     ],
+     "kho": "de"
+    },
+    {
+     "ai": "em áo xám giữa lớp",
+     "tu": 17.5,
+     "den": 21.5,
+     "x": [
+      480,
+      680
+     ],
+     "kho": "de"
+    },
+    {
+     "ai": "em ngồi xa sau em áo đỏ",
+     "tu": 17.5,
+     "den": 20.0,
+     "x": [
+      400,
+      540
+     ],
+     "kho": "vua"
+    },
+    {
+     "ai": "em mép trái, bị cắt khỏi khung",
+     "tu": 19.5,
+     "den": 21.5,
+     "x": [
+      0,
+      140
+     ],
+     "kho": "kho"
+    }
+   ],
+   "tin_cay": "cao (dap_an.json); hai ca cuối ghi \"vừa\"/\"khó\": người ở xa và người bị cắt khỏi khung"
+  },
+  "12_thay_the_gio_tay_hoi_bai": {
+   "tep": "clips/12_thay_the_gio_tay_hoi_bai.mp4",
+   "goi_phuc_vu": [
+    {
+     "ai": "người mép trái",
+     "tu": 2.05,
+     "den": 3.3,
+     "x": [
+      0,
+      220
+     ],
+     "kho": "vua"
+    },
+    {
+     "ai": "cô tóc vàng, giơ nhanh ngang đầu",
+     "tu": 2.0,
+     "den": 2.75,
+     "x": [
+      520,
+      1020
+     ],
+     "kho": "vua"
+    }
+   ],
+   "tin_cay": "cao (dap_an.json)"
+  },
+  "m01_bbq_vn_ban_an": {
+   "tep": "video_mang/m01_bbq_vn_ban_an.mp4",
+   "tin_cay": "vừa (AI xem 1 khung/giây)",
+   "cham_den": 41.5,
+   "ghi_chu": "Tệp hết cảnh quán ở ~41,8 s rồi tới bảng quảng cáo 5 s. Không ai gọi phục vụ (ghi chú cũ \"giơ tay ở giây 28\" là cô áo đỏ đứng lau mặt). Các bàn có khách từ đầu, cô áo đỏ đi vào 16-21 s ngồi thêm vào B1 đang có khách: không có khach_moi thật. Nhân viên đứng gần bàn suốt nên không chấm nv_den.",
+   "goi_phuc_vu": [],
+   "khach_moi": [
+    {
+     "ban": "B1",
+     "tu": 31,
+     "den": 36,
+     "tuy_chon": true,
+     "ai": "cô áo đỏ đi vào ngồi thêm vào B1 (bàn đã có khách)"
+    }
+   ],
+   "can_don": [],
+   "da_don": [],
+   "khong_cham": [
+    "nv_den"
+   ],
+   "am_tinh": [
+    {
+     "tu": 27,
+     "den": 30,
+     "mo_ta": "cô áo đỏ ở B1 đứng lau mặt bằng khăn giấy"
+    },
+    {
+     "tu": 35.5,
+     "den": 37.5,
+     "mo_ta": "cô áo đỏ đưa hai tay ra sau đầu sửa tóc"
+    },
+    {
+     "tu": 40,
+     "den": 41.5,
+     "mo_ta": "cô áo đỏ với tay sang ngang"
+    }
+   ]
+  },
+  "m08_quan_an_vn_nv_ao_den": {
+   "tep": "video_mang/m08_quan_an_vn_nv_ao_den.mp4",
+   "tin_cay": "vừa (AI xem 1 khung/3 giây đoạn 42-66 s; phần còn lại theo GHI_CHU_CLIP_MOI.md)",
+   "goi_phuc_vu": [],
+   "khach_moi": [],
+   "can_don": [],
+   "da_don": [],
+   "nv_den": [
+    {
+     "ban": [
+      "B1",
+      "B5"
+     ],
+     "tu": 49,
+     "den": 88,
+     "ai": "nhân viên áo đen tới ~50 s, đứng giữa bàn có khách (B1) và bàn nhỏ sát lan can (B5) tới hết clip; đang phục vụ ông tóc bạc ngồi bàn lan can"
+    },
+    {
+     "ban": [
+      "B1",
+      "B5",
+      "B6"
+     ],
+     "tu": 0,
+     "den": 40,
+     "tuy_chon": true,
+     "ai": "nhân viên đứng cạnh bàn từ đầu clip"
+    }
+   ],
+   "ghi_chu": "Nhân viên áo đen đứng ở dãy bàn nhỏ sát lan can (B5, B6) từ đầu clip tới ~40 s (theo ảnh sự kiện, chưa xem từng giây): tùy chọn. ~53 s ông tóc bạc ở bàn lan can đưa tay nhận/đưa đồ cho nhân viên đứng cạnh: không phải gọi.",
+   "am_tinh": [
+    {
+     "tu": 51,
+     "den": 56,
+     "mo_ta": "khách đưa tay nhận/đưa đồ cho nhân viên đứng cạnh"
+    }
+   ]
+  },
+  "m10_cafe_vn_khach_ve_nv_don_ban_6phut": {
+   "tep": "video_mang/m10_cafe_vn_khach_ve_nv_don_ban_6phut.mp4",
+   "tin_cay": "vừa (AI xem 1 khung/giây các đoạn 100-108, 170-215, 220-335 s; ngoài các đoạn đó chỉ xem thưa)",
+   "ghi_chu": "B1: khách về 174-192 s, nhân viên tới dọn ngay 192-209 s nên bàn không lúc nào bẩn-vắng-người đủ 5 s: can_don/da_don B1 là tùy chọn. B2: khách đứng dậy ~224 s, đứng quanh bàn tới ~266 s rồi đi; bàn còn ly và giấy 268-306 s; nhân viên dọn 306-318 s. B3: có một người áo tối ngồi bàn sát tường ngay sau B3 tới ~130-160 s, không rõ thuộc bàn nào: không chấm B3. 102-106 s cô ở B1 vươn vai hai tay (không phải gọi). B5 nằm sát quầy pha chế: nhân viên áo đỏ đứng ở quầy nhiều lần (42, 100, 109, 154, 287 s) không phải tới phục vụ B5, vẫn chấm là báo nhầm. Một khách nam áo đen (189-194 s) và một khách áo ca-rô (232, 272 s) bị model coi là nhân viên.",
+   "goi_phuc_vu": [],
+   "khach_moi": [
+    {
+     "ban": "B2",
+     "tu": 196,
+     "den": 206,
+     "tuy_chon": true,
+     "ai": "khách B2 bị ghế sofa che trước ~199 s"
+    }
+   ],
+   "can_don": [
+    {
+     "ban": "B2",
+     "tu": 226,
+     "den": 306,
+     "tu_tre": 268
+    },
+    {
+     "ban": "B1",
+     "tu": 176,
+     "den": 212,
+     "tuy_chon": true
+    }
+   ],
+   "da_don": [
+    {
+     "ban": "B2",
+     "tu": 312,
+     "den": 335
+    },
+    {
+     "ban": "B1",
+     "tu": 200,
+     "den": 225,
+     "tuy_chon": true
+    }
+   ],
+   "nv_den": [
+    {
+     "ban": "B1",
+     "tu": 102,
+     "den": 108,
+     "ai": "nhân viên áo đỏ tới B1"
+    },
+    {
+     "ban": "B1",
+     "tu": 192,
+     "den": 209,
+     "ai": "nhân viên dọn B1"
+    },
+    {
+     "ban": "B2",
+     "tu": 306,
+     "den": 318,
+     "ai": "nhân viên dọn B2"
+    },
+    {
+     "ban": "B2",
+     "tu": 236,
+     "den": 246,
+     "tuy_chon": true,
+     "ai": "nhân viên bưng khay đi ngang B2"
+    }
+   ],
+   "tre_toi_da": {
+    "can_don": 0,
+    "da_don": 5,
+    "nv_den": 3
+   },
+   "bo_qua": [
+    {
+     "ban": "B3"
+    }
+   ],
+   "am_tinh": [
+    {
+     "tu": 102,
+     "den": 106,
+     "mo_ta": "cô ở B1 vươn vai hai tay"
+    },
+    {
+     "tu": 104,
+     "den": 106,
+     "mo_ta": "em bé trèo ghế, hai tay bám lưng ghế"
+    },
+    {
+     "tu": 306,
+     "den": 318,
+     "mo_ta": "em bé đứng sau sofa, hai tay bám lưng sofa"
+    }
+   ]
+  },
+  "m11_cafe_vn_nv_ao_xanh_phuc_vu": {
+   "tep": "video_mang/m11_cafe_vn_nv_ao_xanh_phuc_vu.mp4",
+   "tin_cay": "vừa (AI xem 1 khung/4 giây đoạn 64-96 s và xem ảnh quanh từng sự kiện máy báo; phần còn lại theo GHI_CHU_CLIP_MOI.md)",
+   "goi_phuc_vu": [],
+   "khach_moi": [],
+   "can_don": [],
+   "da_don": [],
+   "nv_den": [
+    {
+     "ban": "B1",
+     "tu": 66,
+     "den": 79,
+     "ai": "nhân viên áo xanh bưng khay nước tới B1"
+    },
+    {
+     "ban": "B1",
+     "tu": 86,
+     "den": 95,
+     "tuy_chon": true,
+     "ai": "người áo trắng tới B1, không rõ có phải nhân viên"
+    },
+    {
+     "ban": "B4",
+     "tu": 100,
+     "den": 122,
+     "ai": "nhân viên áo xanh đứng phục vụ ở B4 (thấy trên ảnh sự kiện 104 s và 118 s)"
+    },
+    {
+     "ban": "B3",
+     "tu": 82,
+     "den": 90,
+     "tuy_chon": true,
+     "ai": "người áo tối đứng ở B3, có vẻ là nhân viên, không chắc"
+    }
+   ],
+   "tre_toi_da": {
+    "nv_den": 3
+   },
+   "am_tinh": [
+    {
+     "tu": 13,
+     "den": 16,
+     "mo_ta": "khách ở B2 bế/đỡ em bé, tay ngang mặt"
+    },
+    {
+     "tu": 113,
+     "den": 116,
+     "mo_ta": "khách ở xa đưa tay lên mặt"
+    }
+   ]
+  },
+  "m13_quan_an_da_nang_goc_cao": {
+   "tep": "video_mang/m13_quan_an_da_nang_goc_cao.mp4",
+   "tin_cay": "thấp-vừa (theo GHI_CHU_CLIP_MOI.md: không có sự kiện; AI chỉ xem ảnh quanh các sự kiện máy báo)",
+   "goi_phuc_vu": [],
+   "khach_moi": [],
+   "can_don": [],
+   "da_don": [],
+   "nv_den": [
+    {
+     "ban": "B3",
+     "tu": 4,
+     "den": 12,
+     "tuy_chon": true,
+     "ai": "cô áo trắng đứng ở quầy bar (B3), có vẻ là nhân viên, không chắc"
+    },
+    {
+     "ban": "B4",
+     "tu": 28,
+     "den": 34,
+     "tuy_chon": true,
+     "ai": "người đứng sau quầy ở mép hình, không chắc"
+    }
+   ]
+  },
+  "m15_cafe_vn_khach_ngoi_yen": {
+   "tep": "video_mang/m15_cafe_vn_khach_ngoi_yen.mp4",
+   "tin_cay": "thấp-vừa (theo GHI_CHU_CLIP_MOI.md: không có sự kiện; AI chỉ xem ảnh quanh các sự kiện máy báo)",
+   "goi_phuc_vu": [],
+   "khach_moi": [],
+   "can_don": [],
+   "da_don": [],
+   "nv_den": [],
+   "bo_qua": [
+    {
+     "ban": "B3"
+    }
+   ],
+   "ghi_chu": "B3 là bàn nhỏ ở xa sau chậu cây, có người ngồi lấp ló suốt clip; ghi chú vùng bàn đã nói \"không chắc, có thể bỏ\": không chấm B3."
+  }
+ }
+}

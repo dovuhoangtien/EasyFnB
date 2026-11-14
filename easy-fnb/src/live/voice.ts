@@ -43,9 +43,9 @@ if (typeof window !== 'undefined') {
     .catch(() => {});
 }
 /** Nhịp đọc kiểu loa báo nhận tiền: chậm hơn giọng gốc, mỗi cụm một hơi, có khoảng lặng ở giữa */
-const RATE = 0.88;
-const PAUSE_COMMA_MS = 380;
-const PAUSE_STOP_MS = 600;
+const RATE = 1.0;
+const PAUSE_COMMA_MS = 250;
+const PAUSE_STOP_MS = 400;
 
 interface Clip {
   text: string;
@@ -117,11 +117,22 @@ export function unlockAudio() {
   }
 }
 
-/** Tiếng chuông: việc gấp kêu hai nốt cao, việc thường một nốt, huỷ thì một nốt trầm */
-export function beep(kind: 'urgent' | 'normal' | 'cancel' = 'normal') {
+/** Tiếng chuông: việc gấp kêu hai nốt cao, việc thường một nốt, huỷ thì một nốt trầm;
+ * soft: một nốt nhỏ (cảnh báo an ninh không đọc to); alarm: chuông dài cho có người ngoài giờ */
+export function beep(kind: 'urgent' | 'normal' | 'cancel' | 'soft' | 'alarm' = 'normal') {
   if (!audio) return;
   if (audio.state === 'suspended') void audio.resume();
-  const notes = kind === 'urgent' ? [988, 1319, 988, 1319] : kind === 'normal' ? [880, 1175] : [523];
+  const notes =
+    kind === 'urgent'
+      ? [988, 1319, 988, 1319]
+      : kind === 'alarm'
+        ? [1319, 988, 1319, 988, 1319, 988]
+        : kind === 'normal'
+          ? [880, 1175]
+          : kind === 'soft'
+            ? [784]
+            : [523];
+  const peak = kind === 'soft' ? 0.08 : 0.22;
   const t0 = audio.currentTime + 0.02;
   notes.forEach((freq, i) => {
     const osc = audio!.createOscillator();
@@ -130,7 +141,7 @@ export function beep(kind: 'urgent' | 'normal' | 'cancel' = 'normal') {
     osc.type = 'sine';
     osc.frequency.value = freq;
     gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.22, t + 0.015);
+    gain.gain.exponentialRampToValueAtTime(peak, t + 0.015);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
     osc.connect(gain).connect(audio!.destination);
     osc.start(t);
@@ -171,9 +182,11 @@ export function speak(text: string) {
 
 /** Chuông, rung rồi đọc: dùng khi có việc mới */
 export function announce(text: string, urgent: boolean) {
+  // xin máy chủ làm sẵn giọng ngay lúc chuông kêu, hết chuông là đọc liền, không phải chờ tổng hợp
+  if (serverVoice) for (const c of clips(text)) void fetch(ttsUrl(c.text)).catch(() => {});
   beep(urgent ? 'urgent' : 'normal');
   vibrate(urgent ? [120, 70, 120, 70, 120] : [90, 60, 90]);
-  window.setTimeout(() => speak(text), urgent ? 950 : 650);
+  window.setTimeout(() => speak(text), urgent ? 700 : 400);
 }
 
 export function stopSpeaking() {

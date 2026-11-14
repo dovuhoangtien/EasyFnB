@@ -42,4 +42,4 @@ goto :gom
   --hand-model giotay_pe_b16.pt --hand-th 0.35 --staff-model nhanvien_pe_b16.pt ^
   --table-model clip --clip-backbone pe_core_s16 ^
   --pose-models yolo26n-pose_544x960_fp16.engine --det-models yolo26s_736x1280_fp16.engine ^
-  --pose-refine rtmpose-m --refine-mode luot --det-every 100 --staff-every 20 --tich-luy --yoloe --hanh-dong %REST%
+  --pose-refine rtmpose-m --refine-mode luot --det-every 100 --staff-every 20 --tich-luy --yoloe --hanh-dong --ghi-hinh %REST%

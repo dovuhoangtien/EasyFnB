@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { frameUrl } from './api';
+import { apiUrl, frameUrl } from './api';
 import { useServerNow } from './store';
 import { cameraLive, clockTime, TABLE_STATE_LABEL } from './text';
 import type { Alert, Camera, CameraZones, TableState } from './types';
@@ -119,13 +119,23 @@ export function LiveCamera({ camera, zones, tables, alerts }: Props) {
     return map;
   }, [tables, camera.id]);
 
+  // camera là điện thoại: luồng MJPEG gốc trên máy chủ (đường dẫn nằm trong tên nguồn của camera)
+  const phone = camera.source?.match(/\/api\/phone\/([^/]+)\/mjpeg/)?.[1];
+  const raw = phone ? apiUrl(`/api/phone/${encodeURIComponent(phone)}/mjpeg`) : null;
+
   const zw = zones?.frame_w || w;
   const zh = zones?.frame_h || h;
   const zoneList = zones?.tables ?? [];
 
   return (
-    <div className="live-cam" style={{ aspectRatio: `${w} / ${h}` }}>
-      {shown ? (
+    <div className="live-cam" data-offline={!online || undefined} style={{ aspectRatio: `${w} / ${h}`, ['--cam-ar' as string]: w / h }}>
+      {raw && online ? (
+        <>
+          {/* hình gốc từ điện thoại, đủ khung/giây; hình AI vẽ khung người (chậm hơn) thu nhỏ ở góc */}
+          <img className="live-cam-img" src={raw} alt={`Hình trực tiếp của ${camera.name}`} draggable={false} />
+          {shown && <img className="live-cam-pip" src={shown.src} alt={`Hình AI đang xử lý của ${camera.name}`} draggable={false} />}
+        </>
+      ) : shown ? (
         <img className="live-cam-img" src={shown.src} alt={`Khung hình mới nhất của ${camera.name}`} draggable={false} />
       ) : zoneList.length === 0 ? (
         <div className="cam-offline">
@@ -183,7 +193,7 @@ export function LiveCamera({ camera, zones, tables, alerts }: Props) {
         {camera.fps !== null && online && <span className="hud-tag measured">{camera.fps.toFixed(1)} khung/giây</span>}
       </div>
       <div className="cam-hud cam-hud--bottom">
-        {camera.source ? <span className="hud-tag hud-src">{camera.source}</span> : !shown && zoneList.length > 0 ? <span className="hud-tag">Chưa có hình, chỉ hiện vùng bàn</span> : <span />}
+        {camera.source ? <span className="hud-tag hud-src">{phone ? `Điện thoại ${phone}` : camera.source}</span> : !shown && zoneList.length > 0 ? <span className="hud-tag">Chưa có hình, chỉ hiện vùng bàn</span> : <span />}
         {camera.last_frame_at !== null && <span className="hud-tag measured">{clockTime(camera.last_frame_at)}</span>}
       </div>
     </div>

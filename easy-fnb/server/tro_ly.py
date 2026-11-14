@@ -20,6 +20,8 @@ import unicodedata
 from collections import Counter
 
 from .hub import CLOSED, KIND_VI, TASK_KINDS, Hub, clock, now_ms, where
+from .an_ninh_tro_ly import an_ninh, cau_an_ninh, tra_loi_an_ninh
+from . import an_ninh_tro_ly
 
 log = logging.getLogger('easyfnb.tro_ly')
 
@@ -28,7 +30,8 @@ ROLE_VI = {'serve': 'phục vụ', 'clean': 'dọn bàn', 'cashier': 'thu ngân'
 STATUS_VI = {'verifying': 'đang kiểm tra', 'open': 'chưa ai nhận', 'acked': 'đang xử lý', 'done': 'đã xong',
              'cancelled': 'đã huỷ'}
 TABLE_VI = {'empty': 'trống', 'occupied': 'có khách', 'needs_clearing': 'cần dọn', 'unknown': 'chưa rõ'}
-GOI_Y = ['Hôm nay chất lượng nhân viên thế nào?', 'Hôm nay có gì đáng chú ý?', 'Bàn nào phải chờ lâu nhất?',
+GOI_Y = ['Cho xem lại lần khách chờ lâu nhất', 'Bàn nào đang chờ lâu?', 'Nên đổi gì cho ca sau?',
+         'Ca sau nên xếp người thế nào?', 'Hôm nay chất lượng nhân viên thế nào?', 'Hôm qua so với hôm nay thế nào?',
          'Giờ nào bận nhất?', 'Tóm tắt ca hôm nay']
 BUCKETS_S = (30, 60, 120, 300, 600, 900, 1800, 3600, 7200)
 
@@ -105,7 +108,8 @@ def lau(x):
 
 
 def viec(hub):
-    return list(hub.alerts.values())
+    """Việc phục vụ của ca (không gồm cảnh báo an ninh: chúng không vào số liệu ca)."""
+    return [a for a in hub.alerts.values() if a['kind'] in TASK_KINDS]
 
 
 def wait_s(a, t=None):
@@ -130,6 +134,8 @@ def ten_nv(hub, sid):
 
 def cau_su_kien(hub, a, t=None):
     """Một câu tiếng Việt cho một việc, ví dụ "Bàn B2 gọi phục vụ, Lan nhận nhanh"."""
+    if a.get('group') == 'security':
+        return cau_an_ninh(hub, a)
     s = f"{where(a['table'], a['camera'])} {KIND_VI[a['kind']]}"
     w = wait_s(a, t)
     nv = ten_nv(hub, a['acked_by'] or a['assigned_to'])
@@ -251,7 +257,8 @@ def khoi_su_kien(hub, ids, title='Sự kiện'):
         items.append(dict(alert_id=aid, kind=a['kind'], table=a['table'], t=a['created_at'], status=a['status'],
                           wait_s=wait_s(a, t), staff=ten_nv(hub, a['acked_by'] or a['assigned_to']),
                           text=cau_su_kien(hub, a, t), crop_url=a['crop_url'], strip_url=strip or None,
-                          video_t=a['video_t']))
+                          video_t=a['video_t'],
+                          clip_url=f'/api/alerts/{aid}/clip.mp4' if a.get('clip') else None))
     if not items:
         return None
     return dict(type='events', title=title, items=items)
@@ -377,8 +384,9 @@ def tom_tat(hub):
 
 
 # ====================================================================== đường không AI
-def tra_loi_rules(hub, question):
-    """(answer, blocks) chọn theo từ khoá. Dùng chính các hàm dựng khối ở trên."""
+def tra_loi_rules(hub, question, clips=None, loop=None, phong=None):
+    """(answer, blocks) chọn theo từ khoá. Dùng chính các hàm dựng khối ở trên.
+    `clips` là kho clip (server/clips.py) để câu trả lời kèm được video; không có thì chỉ kèm ảnh."""
     q = bo_dau(question)
     # vài từ tiếng Anh hay gặp: thêm từ tiếng Việt tương ứng để các nhánh dưới bắt được
     for en, vi in (('staff', 'nhan vien'), ('employee', 'nhan vien'), ('longest', 'cho lau'), ('wait', 'cho lau'),
@@ -403,19 +411,45 @@ def tra_loi_rules(hub, question):
         """Khớp nguyên từ, để 'mon' không dính vào 'mong'."""
         return any(re.search(rf'(?<![a-z]){re.escape(w)}(?![a-z])', q) for w in ws)
 
+    # nhiều ngày: cả tuần, cả tháng, mấy ngày qua (đọc lịch sử lâu dài)
+    kn = nhieu_ngay.khoang(q)
+    if kn:
+        return nhieu_ngay.tra_loi(hub, phong, *kn)[:2]
+    # tiền thu: đọc sổ thanh toán nhân viên chụp gửi (không cần AI)
+    if phong is not None and doanh_thu_tro_ly.la_hoi_tien(q) and not co('loi nhuan'):
+        return doanh_thu_tro_ly.tra_loi(phong, q)
+    if co('loi nhuan', 'gia von', 'ton kho'):
+        return ('Hệ thống chưa ghi lợi nhuận, giá vốn, tồn kho hay món bán chạy. Hiện chỉ có tiền thu từ ảnh chuyển khoản '
+                'và hoá đơn nhân viên chụp gửi vào nhóm, cùng số liệu camera. Bạn có thể hỏi: hôm nay thu được bao nhiêu.'), []
+
     # 0. ngoài những gì camera biết: nói thẳng, kể ra những gì hỏi được
+    # ("chờ món", "lên món" là chuyện camera thấy được, không phải hỏi về thực đơn)
+    hoi_mon = tu('mon') and not co('cho mon', 'len mon', 'ra mon', 'co mon', 'mon len', 'mon ra', 'doi mon', 'mon chua')
     if (co('doanh thu', 'loi nhuan', 'bao nhieu tien', 'thoi tiet', 'thuc don', 'mon an', 'khoa api', 'api key',
            'mat khau', 'password', 'bo qua moi', 'bo qua huong dan', 'ignore previous', 'ignore all',
-           'system prompt') or tu('gia', 'mon')):
-        return ('Câu này ngoài những gì hệ thống biết: camera chỉ ghi khách gọi, bàn cần dọn, khách mới và '
-                'nhân viên nhận việc, không có doanh thu, món ăn hay thông tin bên ngoài. Bạn có thể hỏi: ca hôm nay '
+           'system prompt') or tu('gia') or hoi_mon):
+        return ('Câu này cần AI mới trả lời được, mà AI đang tắt hoặc chưa kết nối. Lúc này trợ lý chỉ đọc được số liệu '
+                'camera ghi: khách gọi, bàn cần dọn, khách mới và nhân viên nhận việc. Bạn có thể hỏi: ca hôm nay '
                 'thế nào, bàn nào chờ lâu nhất, nhân viên ai nhanh, ai vào ca lúc mấy giờ, việc nào chưa ai nhận.'), []
 
+    # 0b. an ninh: lấy đồ của khách, người lạ vào quầy, có người ngoài giờ
+    if co('an ninh', 'trom', 'mat do', 'lay do', 'lay cap', 'nguoi la', 'ngoai gio', 'vao quay', 'khu cam',
+          'dot nhap', 'ai vao quan'):
+        ans, bs = tra_loi_an_ninh(hub)
+        return ans, [b for b in bs if b]
+
     # 1. khách quen: chưa có nhận diện khuôn mặt, nói thật
+    xem = co(*xem_lai.TU_XEM, *xem_lai.TU_KE)
     if co('khach quen', 'khach ruot', 'khach than') or (co('co den', 'co toi', 'den luc', 'toi luc', 'ghe quan')
-                                                        and not s):
+                                                        and not s and not xem):
         return ('Chưa trả lời được: nhận diện khách quen chưa bật, nên camera chưa biết khách nào là ai. '
                 'Hiện hệ thống chỉ ghi lượt khách mới theo bàn.'), [khoi_chi_so(hub)] if al else []
+
+    # 1b. xem lại video, kể chuyện một bàn, bàn đang chờ gì, số liệu ngày khác (server/xem_lai.py)
+    if not s or xem:
+        got = xem_lai.tra_loi(hub, q, clips, loop, t)
+        if got is not None:
+            return got
 
     # 2. một nhân viên cụ thể
     if s:
@@ -431,6 +465,26 @@ def tra_loi_rules(hub, question):
         them(card, khoi_su_kien(hub, [a['id'] for a in sorted(mine, key=lambda a: -a['created_at'])[:8]],
                                 f"Việc của {s['name']}"))
         return ans, blocks
+
+    # 2b. xem lại một thời điểm: "lúc 12:15", "12h15 bàn 5 có gì"
+    m = re.search(r'(?<!\d)(\d{1,2})\s*(?::|h|gio)\s*(\d{2})(?!\d)', q)
+    if m and int(m.group(1)) < 24 and int(m.group(2)) < 60:
+        phut = int(m.group(1)) * 60 + int(m.group(2))
+        tb = _khop_ban(hub, q)
+        gan = []
+        for a in al:
+            c = clock(a['created_at'])
+            lech = abs(int(c[:2]) * 60 + int(c[3:5]) - phut)
+            if lech <= 3 and (not tb or a['table'] == tb):
+                gan.append((lech, a))
+        gio = f'{int(m.group(1)):02d}:{m.group(2)}'
+        o_ban = f' ở bàn {tb}' if tb else ''
+        if not gan:
+            return f'Quanh {gio} camera không ghi sự kiện nào{o_ban}.', []
+        gan.sort(key=lambda x: (x[0], x[1]['created_at']))
+        them(khoi_su_kien(hub, [a['id'] for _, a in gan[:8]], f'Quanh {gio}{o_ban}'))
+        return (f'Quanh {gio}{o_ban} có {len(gan)} sự kiện: '
+                + '; '.join(cau_su_kien(hub, a, t) for _, a in gan[:3]) + '.'), blocks
 
     # 3. một bàn cụ thể
     tb = _khop_ban(hub, q)
@@ -469,7 +523,36 @@ def tra_loi_rules(hub, question):
         return ans, blocks
 
     if not al:
-        return tom_tat(hub), []
+        # máy chủ vừa khởi động lại hoặc vừa bắt đầu ca mới: việc trước đó trong ngày vẫn còn trong dòng thời gian
+        return xem_lai.hom_nay_tu_lich_su(hub, t) or (tom_tat(hub), [])
+
+    # 3b2. xếp ca: quãng nào thiếu người, quãng nào thừa
+    if co('xep ca', 'xep nguoi', 'xep lich', 'thieu nguoi', 'them nguoi', 'bot nguoi', 'thua nguoi', 'du nguoi',
+          'may nguoi', 'bao nhieu nguoi', 'lich lam', 'staffing'):
+        them(goi_y.khoi_xep_ca(hub), khoi_bieu_do_thoi_gian(hub))
+        return goi_y.cau_xep_ca(hub), blocks
+
+    # 3b3. gợi ý cải thiện cho ca sau
+    if co('goi y', 'cai thien', 'nen doi', 'nen lam gi', 'nen sua', 'can sua', 'ngay mai', 'ca sau', 'rut kinh nghiem',
+          'khuyen', 'loi khuyen', 'tot hon', 'improve', 'suggest'):
+        gy = goi_y.goi_y(hub)
+        ans = (f'Có {len(gy)} điều nên xem cho ca sau. Trước hết: {gy[0]["title"].lower()}. {gy[0]["action"]}'
+               if gy else 'Chưa đủ số liệu để gợi ý.')
+        them(goi_y.khoi_goi_y(hub), goi_y.khoi_xep_ca(hub))
+        return ans, blocks
+
+    # 3b4. xem lại hình: "cho xem lại lúc khách gọi", "xem clip bàn cần dọn"
+    if co('xem lai', 'cho xem', 'cho toi xem', 'video', 'clip', 'hinh anh', 'show me'):
+        loai = 'call' if co('goi') else 'needs_clearing' if co('don') else 'new_guest' if co('khach moi') else ''
+        lau_ = co('cho lau', 'doi lau', 'cham', 'lau nhat')
+        got = loc_su_kien(hub, loai=loai, cho_hon_giay=FAST_S if lau_ else 0,
+                          sap_xep='cho_lau_nhat' if lau_ else 'moi_nhat', gioi_han=8)
+        got = [a for _, a in got if a['status'] != 'cancelled' and (a['crop_url'] or a.get('evidence'))]
+        if not got:
+            return 'Chưa có sự kiện nào có hình khớp với câu hỏi.', []
+        ten = ('Những lần khách chờ lâu' if lau_ else 'Sự kiện gần đây') + (f' ({KIND_VI[loai]})' if loai else '')
+        them(khoi_su_kien(hub, [a['id'] for a in got], ten))
+        return f'Đây là {len(got)} sự kiện kèm hình camera, mới nhất là {cau_su_kien(hub, got[0], t).lower()}.', blocks
 
     # 3c. báo nhầm đã huỷ
     if co('bao nham', 'bao sai', 'nhan nham', 'da huy', 'bi huy') or tu('nham'):
@@ -613,15 +696,30 @@ LOI_DAN = """Bạn là trợ lý của chủ một quán ăn. Hệ thống camer
 khách giơ tay gọi phục vụ, bàn cần dọn, khách mới vào bàn, nhân viên nhận việc và tới bàn, chấm công nhân viên.
 
 Cách làm việc:
-1. Luôn gọi công cụ đọc dữ liệu trước (so_lieu_ca, tim_su_kien, trang_thai_ban, nhan_vien_va_cham_cong). Chỉ dùng số liệu công cụ trả về, không bịa.
+1. Câu hỏi về quán, ca hôm nay, khách, bàn, nhân viên: luôn gọi công cụ đọc dữ liệu trước (so_lieu_ca, tim_su_kien, trang_thai_ban, ban_dang_the_nao, nhan_vien_va_cham_cong, phan_tich_ca). Chỉ dùng số liệu công cụ trả về, không bịa.
 2. Chọn dạng hiển thị hợp với câu hỏi bằng công cụ hiển thị. Mỗi lần gọi thêm một khối vào câu trả lời, số liệu trong khối do hệ thống tự điền:
    - Câu hỏi chung (ca thế nào, chất lượng nhân viên, tóm tắt): hien_chi_so và một hoặc hai hien_bieu_do. Hỏi về nhân viên thì thêm hien_nhan_vien.
    - Câu hỏi cụ thể (bàn nào, lúc nào, lần nào, ai): hien_su_kien với đúng các mã sự kiện liên quan, để chủ quán xem ảnh camera.
    - Hỏi về xu hướng theo giờ: hien_bieu_do('thoi_gian'). So sánh bàn: hien_bieu_do('ban'). So sánh người: hien_bieu_do('nhan_vien').
+   - Hỏi nên đổi gì, cải thiện gì, lời khuyên cho ca sau: đọc phan_tich_ca rồi hien_goi_y. Hỏi xếp ca, thiếu hay thừa người, nên thêm mấy người, giờ nào cần ai: đọc phan_tich_ca rồi hien_xep_ca.
+   - Hệ thống có lưu video camera. Hễ câu hỏi có ý muốn xem (xem, xem lại, video, clip, quay lại, lúc đó ra sao, chuyện gì xảy ra lúc mấy giờ, lần nào đó thế nào): gọi xem_video để video hiện ngay trong câu trả lời. Biết mã sự kiện (từ tim_su_kien) thì đưa mã; hỏi theo giờ hoặc theo bàn thì đưa giờ, bàn; hỏi lần khách chờ lâu nhất thì đặt cho_lau_nhat. Không bao giờ nói là không xem được video khi chưa gọi xem_video; công cụ báo không có video thì nói lại đúng lý do nó đưa.
+   - Kể lại chuyện của một bàn hoặc một quãng giờ (khách vào lúc nào, ai ra tiếp, món lên, ăn xong, rời bàn, dọn bàn): gọi dong_thoi_gian, nó hiện từng bước kèm video.
+   - Bàn nào đang chờ, đang chờ món, chờ tính tiền, chưa ai ra tiếp, bữa ăn tới đâu: gọi ban_dang_the_nao.
+   - Hỏi về ngày khác (hôm qua, thứ hai, ngày 12/11) hoặc so hai ngày: gọi so_sanh_ngay. Các công cụ còn lại chỉ đọc ca hôm nay.
+   - Hỏi về nhiều ngày (tuần này, tuần trước, 7 ngày qua, tháng này, tháng trước, từ ngày này đến ngày kia, xu hướng, ngày nào đông nhất, hệ thống lưu những ngày nào): gọi nhieu_ngay. Lịch sử được lưu lâu dài, không được nói là hệ thống chỉ lưu hôm nay.
+   - Hỏi về nhân viên của một ngày đã qua (hôm qua ai vào ca lúc mấy giờ, ngày 12/11 ai làm nhanh nhất): gọi nhan_vien_ngay_cu.
+   - Hỏi về an ninh, trộm, mất đồ, ai lấy đồ của khách, người lạ vào quầy hay kho, có ai vào quán ngoài giờ (đêm qua, lúc đóng cửa): gọi an_ninh, nó hiện các cảnh báo kèm ảnh và video.
+   - Hỏi về doanh thu, tiền thu, thanh toán, hoá đơn, chuyển khoản, khoản lớn nhất, mỗi khách chi bao nhiêu, khách về mà chưa trả tiền, khoản đã huỷ: gọi doanh_thu (ngày khác thì đưa ngay; so hai ngày thì đưa thêm so_voi_ngay), nó tự hiện số liệu và biểu đồ. Đang nói chuyện tiền mà chủ quán hỏi tiếp "so với hôm qua thì sao" thì vẫn gọi doanh_thu với so_voi_ngay, không gọi so_sanh_ngay. Câu hỏi hẹp (khoản bị huỷ, khoản lớn nhất, một bàn, bao nhiêu chuyển khoản) thì đặt tham số hien là false và chỉ trả lời bằng câu. Ngày của quán tính tới 4 giờ sáng: khách và tiền sau nửa đêm vẫn thuộc hôm nay (xem theo_gio các giờ 00 đến 03), không phải hôm qua. Khoản nhân viên đã sửa số tiền nằm ở da_sua_so_tien. Số tiền viết đầy đủ kiểu 6.805.000 đ. Tiền này chỉ gồm khoản nhân viên đã chụp gửi vào nhóm.
    - Danh sách có nhiều cột mà các khối trên không hợp: hien_bang.
    Dùng tối đa 4 khối, không lặp lại cùng một khối.
-3. Sau đó viết câu trả lời bằng tiếng Việt, 1 đến 3 câu, đi thẳng vào kết luận kèm con số chính. Tốc độ phục vụ thì nói bằng chữ như công cụ trả về (nhanh, hơi chậm, chậm, không ai tới), không nêu số giây hay số phút chờ. Chữ thường, không markdown, không gạch đầu dòng, không nhắc tên công cụ hay mã sự kiện.
-4. Thiếu dữ liệu thì nói thẳng. Hệ thống CHƯA nhận diện khách quen theo khuôn mặt: câu hỏi kiểu "anh Nam hôm nay có tới không" thì trả lời là chưa bật nhận diện khách quen, trừ khi tên đó là nhân viên."""
+3. Sau đó viết câu trả lời bằng tiếng Việt, 1 đến 3 câu (câu hỏi xin lời khuyên thì tối đa 6 câu), đi thẳng vào kết luận kèm con số chính. Tốc độ phục vụ thì nói bằng chữ như công cụ trả về (nhanh, hơi chậm, chậm, không ai tới), không nêu số giây hay số phút chờ. Văn bản thường có viết hoa đầu câu, giờ viết dạng 12:07, không markdown, không gạch đầu dòng, không nhắc tên công cụ hay mã sự kiện.
+4. Thiếu dữ liệu thì nói thẳng. Hệ thống CHƯA nhận diện khách quen theo khuôn mặt: câu hỏi kiểu "anh Nam hôm nay có tới không" thì trả lời là chưa bật nhận diện khách quen, trừ khi tên đó là nhân viên.
+5. Chủ quán hỏi gì cũng trả lời. Câu hỏi ngoài dữ liệu camera (kinh nghiệm quản lý quán, giữ chân nhân viên, xử lý khách phàn nàn, thực đơn, khuyến mãi, quảng cáo, luật lao động, tính toán, kiến thức chung) thì trả lời thẳng bằng hiểu biết của bạn, thực tế và hợp với quán ăn ở Việt Nam, không cần gọi công cụ hiển thị. Nếu số liệu ca giúp lời khuyên sát hơn thì đọc công cụ và dẫn ra. Riêng số liệu của chính quán mà hệ thống không ghi (món bán chạy, tồn kho, lợi nhuận, giá vốn) thì nói rõ là hệ thống chưa ghi, không bịa số, rồi gợi ý cách làm chung.
+6. Chủ quán muốn cài đặt thì làm luôn trong chat, không bảo họ vào trang Cài đặt: nối camera, cài camera điện thoại: noi_camera. Tìm bàn, vẽ bàn, đặt bàn: tu_tim_ban. Thêm, bỏ, đổi tên hay vai trò nhân viên: sua_nhan_vien (vai trò: phục vụ, dọn bàn, thu ngân, chủ quán). Điện thoại nhân viên, mã QR, app nhân viên: ma_qr_nhan_vien. Đổi luật báo, nhắc lại, chờ AI xác nhận, nhắc khách chờ, giờ mở hay đóng cửa, trông quán, các loại báo an ninh, giờ giao hàng: doi_luat_bao, chỉ đưa tham số muốn đổi. Che mặt cần mã PIN: bảo chủ quán vào Cài đặt. Ảnh nhận dạng nhân viên: chup_anh_nhan_vien. Các công cụ này chỉ hiện khối, dữ liệu chỉ đổi khi chủ quán bấm Lưu trong khối: nói ngắn "kiểm lại rồi bấm Lưu", KHÔNG BAO GIỜ nói đã lưu hay đã xong. Công cụ báo lỗi (camera chưa nối...) thì nói đúng lý do. Câu chung chung như "giúp tôi setup" thì hỏi một câu xem họ muốn cài gì, không gọi công cụ. Không nhận và không nhắc lại khoá API: khoá đặt trong tệp .env hoặc biến môi trường của máy chủ. Câu bắt đầu bằng [Hệ thống: ...] là ghi chú việc chủ quán vừa bấm Lưu, dùng để biết dữ liệu đã đổi."""
+
+
+# Công cụ chỉ chủ quán dùng (cài đặt), không có trong phòng chat của quán (che_do='phong')
+CONG_CU_CHI_CHU = {'noi_camera', 'tu_tim_ban', 'sua_nhan_vien', 'ma_qr_nhan_vien', 'doi_luat_bao', 'chup_anh_nhan_vien'}
 
 
 class TroLy:
@@ -635,6 +733,9 @@ class TroLy:
         self._sessions = None
         self._runners = {}        # session id -> (Runner, hộp chứa khối của lượt đang chạy)
         self._locks = {}
+        self.phong = None         # phòng chat giữ sổ thanh toán (server/chat.py), app.py gắn vào; None thì không trả lời về tiền
+        self.clips = None         # kho clip (server/clips.py), app.py gắn vào sau khi tạo; None thì trả lời chỉ kèm ảnh
+        self._loop = None         # vòng lặp asyncio của máy chủ: kho clip phải được gọi trong vòng lặp này
 
     # ---------------------------------------------------------------- chọn đường
     @property
@@ -660,9 +761,10 @@ class TroLy:
         return self._adk
 
     # ---------------------------------------------------------------- công cụ của tác tử
-    def tools(self, box):
+    def tools(self, box, che_do='chu'):
         """Công cụ cho một phiên. `box['blocks']` là nơi các công cụ hiển thị bỏ khối vào; mỗi lượt hỏi
-        gán một list mới."""
+        gán một list mới. che_do='phong' (phòng chat của quán, có cả nhân viên): bỏ công cụ cài đặt và công cụ
+        hiển thị khối, chỉ giữ công cụ đọc số liệu."""
         hub = self.hub
 
         def them(b, khong_co='Không có dữ liệu để hiện.'):
@@ -670,6 +772,9 @@ class TroLy:
                 return dict(ket_qua=khong_co)
             if len(box['blocks']) >= 5:
                 return dict(ket_qua='Đã đủ khối, không thêm nữa.')
+            khoa = lambda x: (x.get('type'), [(i.get('alert_id'), i.get('t')) for i in x.get('items') or []])
+            if b.get('type') in ('video', 'events', 'timeline') and any(khoa(x) == khoa(b) for x in box['blocks']):
+                return dict(ket_qua='Khối này đã hiện rồi, không hiện lại.')   # mô hình đôi khi gọi hai lần cùng một video
             box['blocks'].append(b)
             return dict(ket_qua='Đã hiện cho chủ quán.')
 
@@ -730,6 +835,18 @@ class TroLy:
                                         toc_do_nhan_viec=MUC_VI.get(muc(s['mean_response_s'])))
                                    for s in b['items']])
 
+        def phan_tich_ca() -> dict:
+            """Phân tích ca để khuyên chủ quán: danh sách vấn đề kèm việc nên làm (thiếu người quãng nào, bàn hay phải chờ, dọn bàn chậm, việc dồn vào một người, bàn hay báo nhầm, ai đáng khen) và bảng xếp ca theo từng quãng giờ (số việc, số người trong ca, số lần khách chờ lâu, thiếu hay thừa người)."""
+            return goi_y.du_lieu(hub)
+
+        def hien_goi_y() -> dict:
+            """Hiện cho chủ quán các gợi ý cho ca sau, mỗi gợi ý kèm việc nên làm và hình camera làm bằng chứng."""
+            return them(goi_y.khoi_goi_y(hub), 'Chưa đủ số liệu để gợi ý.')
+
+        def hien_xep_ca() -> dict:
+            """Hiện bảng xếp ca: từng quãng giờ có bao nhiêu việc, mấy người trong ca, khách chờ lâu mấy lần, nên thêm hay bớt người."""
+            return them(goi_y.khoi_xep_ca(hub), 'Ca chưa có việc nào để xếp ca.')
+
         def hien_chi_so() -> dict:
             """Hiện cho chủ quán một hàng ô chỉ số của ca (số lần gọi, cần dọn, khách mới, tốc độ phục vụ, bàn chờ lâu nhất, báo nhầm, việc đang chờ)."""
             return them(khoi_chi_so(hub))
@@ -744,7 +861,13 @@ class TroLy:
                  'cho_theo_ban': khoi_bieu_do_cho_theo_ban}.get(bo_dau(chu_de).replace(' ', '_'))
             if f is None:
                 return dict(ket_qua='chu_de phải là nhan_vien, ban, thoi_gian hoặc cho_theo_ban.')
-            return them(f(hub), 'Chưa có số liệu cho biểu đồ này.')
+            b = f(hub)
+            kq = them(b, 'Chưa có số liệu cho biểu đồ này.')
+            if b and b.get('points'):     # đưa lại số trong biểu đồ để câu trả lời không nói khác hình
+                cao = max(b['points'], key=lambda p: p['value'])
+                kq = dict(kq, tieu_de=b['title'], cao_nhat=dict(nhan=cao['label'], gia_tri=cao['value']),
+                          cac_cot=[(p['label'], p['value']) for p in b['points']][:24])
+            return kq
 
         def hien_su_kien(tieu_de: str, ma_su_kien: list[str]) -> dict:
             """Hiện danh sách sự kiện kèm ảnh camera, giờ và mức chờ (nhanh hay chậm).
@@ -773,23 +896,141 @@ class TroLy:
             """
             return them(khoi_bang(tieu_de, list(cot), list(hang)), 'Bảng trống.')
 
-        return [so_lieu_ca, tim_su_kien, trang_thai_ban, nhan_vien_va_cham_cong,
-                hien_chi_so, hien_bieu_do, hien_su_kien, hien_nhan_vien, hien_bang]
+        def tim_ban(ban):
+            """(mã bàn thật, None) hoặc (None, lời báo cho mô hình) khi không có bàn đó."""
+            if not str(ban or '').strip():
+                return None, None
+            tb, biet = xem_lai.tim_ban(hub, 'ban ' + _khoa_ban(ban))
+            return (tb, None) if biet else (None, f'Hệ thống không theo dõi bàn nào tên {ban}.')
 
-    def agent(self, box):
+        def cau_gio(tu_gio, den_gio, ngay):
+            tu_gio, den_gio = str(tu_gio or '').strip(), str(den_gio or '').strip()
+            if bo_dau(tu_gio) in xem_lai.BUOI and not den_gio:      # "trưa", "tối": cả buổi đó
+                return bo_dau(f'{tu_gio} {ngay or "nay"}').strip()
+            gio = f'tu {tu_gio} den {den_gio}' if tu_gio and den_gio else f'luc {tu_gio or den_gio}' if tu_gio or den_gio else ''
+            return bo_dau(f'{gio} {ngay or ""}').strip()
+
+        def xem_video(ma_su_kien: str = '', ban: str = '', gio: str = '', den_gio: str = '', ngay: str = '',
+                      loai: str = '', cho_lau_nhat: bool = False, tieu_de: str = '') -> dict:
+            """Hiện video camera cho chủ quán xem ngay trong câu trả lời. Dùng mỗi khi chủ quán muốn xem lại một lúc nào đó. Mọi tham số đều tuỳ chọn.
+
+            Args:
+                ma_su_kien: các mã sự kiện lấy từ tim_su_kien, cách nhau bằng dấu phẩy, ví dụ "a3,a7". Có mã thì bỏ qua các tham số lọc khác.
+                ban: mã bàn, ví dụ B2.
+                gio: giờ muốn xem, dạng HH:MM, hoặc "5 phút trước", "vừa rồi".
+                den_gio: nếu muốn xem cả một quãng thì đây là giờ kết thúc, dạng HH:MM.
+                ngay: bỏ trống là hôm nay; hoặc "hôm qua", hoặc dạng YYYY-MM-DD. Video chỉ được giữ khoảng một ngày.
+                loai: goi_phuc_vu, can_don hoặc khach_moi, khi muốn xem các sự kiện gần đây của một loại.
+                cho_lau_nhat: true để xem lần khách phải chờ lâu nhất.
+                tieu_de: tiêu đề ngắn cho khối video.
+            """
+            xin = xem_lai.Xin(hub, self.clips, self._loop)
+            ids = [x for x in re.split(r'[,;\s]+', str(ma_su_kien or '').strip('[] ')) if x]
+            tb, loi = tim_ban(ban)
+            if loi and not ids:
+                return dict(ket_qua=loi)
+            g = xem_lai.doc_gio(cau_gio(gio, den_gio, ngay)) if (gio or den_gio) and not ids else None
+            if g:
+                ans, bs = xem_lai.xem_thoi_diem(hub, g, tb, xin)
+            else:
+                cau = bo_dau(loai).replace('_', ' ') + (' cho lau nhat' if cho_lau_nhat else '')
+                ans, bs = xem_lai.xem_su_kien(hub, cau, tb, xin, ids=ids or None)
+            vb = next((b for b in bs if b['type'] == 'video'), None)
+            b = vb or next((b for b in bs if b['type'] == 'events'), None)
+            if b is None:
+                return dict(ket_qua=ans, co_video=False)
+            if tieu_de:
+                b = dict(b, title=tieu_de)
+            kq = them(b)
+            return dict(ket_qua=kq['ket_qua'], tom_tat=ans, co_video=xem_lai.co_video(vb),
+                        clip=[dict(gio=clock(it['t'])[:5], ban=it['table'], noi_dung=it['label'],
+                                   ly_do_khong_co_video=it['error']) for it in (vb or dict(items=[]))['items']])
+
+        def dong_thoi_gian(ban: str = '', tu_gio: str = '', den_gio: str = '', ngay: str = '') -> dict:
+            """Kể lại từng bước chuyện của một bàn hoặc một quãng giờ (khách vào, nhân viên ra tiếp, món lên, khách gọi, ăn xong, rời bàn, dọn bàn) và hiện cho chủ quán dòng thời gian kèm video. Đọc được cả ngày khác.
+
+            Args:
+                ban: mã bàn, ví dụ B2. Bỏ trống là mọi bàn.
+                tu_gio: từ giờ này, dạng HH:MM; chủ quán nói một buổi thì đưa đúng chữ đó: "sáng", "trưa", "chiều" hoặc "tối". Chỉ đưa bàn mà bỏ trống giờ thì lấy lượt khách mới nhất của bàn.
+                den_gio: tới giờ này, dạng HH:MM.
+                ngay: bỏ trống là hôm nay; hoặc "hôm qua", hoặc dạng YYYY-MM-DD.
+            """
+            tb, loi = tim_ban(ban)
+            if loi:
+                return dict(ket_qua=loi)
+            cau = cau_gio(tu_gio, den_gio, ngay)
+            ngays = xem_lai.doc_cac_ngay(cau)
+            ans, bs, dong = xem_lai.ke_lai(hub, tb, xem_lai.doc_gio(cau) if (tu_gio or den_gio) else None,
+                                           ngays[0] if ngays else None, xem_lai.Xin(hub, self.clips, self._loop))
+            for b in bs:
+                them(b)
+            return dict(tom_tat=ans, da_hien=bool(bs),
+                        cac_buoc=[dict(gio=clock(x['t'])[:5], ban=x['table'], viec=x['text']) for x in dong[-30:]])
+
+        an_ninh_ca = an_ninh_tro_ly.cong_cu(hub, them)     # server/an_ninh_tro_ly.py
+
+        def ban_dang_the_nao(hien: bool = False) -> dict:
+            """Các bàn đang có khách lúc này và bữa ăn tới đâu (mới ngồi chờ nhân viên ra tiếp, đã có người tiếp và chờ món, đã lên món, đã ăn xong), bàn nào cần để ý vì chờ lâu, và việc nào chưa ai nhận.
+
+            Args:
+                hien: true để hiện luôn bảng các bàn cho chủ quán.
+            """
+            ans, bs = xem_lai.tra_loi_ban_luc_nay(hub)
+            if hien:
+                for b in bs:
+                    them(b)
+            return dict(tom_tat=ans, ban=[dict(ban=r['ban'], bua_an=r['buoc'], tu_luc=r['tu_luc'], can_de_y=r['luu_y'],
+                                               so_nguoi=r['so_nguoi']) for r in xem_lai.ban_dang_the_nao(hub)])
+
+        def so_sanh_ngay(ngay: str, ngay_khac: str = '') -> dict:
+            """Số liệu của một ngày khác, hoặc so hai ngày với nhau, đọc từ lịch sử lâu dài; hiện luôn cho chủ quán.
+
+            Args:
+                ngay: ngày cần xem: "hôm qua", "thứ hai", "12/11" hoặc dạng YYYY-MM-DD.
+                ngay_khac: ngày đem ra so. Bỏ trống thì chỉ xem một ngày; "hôm nay" để so với hôm nay.
+            """
+            d1 = xem_lai.doc_cac_ngay(bo_dau(ngay))
+            d2 = xem_lai.doc_cac_ngay(bo_dau(ngay_khac)) if str(ngay_khac or '').strip() else []
+            if not d1:
+                return dict(ket_qua='Không hiểu ngày nào. Đưa "hôm qua", "thứ hai", "12/11" hoặc dạng YYYY-MM-DD.')
+            ans, bs, tks = xem_lai.so_sanh_ngay(hub, d1[0], d2[0] if d2 else d1[0])
+            for b in bs:
+                them(b)
+            return dict(tom_tat=ans, ngay=[dict(
+                ngay=tk['ten'], co_du_lieu=bool(tk['n']), goi_phuc_vu=tk['call'], can_don=tk['needs_clearing'],
+                khach_moi=tk['new_guest'], toc_do_phuc_vu=MUC_VI.get(nhan_xet(tk['speed'])),
+                viec_nhanh=tk['speed']['fast'], viec_hoi_cham=tk['speed']['ok'], viec_cham=tk['speed']['slow'],
+                viec_khong_ai_toi=tk['speed']['missed'],
+                gio_ban_nhat=f"{tk['dinh']:02d}:00" if tk['dinh'] is not None else None) for tk in tks])
+
+        cai_dat_cu = cai_dat.cong_cu(hub, them)     # cài đặt (server/cai_dat.py): chỉ chủ quán, xem CONG_CU_CHI_CHU
+
+        ds = [so_lieu_ca, tim_su_kien, trang_thai_ban, nhan_vien_va_cham_cong, phan_tich_ca,
+              hien_goi_y, hien_xep_ca, hien_chi_so, hien_bieu_do, hien_su_kien, hien_nhan_vien, hien_bang,
+              xem_video, dong_thoi_gian, ban_dang_the_nao, so_sanh_ngay, an_ninh_ca,
+              *cai_dat_cu]
+        if self.phong is not None:
+            ds += nhieu_ngay.cong_cu(hub, self.phong, them)            # cả tuần, cả tháng, nhân viên ngày cũ
+            ds.append(doanh_thu_tro_ly.cong_cu(self.phong, them))     # tiền thu (server/doanh_thu_tro_ly.py)
+        if che_do == 'phong':
+            ds = [f for f in ds if getattr(f, '__name__', '') not in CONG_CU_CHI_CHU
+                  and not getattr(f, '__name__', '').startswith('hien_')]
+        return ds
+
+    def agent(self, box, che_do='chu'):
         Agent, _, types = self.load_adk()
-        return Agent(name='tro_ly_easy_fnb', model=self.model, instruction=LOI_DAN, tools=self.tools(box),
+        return Agent(name='tro_ly_easy_fnb', model=self.model, instruction=LOI_DAN, tools=self.tools(box, che_do),
                      description='Trợ lý trả lời chủ quán về ca làm việc từ dữ liệu camera AI.',
                      generate_content_config=types.GenerateContentConfig(temperature=0.2))
 
     # ---------------------------------------------------------------- một lượt hỏi
-    async def _hoi_adk(self, question, sid):
+    async def _hoi_adk(self, question, sid, che_do='chu'):
         _, Runner, types = self._adk
         if sid not in self._runners:
             if len(self._runners) > 200:      # demo: không để phiên cũ chiếm bộ nhớ mãi
                 self._runners.clear()
             box = dict(blocks=[])
-            self._runners[sid] = (Runner(app_name='easy_fnb', agent=self.agent(box),
+            self._runners[sid] = (Runner(app_name='easy_fnb', agent=self.agent(box, che_do),
                                          session_service=self._sessions), box)
         runner, box = self._runners[sid]
         if await self._sessions.get_session(app_name='easy_fnb', user_id='chu_quan', session_id=sid) is None:
@@ -804,28 +1045,61 @@ class TroLy:
                 text = ''.join(p.text or '' for p in ev.content.parts if not getattr(p, 'thought', False))
         if not text.strip() and not blocks:
             raise RuntimeError('ADK không trả nội dung')
+        if re.search(r'\{\s*\w+\s*\(', text):      # model viết tên công cụ vào câu thay vì gọi: coi như hỏng
+            raise RuntimeError('ADK viết công cụ vào câu trả lời')
         return _go_markdown(text) or 'Số liệu ở bên dưới.', blocks
 
-    async def hoi(self, question, session=None):
+    async def _hoi_adk_thu_lai(self, cau, sid, che_do):
+        """Gemini báo hết lượt trong phút (429) thì chờ một nhịp rồi thử lại đúng một lần."""
+        for lan in (1, 2):
+            try:
+                return await (self._hoi_adk(cau, sid) if che_do == 'chu' else self._hoi_adk(cau, sid, che_do))
+            except Exception as e:   # noqa: BLE001
+                if lan == 2 or 'RESOURCE_EXHAUSTED' not in str(e):
+                    raise
+                self._runners.pop(sid, None)
+                await asyncio.sleep(4)
+
+    async def hoi(self, question, session=None, ghi_chu=None, che_do='chu'):
+        """ghi_chu: dòng giao diện gửi kèm sau khi chủ quán bấm Lưu trong khối cài đặt (ví dụ "đã lưu 3 nhân viên"),
+        để tác tử biết dữ liệu vừa đổi. Đường không AI bỏ qua.
+        che_do='phong': câu hỏi từ phòng chat của quán (server/chat.py), không có công cụ cài đặt. Phiên phòng chat
+        phải dùng mã phiên riêng (ví dụ 'phong-<ngày>') vì bộ công cụ gắn theo phiên."""
         t0 = time.perf_counter()
         sid = re.sub(r'[^A-Za-z0-9_-]', '', str(session or ''))[:64] or 'mac_dinh'
-        engine, answer, blocks = 'rules', None, []
+        engine, answer, blocks, ban = 'rules', None, [], False
+        self._loop = asyncio.get_running_loop()
         if self.adk_wanted and self.load_adk():
             lock = self._locks.setdefault(sid, asyncio.Lock())   # một phiên chỉ chạy một lượt một lúc
             try:
                 async with lock:
-                    answer, blocks = await asyncio.wait_for(self._hoi_adk(question, sid), ADK_TIMEOUT_S)
+                    cau = f'[Hệ thống: {str(ghi_chu)[:300]}] {question}' if ghi_chu else question
+                    answer, blocks = await asyncio.wait_for(self._hoi_adk_thu_lai(cau, sid, che_do), ADK_TIMEOUT_S)
                 engine = 'adk'
             except Exception as e:   # noqa: BLE001  lỗi mạng, khoá sai, quá giờ: vẫn trả lời bằng rules
                 log.warning('Trợ lý ADK lỗi (%s: %s), trả lời không AI', type(e).__name__, str(e)[:300])
                 self._runners.pop(sid, None)
+                ban = True
         if engine == 'rules':
-            answer, blocks = tra_loi_rules(self.hub, question)
-        refs = [dict(alert_id=it['alert_id'], t=it['t'], table=it['table'])
-                for b in blocks if b['type'] == 'events' for it in b['items']]
+            got = await cai_dat.tra_loi(self.hub, question) if che_do != 'phong' else None   # câu cài đặt: dựng khối, không dùng AI
+            answer, blocks = got if got is not None else tra_loi_rules(self.hub, question, self.clips, self._loop, self.phong)
+            if ban:      # AI có bật nhưng đang bận hoặc lỗi mạng: nói đúng như vậy
+                answer = (answer or '').replace('mà AI đang tắt hoặc chưa kết nối', 'mà AI đang bận, bạn thử lại sau ít phút')
+        refs, da_co = [], set()
+        for b in sorted(blocks, key=lambda b: b['type'] != 'events'):      # sự kiện trước, rồi tới video
+            for it in b['items'] if b['type'] in ('events', 'video') else []:
+                if (it['alert_id'], it['t']) not in da_co:
+                    da_co.add((it['alert_id'], it['t']))
+                    refs.append(dict(alert_id=it['alert_id'], t=it['t'], table=it['table']))
+        if any(b['type'] in ('ban', 'xac_nhan', 'chup') for b in blocks) and cai_dat.NOI_DA_LUU.search(answer or ''):
+            answer = 'Kiểm lại rồi bấm Lưu để áp dụng.'      # chưa ai bấm Lưu: model không được nói như đã xong
         qn = bo_dau(question).strip(' ?')
+        cai = cai_dat.la_cai_dat(question) or any(b['type'] in cai_dat.LOAI_KHOI for b in blocks)
+        tien = self.phong is not None and (doanh_thu_tro_ly.la_hoi_tien(qn) or any(
+            str(b.get('title') or '').startswith('Tiền thu') for b in blocks))
         return dict(answer=answer, blocks=blocks,
-                    suggestions=[g for g in GOI_Y if bo_dau(g).strip(' ?') != qn][:3],
+                    suggestions=[g for g in (cai_dat.GOI_Y_CAI_DAT if cai else doanh_thu_tro_ly.GOI_Y if tien else GOI_Y)
+                                 if bo_dau(g).strip(' ?') != qn][:3],
                     refs=refs, engine=engine, model=self.model if engine == 'adk' else None,
                     ms=int((time.perf_counter() - t0) * 1000))
 
@@ -834,6 +1108,13 @@ def _go_markdown(s):
     s = re.sub(r'[*_`#]+', '', s or '')
     s = re.sub(r'^\s*[-•]\s+', '', s, flags=re.M)
     return re.sub(r'\n{2,}', '\n', s).strip()
+
+
+from . import goi_y  # noqa: E402  goi_y dùng các hàm ở trên, nên nạp sau cùng
+from . import xem_lai  # noqa: E402  cũng vậy
+from . import cai_dat  # noqa: E402  cũng vậy
+from . import nhieu_ngay  # noqa: E402
+from . import doanh_thu_tro_ly  # noqa: E402  cũng vậy
 
 
 async def _main():

@@ -12,6 +12,7 @@
 @import "./styles/app.css" layer(components);
 @import "./styles/motion.css" layer(components);
 @import "./styles/charts.css" layer(components);
+@import "./styles/team.css" layer(components);
 @import "tailwindcss/utilities.css" layer(utilities);
 
 :root {

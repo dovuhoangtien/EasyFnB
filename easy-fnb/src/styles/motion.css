@@ -523,6 +523,13 @@
 .fx-table-chip[data-state="needs_clearing"] .fx-table-dot {
   background: var(--color-text-warning);
 }
+.fx-table-chip[data-look] {
+  border-color: var(--color-border-warning);
+}
+.fx-table-chip[data-look] .fx-table-dot {
+  background: var(--color-text-warning);
+  animation: fx-ping 1.4s var(--ease-out) infinite;
+}
 .fx-table-chip[data-hot] .fx-table-dot {
   background: var(--color-text-error);
   animation: fx-ping 1.4s var(--ease-out) infinite;

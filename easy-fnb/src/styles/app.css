@@ -52,14 +52,92 @@
 }
 
 /* ---------- camera ---------- */
+/* khung camera kiểu màn hình CCTV: cao tối đa cố định, hình dọc hay ngang đều nằm gọn giữa nền tối */
 .fx-cam-frame {
+  --cam-max-h: min(48vh, 440px);
   border-radius: var(--radius-container);
   overflow: hidden;
-  background: var(--color-background-muted);
+  background: var(--color-cam-bg, #0b0c0e);
+  display: flex;
+  justify-content: center;
+}
+/* hình AI (khung người, khung xương) thu nhỏ ở góc, trên hình gốc */
+.live-cam-pip {
+  position: absolute;
+  right: 8px;
+  bottom: 36px;
+  width: 30%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid rgb(255 255 255 / 0.5);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.5);
+  z-index: 2;
+  pointer-events: none;
+}
+/* đang phóng to một camera: các camera khác thu nhỏ thành dải bên dưới, bấm để đổi */
+.fx-cam-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 180px));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fx-cam-strip .fx-cam-tile {
+  background: var(--color-cam-bg, #0b0c0e);
+}
+.fx-cam-strip .live-cam-pip,
+.fx-cam-strip .cam-hud--bottom,
+.fx-cam-strip .zone-labels {
+  display: none;
+}
+/* nhiều camera: lưới ô 16:9 như màn hình CCTV, bấm ô để xem to */
+.fx-cam-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: var(--radius-container);
+  background: var(--color-cam-bg, #0b0c0e);
+}
+.fx-cam-tile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: transparent;
+  cursor: zoom-in;
+}
+.fx-cam-tile:focus-visible {
+  outline: 2px solid var(--color-accent, currentColor);
+  outline-offset: 2px;
+}
+.fx-cam-tile .live-cam {
+  border: 0;
+  border-radius: 0;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+}
+.fx-cam-tile .zone-labels {
+  font-size: 11px;
+}
+.fx-cam-tile:hover {
+  outline: 2px solid rgb(255 255 255 / 0.35);
+  outline-offset: -2px;
 }
 .fx-cam-frame .live-cam {
   border-radius: 0;
   border: 0;
+  width: min(100%, calc(var(--cam-max-h) * var(--cam-ar, 1.7778)));
+  max-height: var(--cam-max-h);
 }
 
 .fx-table-chip {
@@ -86,6 +164,22 @@
   background: var(--color-error-muted);
   border-color: var(--color-border-error);
 }
+/* bữa ăn tới đâu: một nhãn nhỏ sau số khách; khách chờ lâu thì ô bàn ngả vàng */
+.fx-table-stage {
+  font-style: normal;
+  color: var(--color-text-secondary);
+  padding-left: 8px;
+  border-left: 1px solid var(--color-border);
+}
+.fx-table-chip[data-nudge] {
+  background: var(--color-warning-muted);
+  border-color: var(--color-border-warning);
+}
+.fx-table-chip[data-nudge] .fx-table-stage {
+  color: inherit;
+  font-weight: 600;
+  border-left-color: var(--color-border-warning);
+}
 
 /* ---------- việc ---------- */
 .fx-task {
@@ -102,6 +196,78 @@
 .fx-task[data-urgent] {
   border-color: var(--color-border-error);
   background: color-mix(in oklab, var(--color-error-muted) 38%, var(--color-background-card));
+}
+
+/* ---------- cảnh báo an ninh: thẻ viền đỏ, luôn ở trên cùng, tách khỏi hàng việc ---------- */
+.fx-sec {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-container);
+  border: 2px solid var(--color-border-error);
+  background: color-mix(in oklab, var(--color-error-muted) 45%, var(--color-background-card));
+}
+.fx-sec[data-phone] {
+  flex-direction: column;
+  padding: 16px;
+}
+.fx-sec[data-fresh]::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 45%;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent, color-mix(in oklab, var(--color-text-error) 18%, transparent), transparent);
+  animation: fx-sweep 1000ms var(--ease-out) 160ms both;
+}
+.fx-sec-shots {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+.fx-sec-shot {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fx-sec-shot figcaption {
+  font-size: var(--text-supporting-size, 0.8125rem);
+  color: var(--color-text-secondary);
+}
+.fx-sec-line {
+  font-size: 1.125rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+.fx-sec-line--big {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+@media (max-width: 560px) {
+  .fx-sec:not([data-phone]) {
+    flex-direction: column;
+  }
+}
+
+/* nút Trông quán ở chân thanh bên */
+.fx-guard {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fx-guard-note {
+  font-size: var(--text-supporting-size, 0.8125rem);
+  color: var(--color-text-secondary);
+  padding-left: 2px;
+}
+.fx-guard[data-on] .fx-guard-note {
+  color: var(--color-text-error);
+  font-weight: 600;
 }
 
 .fx-shot {
@@ -224,6 +390,7 @@
   background: var(--color-icon-blue);
 }
 .fx-ch-col-val {
+  white-space: nowrap;
   position: absolute;
   left: 0;
   right: 0;
@@ -286,6 +453,239 @@
     grid-template-columns: 220px minmax(0, 1fr);
   }
 }
+.fx-ev-video {
+  grid-column: 1 / -1;
+}
+
+/* ---------- video camera trong câu trả lời ---------- */
+.fx-vid {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  max-width: 720px;
+}
+.fx-vid-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--radius-container);
+  border: 1px solid var(--color-border);
+  background: #101114;
+  color: #f4f4f5;
+}
+.fx-vid-stage > video,
+.fx-vid-stage > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.fx-vid-stage:not([data-status="ready"]) > img {
+  opacity: 0.45;
+}
+.fx-vid-note {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  text-align: center;
+  font-size: var(--text-supporting-size);
+  line-height: 1.45;
+}
+.fx-vid-note > span {
+  max-width: 34ch;
+}
+.fx-vid-spin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgb(255 255 255 / 0.25);
+  border-top-color: #fff;
+  animation: fx-vid-spin 0.9s linear infinite;
+}
+@keyframes fx-vid-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.fx-vid-open {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.fx-vid-cap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+.fx-vid-cap > p {
+  flex-basis: 100%;
+  margin: 0;
+}
+.fx-vid-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fx-vid-pick {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: var(--radius-element);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-supporting-size);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out);
+}
+.fx-vid-pick:hover {
+  border-color: var(--color-border-info);
+}
+.fx-vid-pick[aria-pressed="true"] {
+  background: var(--color-info-muted);
+  border-color: var(--color-border-info);
+}
+.fx-vid-pick > small {
+  color: var(--color-text-secondary);
+}
+.fx-vid-pick:focus-visible,
+.fx-vid-open:focus-visible,
+.fx-tl-play:focus-visible {
+  outline: 2px solid var(--color-border-info);
+  outline-offset: 2px;
+}
+
+/* ---------- kể lại từng bước ---------- */
+.fx-tl {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fx-tl-row {
+  display: grid;
+  grid-template-columns: 3.2em 12px minmax(0, 1fr);
+  gap: 10px;
+  padding: 7px 0;
+  align-items: start;
+  font-size: var(--text-body-size, 0.95rem);
+}
+.fx-tl-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.fx-tl-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 0.4em;
+  border-radius: 50%;
+  background: var(--color-border);
+}
+.fx-tl-row[data-tone="good"] .fx-tl-dot {
+  background: var(--color-border-success, #2e9e62);
+}
+.fx-tl-row[data-tone="warn"] .fx-tl-dot {
+  background: var(--color-border-warning);
+}
+.fx-tl-row[data-tone="bad"] .fx-tl-dot {
+  background: var(--color-border-error);
+}
+.fx-tl-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+.fx-tl-body > .fx-vid {
+  width: 100%;
+}
+.fx-tl-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border-radius: var(--radius-element);
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-supporting-size);
+  cursor: pointer;
+}
+.fx-tl-play:hover {
+  border-color: var(--color-border-info);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-vid-spin {
+    animation: none;
+    border-top-color: rgb(255 255 255 / 0.25);
+  }
+  .fx-vid-pick {
+    transition: none;
+  }
+}
+
+.fx-insights {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fx-insight {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+}
+.fx-insight:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.fx-insight-do {
+  margin: 0;
+  font-weight: 600;
+}
+.fx-insight-proof summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--text-supporting-size);
+}
+.fx-insight-proof summary:focus-visible {
+  outline: 2px solid var(--color-text-accent, currentColor);
+  outline-offset: 2px;
+}
+.fx-insight-proof > div {
+  padding-top: 12px;
+}
 
 .fx-suggest {
   display: flex;
@@ -294,11 +694,17 @@
 }
 
 /* ---------- trang Trợ lý chiếm hết chiều cao còn lại ---------- */
+.fx-side-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
 .fx-chat-page {
   width: 100%;
   max-width: 920px;
   margin-inline: auto;
-  height: calc(100dvh - 120px);
+  height: calc(100dvh - 72px);
   min-height: 420px;
   display: flex;
   flex-direction: column;
@@ -356,6 +762,84 @@
   align-items: end;
 }
 
+.fx-staff-photos {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fx-photo-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fx-photo-strip li {
+  position: relative;
+  width: 64px;
+}
+
+.fx-photo-strip img {
+  display: block;
+  width: 64px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-element);
+  background: var(--color-background-muted);
+}
+
+.fx-photo-strip span {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.fx-photo-strip button {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+  color: var(--color-background-card);
+  cursor: pointer;
+}
+
+.fx-photo-strip button:focus-visible,
+.fx-file-btn:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.fx-file-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-emphasized);
+  border-radius: var(--radius-element);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.fx-file-btn[data-busy] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 /* Text của Astryx luôn là inline; khi dùng làm đoạn hay tiêu đề thì phải xuống dòng */
 p.astryx-text,
 div.astryx-text,
@@ -397,4 +881,41 @@ h3.astryx-text {
 .fx-phone-pick:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* ---------- khối cài đặt trong trợ lý (src/app/setupBlocks.tsx) ---------- */
+.fx-ban-review {
+  display: block;
+  width: 100%;
+  max-height: var(--cam-max-h);
+  background: var(--color-cam-bg, #0b0c0e);
+}
+.fx-ban-review polygon {
+  fill: color-mix(in srgb, var(--color-icon-blue) 22%, transparent);
+  stroke: var(--color-icon-blue);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+.fx-ban-review .is-old polygon {
+  fill: transparent;
+  stroke: rgb(255 255 255 / 0.55);
+  stroke-dasharray: 6 4;
+}
+.fx-ban-review text {
+  fill: #fff;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: rgb(0 0 0 / 0.7);
+  stroke-width: 3px;
+}
+.fx-setup-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 160px) auto;
+  align-items: center;
+  gap: 8px;
+}
+.fx-setup-shot {
+  width: 100%;
+  max-width: 260px;
+  border-radius: var(--radius-container);
 }

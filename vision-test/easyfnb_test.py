@@ -26,6 +26,11 @@ import torch
 from PIL import Image, ImageDraw, ImageFont
 from ultralytics import YOLO
 
+import ghi_video
+import khop_ban
+import thiet_lap
+from an_ninh import DO_GIA_TRI, AnNinh
+from nhin_quanh import NhinQuanh
 from fnb_common import (TILE, blur_faces, grow_box, make_overview, make_strip, pad_box,
                         rect_size, square)
 
@@ -43,6 +48,12 @@ YOLOE_VI = {
     'napkin': 'khăn giấy', 'tissue': 'khăn giấy', 'tray': 'khay', 'food': 'thức ăn',
     'leftovers': 'thức ăn thừa', 'paper': 'giấy', 'wrapper': 'vỏ gói',
 }
+# Đồ cá nhân: khách để lại bàn rồi đi ra ngoài một lúc (vệ sinh, nghe điện thoại) thì bàn vẫn là của khách, chưa dọn.
+# Hai model có sẵn chỉ biết các lớp dưới đây; KHÔNG có lớp áo khoác.
+DO_CA_NHAN_COCO = {24: 'ba lô', 26: 'túi xách', 28: 'va li', 63: 'laptop', 67: 'điện thoại'}   # mã lớp COCO
+DO_CA_NHAN_YOLOE = {'phone': 'điện thoại', 'bag': 'túi'}                                        # nhãn trong engine YOLOE
+DO_CA_NHAN_CONF = 0.25   # ngưỡng nhận đồ cá nhân, bằng ngưỡng đồ trên bàn
+DO_CA_NHAN_LE = 0.35     # túi để trên ghế / dưới chân bàn: cách mép vùng bàn không quá bấy nhiêu lần cạnh ngắn của bàn
 NOSE, LSH, RSH, LEL, REL, LWR, RWR = 0, 5, 6, 7, 8, 9, 10
 LHI, RHI, LKN, RKN, LAN, RAN = 11, 12, 13, 14, 15, 16   # hông, đầu gối, cổ chân (COCO)
 
@@ -52,7 +63,7 @@ BGR = {
     'can_don': (0, 160, 255),
     'goi': (40, 40, 230),
     'di': (170, 170, 170),
-    'nv': (200, 80, 200),
+    'nv': (0, 255, 128),     # nhân viên: xanh chanh, khác hẳn khung xanh dương của khách
     'item': (0, 200, 255),
 }
 STATE_VI = {'trong': 'trống', 'co_khach': 'có khách', 'can_don': 'cần dọn'}
@@ -64,6 +75,11 @@ EVENT_VI = {
     'can_don': 'Bàn cần dọn',
     'da_don': 'Bàn đã dọn',
     'nv_den': 'Nhân viên tới bàn',
+    'nhin_quanh': 'Khách nhìn quanh tìm nhân viên',
+    'giu_cho': 'Khách vắng, còn đồ, giữ chỗ',
+    'lay_do': 'Có người lấy đồ',
+    'co_nguoi_ngoai_gio': 'Có người ngoài giờ',
+    'vao_khu_cam': 'Khách vào khu cấm',
 }
 
 
@@ -125,6 +141,8 @@ def class_probs(model, crops, cls_name):
     """
     if model is None or not crops:
         return [None] * len(crops)
+    # ảnh cắt rỗng (khung người dẹt ở mép hình, vùng bàn lệch ra ngoài): thay bằng ảnh đen, nếu không model dừng cả pipeline
+    crops = [c if c is not None and c.size else np.zeros((8, 8, 3), np.uint8) for c in crops]
     if hasattr(model, 'p_pos'):  # CLIP: trả xác suất lớp dương (bàn "bẩn", người "nhan_vien")
         if model.classes[1] != cls_name:
             raise ValueError(f'model CLIP này phân loại {model.classes}, không có lớp dương {cls_name}')
@@ -214,6 +232,67 @@ def yoloe_table_items(model, frame, table, args):
         return None
 
 
+def thuoc_ban(tables, tb, c, le=DO_CA_NHAN_LE):
+    """Điểm c (tâm một món đồ) có thuộc bàn tb không: tb là bàn gần c nhất, và c nằm trong vùng bàn hoặc cách mép
+    không quá le lần cạnh ngắn của bàn."""
+    c = (float(c[0]), float(c[1]))
+    gan = max(tables, key=lambda b: cv2.pointPolygonTest(b.poly, c, True))
+    if gan is not tb:
+        return False
+    _, _, w_, h_ = cv2.boundingRect(tb.poly.astype(np.int32))
+    return cv2.pointPolygonTest(tb.poly, c, True) > -le * min(w_, h_)
+
+
+def do_ca_nhan(det, yoloe, frame, tb, tables, args, det_sz, fp16):
+    """Đồ cá nhân (laptop, điện thoại, túi, ba lô, va li) đang ở bàn tb: danh sách tên tiếng Việt, rỗng nếu không thấy.
+    Chỉ gọi lúc bàn vừa vắng khách nên không làm chậm pipeline. Model lỗi thì coi như không thấy (giữ luật cũ)."""
+    thay = []
+    try:
+        d = det.predict(frame, classes=list(DO_CA_NHAN_COCO), conf=DO_CA_NHAN_CONF, imgsz=det_sz, **fp16,
+                        device=args.device, verbose=False)[0]
+        for c, b in zip(d.boxes.cls.cpu().numpy(), d.boxes.xyxy.cpu().numpy()):
+            if thuoc_ban(tables, tb, ((b[0] + b[2]) / 2, (b[1] + b[3]) / 2)):
+                thay.append(DO_CA_NHAN_COCO[int(c)])
+    except Exception as exc:
+        print(f'  không tìm được đồ cá nhân bằng model đồ vật: {exc}')
+    if yoloe is not None:
+        try:
+            r = yoloe.predict(frame, imgsz=args.yoloe_imgsz, conf=DO_CA_NHAN_CONF,
+                              device=args.device, verbose=False, half=args.half)[0]
+            if r.boxes is not None:
+                for c, b in zip(r.boxes.cls.cpu().numpy(), r.boxes.xyxy.cpu().numpy()):
+                    ten = DO_CA_NHAN_YOLOE.get(r.names[int(c)])
+                    if ten and thuoc_ban(tables, tb, ((b[0] + b[2]) / 2, (b[1] + b[3]) / 2)):
+                        thay.append(ten)
+        except Exception as exc:
+            print(f'  không tìm được đồ cá nhân bằng YOLOE: {exc}')
+    return sorted(set(thay))
+
+
+def quet_do_ban(det, frame, tb, tables, args, imgsz, fp16):
+    """--an-ninh: đồ có giá trị ở bàn tb, chạy model đồ vật trên vùng cắt quanh bàn (nhanh hơn cả khung).
+    [(tên, box theo toạ độ khung)]; None nếu model lỗi (lần quét này không tính)."""
+    x, y, w_, h_ = cv2.boundingRect(tb.poly.astype(np.int32))
+    le = DO_CA_NHAN_LE * min(w_, h_)
+    H, W = frame.shape[:2]
+    x0, y0 = max(0, int(x - le)), max(0, int(y - le))
+    x1, y1 = min(W, int(x + w_ + le)), min(H, int(y + h_ + le))
+    if x1 - x0 < 16 or y1 - y0 < 16:
+        return []
+    try:
+        d = det.predict(frame[y0:y1, x0:x1], classes=list(DO_GIA_TRI), conf=DO_CA_NHAN_CONF, imgsz=imgsz, **fp16,
+                        device=args.device, verbose=False)[0]
+    except Exception as exc:
+        print(f'  [an ninh] không quét được đồ ở bàn {tb.name}: {exc}')
+        return None
+    out = []
+    for c, b in zip(d.boxes.cls.cpu().numpy(), d.boxes.xyxy.cpu().numpy()):
+        b = [float(b[0] + x0), float(b[1] + y0), float(b[2] + x0), float(b[3] + y0)]
+        if thuoc_ban(tables, tb, ((b[0] + b[2]) / 2, (b[1] + b[3]) / 2)):
+            out.append((DO_GIA_TRI[int(c)], b))
+    return out
+
+
 def _dong_goi(mc, eid, kind, ban, buf, t0, W, H, clean_ref, items, box=None, poly=None):
     """Gói bằng chứng của một sự kiện và gửi lên máy chủ (không đợi phản hồi).
 
@@ -300,6 +379,44 @@ def hand_lift(kp, kc, box, tren_mui=False):
         return None
     ref = max(abs(kp[LSH][0] - kp[RSH][0]), 0.1 * (y2 - y1)) if len(sh) == 2 else 0.3 * (x2 - x1)
     return float((min(p[1] for p in sh) - min(p[1] for p in wr)) / ref)
+
+
+CHI_TAY_PH = 0.45      # dưới mức tin này, tay duỗi ngang bị coi là chỉ trỏ
+
+
+def chi_tay(kp, kc, ngang=1.4):
+    """Tay đưa lên nhưng duỗi ngang nhiều hơn là giơ cao: khách đang chỉ trỏ (chỉ món, chỉ đường), không phải gọi.
+
+    Xét cổ tay cao nhất: lệch ngang so với vai cùng bên lớn hơn `ngang` lần độ cao hơn vai thì là chỉ tay.
+    Giơ tay gọi thật thì cổ tay ở trên vai, chéo tối đa cỡ 45 độ. Không thấy rõ vai hay cổ tay thì trả False.
+    """
+    d = do_ngang(kp, kc)
+    return d is not None and d > ngang
+
+
+def do_ngang(kp, kc):
+    """Cổ tay cao nhất lệch ngang gấp mấy lần độ cao hơn vai cùng bên. None: không thấy rõ, hoặc tay không cao hơn vai."""
+    tay = [(kp[wr], kp[sh]) for sh, wr in ((LSH, LWR), (RSH, RWR)) if kc[wr] > 0.3 and kc[sh] > 0.3]
+    if not tay:
+        return None
+    w, v = min(tay, key=lambda x: x[0][1])
+    cao = float(v[1] - w[1])
+    return abs(float(w[0] - v[0])) / cao if cao > 0 else None
+
+
+def da_so_dung(th):
+    """th = [(t, 'dung'|'ngoi'), ...] gần đây của một người: đa số là đứng (và có ít nhất 2 lần thấy rõ)?"""
+    n = sum(1 for _, v in th if v == 'dung')
+    return n >= 2 and n > len(th) - n
+
+
+def co_nv_canh(box, nv_tam, gan):
+    """Có nhân viên (tâm khung trong nv_tam) cách tâm khung người `box` không quá gan lần chiều cao khung đó?"""
+    if gan <= 0 or not nv_tam:
+        return False
+    x1, y1, x2, y2 = box[:4]
+    h = max(float(y2 - y1), 1.0)
+    return any(np.hypot(cx - (x1 + x2) / 2, cy - (y1 + y2) / 2) <= gan * h for cx, cy in nv_tam)
 
 
 def tu_the(kp, kc):
@@ -497,7 +614,11 @@ class Table:
     đã dọn phải sạch liên tục 3 s. Thời gian giữ là giây ngoài đời; toc = giây ngoài đời / giây video
     (1 với camera thật, ~30 với clip time-lapse, khai trong zones.json)."""
     GIU_VAO, GIU_RA, GIU_SACH = 1.0, 5.0, 3.0   # giây ngoài đời
+    GIU_DO_S = 600.0   # khách để đồ cá nhân lại bàn: giữ bàn "có khách" tối đa bấy nhiêu giây (--giu-do), rồi về luật cũ
     BAN, SACH, TAU = 0.5, 0.35, 0.5              # ngưỡng bẩn vào / ra, hằng số EMA (bội số của win)
+    # nhân viên rời bàn quá bấy nhiêu giây ngoài đời thì tính là một lượt tới mới. Đã thử 3,0 (do_chinh_xac.py): bớt
+    # báo trùng nhưng sinh báo nhầm ở bàn khác (nhân viên thoáng qua hai lần cũng đủ 1 s) nên giữ 0,7.
+    NV_VANG_S = 0.7
 
     def __init__(self, name, pts, toc=1.0):
         self.name = name
@@ -515,6 +636,8 @@ class Table:
         self.t_dirty = None
         self.is_dirty = False
         self.t_vao = self.t_ra = self.t_sach = None
+        self.t_giu = None      # đang giữ chỗ vì khách để đồ cá nhân lại: lúc bắt đầu giữ
+        self.het_giu = False   # lần "khách rời" vừa rồi là do giữ chỗ quá hạn: không xét giữ chỗ nữa
         self.nv_t0 = self.nv_last = None   # nhân viên đứng ở bàn: lúc bắt đầu, lúc thấy gần nhất
         self.nv_gui = -1e9                 # lúc gửi "nhân viên tới bàn" gần nhất
 
@@ -524,7 +647,7 @@ class Table:
         Trả None (không gửi), True (lần đầu của lượt tới này) hoặc False (gửi lại)."""
         if not co_mat:
             return None
-        if self.nv_last is None or t - self.nv_last > 0.7 / self.toc:   # vắng quá 0,7 s: lượt tới mới
+        if self.nv_last is None or t - self.nv_last > self.NV_VANG_S / self.toc:   # vắng lâu: lượt tới mới
             self.nv_t0 = t
             self.nv_gui = -1e9
         self.nv_last = t
@@ -533,6 +656,13 @@ class Table:
         lan_dau = self.nv_gui < 0
         self.nv_gui = t
         return lan_dau
+
+    def giu_cho(self, t):
+        """Bàn vừa vắng người nhưng còn đồ cá nhân: coi như khách ra ngoài một lúc. Bàn quay lại "có khách" và không
+        báo khách rời / cần dọn cho tới khi khách về (vẫn là lượt khách cũ, không báo khách mới) hoặc quá GIU_DO_S."""
+        self.state = 'co_khach'
+        self.t_giu = t
+        self.t_ra = self.t_sach = None
 
     def reset(self, t=None):
         """Video lặp lại (cảnh quay về đầu clip): dựng lại trạng thái trong im lặng.
@@ -547,6 +677,7 @@ class Table:
         self.t_dirty = None
         self.is_dirty = False
         self.t_vao = self.t_ra = self.t_sach = None
+        self.t_giu = None
         self.nv_t0 = self.nv_last = None
         self.nv_gui = -1e9
 
@@ -604,9 +735,13 @@ class Table:
             else:
                 self.t_vao = None
         if self.state == 'co_khach':
-            if occ <= 0.2:
+            if occ <= 0.2 and self.t_giu is not None and not held(self.t_giu, self.GIU_DO_S):
+                pass   # khách để đồ lại, chưa quá hạn giữ chỗ: bàn vẫn là "có khách"
+            elif occ <= 0.2:
                 self.t_ra = t if self.t_ra is None else self.t_ra
                 if held(self.t_ra, self.GIU_RA):
+                    self.het_giu = self.t_giu is not None
+                    self.t_giu = None
                     ev.append(('khach_roi', ''))
                     self.state = 'can_don' if dirty else 'trong'
                     self.t_ra = self.t_sach = None
@@ -614,6 +749,8 @@ class Table:
                         ev.append(('can_don', 'còn đồ trên bàn sau khi khách đi'))
             else:
                 self.t_ra = None
+                if occ >= 0.5:
+                    self.t_giu = None   # khách đã về chỗ: hết giữ, vẫn là lượt khách cũ
         elif self.state == 'can_don':
             if not dirty and occ <= 0.2:
                 self.t_sach = t if self.t_sach is None else self.t_sach
@@ -627,6 +764,88 @@ class Table:
             else:
                 self.t_sach = None
         return ev
+
+
+# ---------------------------------------------------------------- độ bền: camera rớt, khung hỏng, lịch chạy model
+MAT_HINH_S = 3.0             # hình đứng / mất lâu hơn mức này (giây) thì dựng lại trạng thái trong im lặng
+DOC_LAI_LAN = 5              # camera đọc hỏng: thử đọc lại bấy nhiêu lần rồi mới đóng và mở lại
+MO_LAI_CHO_S = (1, 2, 4, 8)  # giãn cách các lần mở lại camera (giây); hết dãy thì dùng mãi số cuối
+BAN_NHO_NHAT = 8             # vùng bàn còn dưới bấy nhiêu pixel trong khung hình thì bỏ
+HET_BO_NHO = ('Hết bộ nhớ GPU. Đóng bớt chương trình đang dùng GPU (camera khác, trình duyệt, game) rồi chạy lại; '
+              'hoặc chạy bằng CPU: thêm --device cpu (chậm hơn nhiều).')
+
+
+def toi_luot(i, i_truoc, moi):
+    """Việc chạy "mỗi `moi` khung video": từ khung xử lý trước (số thứ tự i_truoc) tới khung này (i) có đi qua một
+    bội số của `moi` không. Xử lý đủ mọi khung thì y như "i % moi == 0". File chạy đúng tốc độ thật bỏ khung nên i
+    có thể toàn lẻ: "i % 4 == 0" khi đó không bao giờ đúng và model bàn không bao giờ chạy; cách này thì vẫn đều,
+    và nhịp tính theo thời gian video chứ không theo máy nhanh hay chậm."""
+    return moi <= 1 or i // moi != i_truoc // moi
+
+
+def khung_hop_le(frame):
+    """Khung đọc được có dùng được không (camera mạng có lúc trả khung rỗng hoặc hỏng)."""
+    return frame is not None and getattr(frame, 'ndim', 0) == 3 and frame.shape[2] == 3 and frame.size > 0
+
+
+def ve_co(frame, W, H):
+    """Camera đổi độ phân giải giữa chừng: đưa về cỡ lúc đầu, vì vùng bàn và model đã xuất tính theo cỡ đó."""
+    if frame.shape[1] == W and frame.shape[0] == H:
+        return frame
+    return cv2.resize(frame, (W, H), interpolation=cv2.INTER_AREA)
+
+
+def hinh_dung(t_truoc, t):
+    """Giữa hai khung liên tiếp có một khoảng không nhìn thấy gì (camera rớt, máy treo) hoặc thời gian lùi lại.
+    Khi đó mọi bộ đếm "vắng liên tục N giây" không còn đúng: phải dựng lại trạng thái trong im lặng."""
+    return t_truoc is not None and (t - t_truoc > MAT_HINH_S or t < t_truoc - 1e-6)
+
+
+def loc_ban(ban, W, H):
+    """Bỏ vùng bàn không dùng được: thiếu điểm, toạ độ hỏng, hoặc nằm (gần như) ngoài khung hình (vẽ cho camera
+    khác cỡ). Vùng lệch ra ngoài một phần vẫn giữ. Không lọc thì ảnh cắt bàn rỗng làm model bàn dừng cả pipeline."""
+    tot = {}
+    for k, pts in (ban or {}).items():
+        try:
+            a = np.array(pts, np.float32).reshape(-1, 2)
+            if len(a) < 3 or not np.isfinite(a).all():
+                raise ValueError
+            x, y, w, h = cv2.boundingRect(a.astype(np.int32))
+            if min(min(W, x + w) - max(0, x), min(H, y + h) - max(0, y)) < BAN_NHO_NHAT:
+                raise ValueError
+            tot[k] = pts
+        except (ValueError, TypeError, OverflowError):
+            print(f'  bỏ vùng bàn {k}: nằm ngoài khung hình {W}x{H} hoặc toạ độ hỏng')
+    return tot
+
+
+def doc_lai_camera(cap, mo, cho_s, dung=None, ngu=time.sleep, dong_ho=time.monotonic):
+    """Camera đọc hỏng (rớt mạng, RTSP đứt): thử đọc lại vài lần, không được thì đóng và mở lại, giãn dần,
+    tối đa `cho_s` giây. Trả (cap, khung) hoặc (cap, None) khi hết giờ hay bị dừng (dung: list khác rỗng = Ctrl+C).
+    mo(): mở lại nguồn như lúc đầu. ngu, dong_ho: để test không phải chờ thật."""
+    for _ in range(DOC_LAI_LAN):
+        ok, frame = cap.read()
+        if ok and khung_hop_le(frame):
+            return cap, frame
+        ngu(0.05)
+    het, lan = dong_ho() + cho_s, 0
+    while not dung and dong_ho() < het:
+        ngu(MO_LAI_CHO_S[min(lan, len(MO_LAI_CHO_S) - 1)])
+        lan += 1
+        try:
+            cap.release()
+            cap = mo()
+            if cap.isOpened():
+                ok, frame = cap.read()
+                if ok and khung_hop_le(frame):
+                    return cap, frame
+        except Exception as e:   # driver camera có khi ném lỗi lúc mở: coi như chưa lên, thử lại
+            print(f'  mở lại camera lỗi: {e}')
+    return cap, None
+
+
+def la_het_bo_nho(e):
+    return isinstance(e, getattr(torch.cuda, 'OutOfMemoryError', ())) or 'out of memory' in str(e).lower()
 
 
 # ---------------------------------------------------------------- chạy một clip
@@ -658,9 +877,17 @@ def run_clip(path, zones, args, out_root, mc=None):
     if args.yoloe and yoloe_m is None:
         print(f'  không thấy YOLOE {args.yoloe_model}; dùng luật cũ')
     dump = []  # ghi chi tiết từng khung (--dump) để thử ngưỡng mà không phải chạy lại model
+    nq = NhinQuanh() if args.nhin_quanh else None   # khách nhìn quanh tìm nhân viên (tín hiệu mềm)
     kx = []    # khung xương từng người từng khung (--luu-khung-xuong), dữ liệu train lớp theo thời gian
     staff_m = load_small_model(args.staff_model)
     rtm = load_rtmpose(args.pose_refine, args.device)
+    nv_anh = None   # nhận nhân viên theo ảnh chụp ở trang Cài đặt (--nv-theo-anh)
+    if args.nv_theo_anh:
+        if mc is None or not hasattr(staff_m, 'features'):
+            print('  --nv-theo-anh cần --may-chu và model nhân viên loại CLIP/PE-Core; bỏ qua')
+        else:
+            nv_anh = thiet_lap.ThuVienNV(staff_m, args.nv_anh_lo, args.nv_anh_hi)
+            mc.want_refs = True
     hd = None   # tỉ lệ hành động từng người (--hanh-dong), dùng chung phần ảnh PE-Core với model giơ tay/nhân viên
     if args.hanh_dong:
         from hanh_dong import KEY as HD_KEY, HanhDong
@@ -683,6 +910,17 @@ def run_clip(path, zones, args, out_root, mc=None):
     cap = cv2.VideoCapture(int(path) if is_cam and path.isdigit() else str(path))
     if is_cam:
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # chỉ giữ khung mới nhất
+
+    def mo_lai():   # camera rớt: mở lại y như lúc đầu
+        c = cv2.VideoCapture(int(path) if path.isdigit() else str(path))
+        c.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        return c
+    # camera qua mạng (điện thoại, RTSP) chưa phát: chờ và thử lại thay vì thoát, để bật máy camera trước cũng được
+    if is_cam and not path.isdigit() and not cap.isOpened():
+        print(f'  chưa có hình từ {path}: chờ camera phát, cứ 5 giây thử lại', flush=True)
+        while not cap.isOpened():
+            time.sleep(5)
+            cap = mo_lai()
     if not cap.isOpened():
         raise SystemExit(f'Không mở được nguồn video: {path}')
     fps = cap.get(cv2.CAP_PROP_FPS) or 25
@@ -694,8 +932,14 @@ def run_clip(path, zones, args, out_root, mc=None):
         cap.set(cv2.CAP_PROP_POS_FRAMES, bo_dau)
     ban = cfg.get('ban', {})
     if mc is not None:  # vùng bàn vẽ trên web (máy chủ) được ưu tiên
-        ban = mc.load_zones(ban, W, H)
+        ban = mc.load_zones(ban, W, H, live=is_cam)
+    ban = loc_ban(ban, W, H)
+    Table.GIU_DO_S = args.giu_do
     tables = [Table(k, v, toc=toc) for k, v in ban.items()]
+    gan_ban = khop_ban.GanBan(tables, toc)   # người -> bàn (khop_ban.py); --khop-cu: luật cũ nearest_table
+    # bước 2: người ngồi giữa hai bàn mà không chắc thì hỏi Gemini Decision qua máy chủ
+    url_hb = args.hoi_ban or (args.may_chu if mc is not None and not args.khong_hoi_ban else None)
+    hoi_ban = khop_ban.HoiBan(url_hb, args.camera, args.khoa) if url_hb and not args.khop_cu else None
     # model đã xuất có cỡ ảnh cố định: đưa đúng [cao, rộng]; model .pt thì để YOLO tự tính
     pose_sz = args.imgsz if pose_name.endswith('.pt') else rect_size(W, H, args.imgsz)
     det_sz = args.det_imgsz if det_name.endswith('.pt') else rect_size(W, H, args.det_imgsz)
@@ -707,6 +951,22 @@ def run_clip(path, zones, args, out_root, mc=None):
     # làm mờ mặt trên mọi ảnh rời máy (crop sự kiện, khung live, khung gốc) và trên video kết quả;
     # ảnh sự kiện lưu tại chỗ (anh_su_kien/) để nguyên để còn soát lỗi
     mo_mat = not args.khong_mo_mat
+    gv = ghi_video.tao(args, args.camera, mc)   # --ghi-hinh: ghi bản gốc + vị trí mặt, cắt clip (che mặt) cho từng sự kiện
+    an = None   # --an-ninh: ngoài giờ, khu cấm, lấy đồ (an_ninh.py)
+    ms_an = []  # thời gian mỗi lần quét đồ các bàn (ms)
+    last_in_an = time.perf_counter()
+    if args.an_ninh:
+        if mc is None:
+            print('  --an-ninh cần --may-chu (trạng thái quán, vùng quầy/kho lấy từ máy chủ); bỏ qua')
+        else:
+            vec = None
+            if hasattr(staff_m, 'features'):   # vector PE-Core của model nhân viên: so người lấy với người của bàn
+                vec = lambda img: staff_m.features([img])[0].cpu().numpy()
+            an = AnNinh(giong=args.an_ninh_giong, vector=vec)
+            print(f"  an ninh: bật (quét đồ mỗi {args.an_ninh_moi} khung, so người bằng "
+                  f"{'mã bám + vector PE-Core' if vec else 'mã bám'}"
+                  f"{'' if staff_m is not None else '; KHÔNG có --staff-model nên khu cấm coi mọi người là khách'})")
+    an_sz = 640 if det_name.endswith('.pt') else det_sz   # quét đồ trên vùng cắt quanh bàn: ảnh nhỏ là đủ
 
     hist = {}        # track id -> deque[(t, điểm giơ tay, tâm, chiều cao)]
     weak_hist = {}   # track id -> deque[(t, xác suất giơ tay khi cổ tay đã lên trên vai, không thì 0)]
@@ -731,12 +991,42 @@ def run_clip(path, zones, args, out_root, mc=None):
     track_ids = set()
     timeline = []    # [(t, "TCCD")] trạng thái từng bàn mỗi khung, để chấm điểm
     i = 0
+    i_truoc = -1     # số thứ tự khung video của khung xử lý trước (i nhảy cóc khi bỏ khung): cho lịch "mỗi N khung"
+    t_khung = None   # thời điểm khung trước, để biết hình vừa đứng / mất một lúc
+    sai_co = False   # đã báo camera đổi độ phân giải
     t_start = time.perf_counter()
     last_live = last_tables = last_raw = -1e9
+    last_snap = time.perf_counter()   # --chup-ban: lần gửi ảnh bàn gần nhất
     proc_fps, t_prev = None, None
     t_wall5 = i_wall5 = None
     stop = []  # Ctrl+C: dừng vòng lặp nhưng vẫn ghi kết quả và gửi nốt sự kiện
     old_sigint = signal.signal(signal.SIGINT, lambda *_: stop.append(1))
+
+    def dung_lai(tt):
+        """Cảnh nhảy (video lặp về đầu, camera mất hình một lúc): mọi bàn đổi trạng thái cùng một khung, nên dựng
+        lại trong im lặng, nếu không sẽ báo "khách rời" cả loạt rồi "khách mới" cả loạt."""
+        for tb in tables:
+            tb.reset(tt)
+        hist.clear()
+        weak_hist.clear()
+        if nq is not None:
+            nq.clear()
+        rtm_cache.clear()
+        last_call.clear()
+        seen.clear()
+        lan_di.clear()
+        the_hist.clear()
+        vuon_vai.clear()
+        hai_tay_q.clear()
+        if hd is not None:
+            hd.xoa()
+        if an is not None:
+            an.xoa()
+        ban_truoc.clear()
+        gan_ban.st.clear()
+        clean_ref.clear()
+        last_clean_t.clear()
+
     while not stop:
         if args.thoi_gian_thuc and not is_cam:
             # chạy file video đúng tốc độ thật: nhanh quá thì chờ, chậm quá thì bỏ khung như camera thật
@@ -748,32 +1038,40 @@ def run_clip(path, zones, args, out_root, mc=None):
                     if not cap.grab():
                         break
                     i += 1
+        elif args.buoc > 1 and not is_cam and i > 0:
+            # --buoc N (chỉ để đo): bỏ N-1 khung giữa hai khung xử lý, giả camera ít khung/giây một cách lặp lại được
+            for _ in range(args.buoc - 1):
+                if not cap.grab():
+                    break
+                i += 1
         ok, frame = cap.read()
+        if ok and not khung_hop_le(frame):
+            ok = False   # khung rỗng / hỏng: coi như đọc hỏng
         if not ok and args.lap and not is_cam and i > 0:
             cap.set(cv2.CAP_PROP_POS_FRAMES, bo_dau)  # hết video: quay lại đầu, thời gian vẫn chạy tiếp
             ok, frame = cap.read()
+            ok = ok and khung_hop_le(frame)
             if ok:
                 # Cảnh quay về đầu clip nên mọi bàn đổi trạng thái cùng một khung: dựng lại trong im lặng,
                 # nếu không mỗi vòng lặp sẽ báo "khách rời" cả loạt rồi "khách mới" cả loạt.
-                for tb in tables:
-                    tb.reset(i / fps)
-                hist.clear()
-                weak_hist.clear()
-                rtm_cache.clear()
-                last_call.clear()
-                seen.clear()
-                lan_di.clear()
-                the_hist.clear()
-                vuon_vai.clear()
-                hai_tay_q.clear()
-                if hd is not None:
-                    hd.xoa()
-                ban_truoc.clear()
-                clean_ref.clear()
-                last_clean_t.clear()
+                dung_lai(i / fps)
+        if not ok and is_cam and not stop:
+            # camera thật rớt (mất mạng, RTSP đứt): chờ và mở lại chứ không thoát, quán không ai ngồi canh máy
+            print(f'  camera mất hình, đang thử nối lại (tối đa {args.cho_camera:.0f} s)...', flush=True)
+            cap, frame = doc_lai_camera(cap, mo_lai, args.cho_camera, dung=stop)
+            ok = frame is not None
+            print('  camera đã có hình lại' if ok else '  camera không lên lại, dừng', flush=True)
         if not ok:
             break
+        if frame.shape[1] != W or frame.shape[0] != H:
+            if not sai_co:
+                sai_co = True
+                print(f'  camera đổi độ phân giải ({frame.shape[1]}x{frame.shape[0]}), đưa về {W}x{H} như lúc đầu')
+            frame = ve_co(frame, W, H)
         t = (time.perf_counter() - t_start) if is_cam else i / fps
+        if hinh_dung(t_khung, t):
+            dung_lai(t)   # vừa mất hình một lúc: không tính khoảng không nhìn thấy là "vắng liên tục"
+        t_khung = t
         now_w = time.perf_counter()
         if t_wall5 is None and i >= 5:
             t_wall5, i_wall5 = now_w, i  # đo fps thật (cả đọc video, model nhỏ, luật, gửi) từ khung thứ 5 (chế độ thời gian thực có thể bỏ khung qua mốc 5)
@@ -799,6 +1097,7 @@ def run_clip(path, zones, args, out_root, mc=None):
         if len(boxes) and not args.khong_noi:
             ids = np.array(noi_danh_tinh(ids, boxes, t, alias, seen), dtype=int)
         anon = None  # khung đã làm mờ mặt: chỉ tính (một lần mỗi khung) khi có ảnh cần gửi đi hoặc cần vẽ
+        anon_luon = None
 
         def an_danh():
             nonlocal anon
@@ -806,12 +1105,23 @@ def run_clip(path, zones, args, out_root, mc=None):
                 anon = blur_faces(frame, kps, kcs, boxes) if mo_mat else frame
             return anon
 
+        def che_luon():
+            """Khung luôn che mặt (kể cả --khong-mo-mat): ảnh gửi Gemini."""
+            nonlocal anon_luon
+            if mo_mat:
+                return an_danh()
+            if anon_luon is None:
+                anon_luon = blur_faces(frame, kps, kcs, boxes)
+            return anon_luon
+
         # mẫu khung đã làm mờ mặt cho gói bằng chứng (chỉ khi có máy chủ và có việc đang chờ)
-        if mc is not None and i % 2 == 0:
-            ev_buf.append((t, an_danh().copy()))
+        if mc is not None and toi_luot(i, i_truoc, 2):
+            ev_buf.append((t, che_luon().copy()))
+        if gv is not None:
+            gv.khung(frame, kps, kcs, boxes)
 
         new_items = None
-        if i % args.det_every == 0:
+        if toi_luot(i, i_truoc, args.det_every):
             t0 = time.perf_counter()
             d = det.predict(frame, classes=list(ITEMS), conf=0.25, imgsz=det_sz, **fp16,
                             device=args.device, verbose=False)[0]
@@ -840,17 +1150,25 @@ def run_clip(path, zones, args, out_root, mc=None):
         # Người mới (chưa đủ 3 lần xét) được xét dồn mỗi 3 khung, để không phải chờ tới lượt mới có nhãn.
         p_staff = [None] * len(boxes)
         if staff_m is not None and len(boxes):
-            ca = i % args.staff_every == 0
+            ca = toi_luot(i, i_truoc, args.staff_every)
             # người bị mép khung cắt mất nửa người cho điểm nhân viên cao bất thường: không xét, giữ nhãn cũ
             chon = [k for k, tid in enumerate(ids)
-                    if (ca or (i % 3 == 0 and len(staff_hist.get(int(tid), ())) < 3))
+                    if (ca or (toi_luot(i, i_truoc, 3) and len(staff_hist.get(int(tid), ())) < 3))
                     and boxes[k][0] > 3 and boxes[k][2] < W - 3]
             for k, v in zip(chon, class_probs(staff_m, [pcrops[k] for k in chon], 'nhan_vien')):
                 p_staff[k] = v
+            if nv_anh is not None and nv_anh.emb is not None:  # giống ảnh nhân viên chụp sẵn thì cũng là nhân viên
+                # đã có ảnh nhân viên thì chỉ tin ảnh: model đồng phục dựng sẵn hay nhận nhầm khách mặc áo sáng
+                for k, g in zip(chon, nv_anh.probs([pcrops[k] for k in chon])):
+                    p_staff[k] = g
         if (hand_m or staff_m) and i >= 5 and len(boxes):
             ms_cls.append((time.perf_counter() - t0) * 1000)
 
         # --- từng người: giơ tay? nhân viên? đang đi hay ngồi? thuộc bàn nào?
+        # tâm khung của những người đang được coi là nhân viên (nhãn từ các khung trước), để biết khách có nhân viên cạnh.
+        # Chỉ tính nhân viên đang ĐỨNG: khách ngồi bị nhận nhầm là nhân viên không được làm cả bàn mất quyền gọi.
+        nv_tam = [((b[0] + b[2]) / 2, (b[1] + b[3]) / 2) for b, tid in zip(boxes, ids)
+                  if staff_on.get(int(tid)) and da_so_dung(the_hist.get(int(tid), ()))]
         persons = []
         for b, tid, kp, kc, ph, pst in zip(boxes, ids, kps, kcs, p_hand, p_staff):
             tid = int(tid)
@@ -936,10 +1254,25 @@ def run_clip(path, zones, args, out_root, mc=None):
                 kt = hd.hien(('kt', tid))
                 if kt is not None and kt[HD_IDX['goi']] < args.hanh_dong_goi:
                     calling = False
+            # đã có nhân viên đứng trong tầm với (cách không quá --nv-gan lần chiều cao khung người): khách đang được
+            # phục vụ, tay đưa lên là nhận / đưa đồ hoặc vươn vai, và có gọi thì nhân viên cũng đã ở đó. Không báo.
+            if calling and co_nv_canh(b, nv_tam, args.nv_gan):
+                calling = False
+            # tay duỗi ngang mà model giơ tay chỉ hơi tin: khách đang chỉ trỏ, không phải gọi. Vẫy gọi ngang thật thì
+            # model tin rõ (đo trên clips_kie: chỉ tay 0,35 đến 0,40; vẫy gọi ở vỉa hè 0,5 đến 0,76).
+            if calling and ph is not None and ph < CHI_TAY_PH and chi_tay(kp, kc):
+                calling = False
             score_show = max(score, float(ph or 0), manh)  # điểm thật sự đã kích hoạt, không phải điểm luật = 0
-            tb = ban_on_dinh(ban_truoc, tid, nearest_table(tables, anchor, 0.45 * h), t) if tables else None
+            ban_chac = True
+            # Nhân viên giữ luật cũ: khớp bàn mới (khop_ban.py) là để đếm khách ngồi; áp cho nhân viên thì đo được
+            # báo "nhân viên tới" nhầm tăng 10 -> 13 (do_chinh_xac.py, 8 clip có vùng bàn).
+            if args.khop_cu or staff:
+                tb = ban_on_dinh(ban_truoc, tid, nearest_table(tables, anchor, 0.45 * h), t) if tables else None
+            else:
+                tb, ung_ban = gan_ban.gan(tid, b, kp, kc, t, dung=dung, di=walking)
+                ban_chac = not ung_ban   # False: đang lưỡng lự giữa 2-3 bàn sát nhau (an ninh dùng lại)
             persons.append(dict(id=tid, box=b, kp=kp, kc=kc, walking=walking, staff=staff, t_di=lan_di[tid], dung=dung,
-                                calling=calling, score=score_show, table=tb))
+                                calling=calling, score=score_show, table=tb, ban_chac=ban_chac))
             if calling and t - last_call.get(tid, -1e9) > args.call_cooldown:
                 last_call[tid] = t
                 ev_seq += 1
@@ -955,8 +1288,82 @@ def run_clip(path, zones, args, out_root, mc=None):
                                            eid=eid, box=[round(float(v)) for v in b],
                                            poly=None, items=None))
 
+        hoi_khung = []   # mã người vừa gửi câu hỏi bàn ở khung này (ghi vào --dump để đếm)
+        if hoi_ban is not None and tables:
+            for pid, ten_ban, probs in hoi_ban.ket_qua():
+                print(f"  hỏi bàn #{pid}: {probs} -> {ten_ban or 'chưa chắc, giữ hình học'}", flush=True)
+                if ten_ban:
+                    gan_ban.chot(pid, ten_ban)
+            for pid, ung in gan_ban.can_hoi(t):
+                p = next((q for q in persons if q['id'] == pid), None)
+                if p is not None and hoi_ban.gui(pid, khop_ban.anh_hoi(che_luon(), p['box'], [u.poly for u in ung]),
+                                                 [u.name for u in ung]):
+                    gan_ban.da_hoi(pid, t)
+                    hoi_khung.append(pid)
+        gan_ban.quen(t)
+
+        # --- khách ngồi nhìn quanh tìm nhân viên: chỉ nhắc trên màn hình quản lý, không giao việc
+        if nq is not None:
+            for p, d, ly_do in nq.update(t, persons):
+                x1, y1, x2, y2 = p['box']
+                ev_seq += 1
+                events.append(dict(t=round(t, 2), loai='nhin_quanh', ban=p['table'].name if p['table'] else None,
+                                   nguoi=p['id'], chi_tiet=ly_do, box=[round(float(v)) for v in p['box']],
+                                   diem=round(d, 3), eid=f'{name}:{ev_seq}',
+                                   _crop=crop(frame, x1, y1, x2, y2, 0.15 * (y2 - y1))))
+                if mc is not None:
+                    mc.event(events[-1], crop(an_danh(), x1, y1, x2, y2, 0.15 * (y2 - y1)))
+
+        # --- an ninh (--an-ninh): ngoài giờ, khu cấm, lấy đồ. Ảnh gửi đi luôn đã che mặt.
+        if an is not None:
+            cfg_an = mc.an_ninh()
+            pp = [dict(id=p['id'], box=p['box'], kp=p['kp'], kc=p['kc'], staff=p['staff'],
+                       da_xet=staff_m is None or len(staff_hist.get(p['id'], ())) >= 2, walking=p['walking'],
+                       dung=p['dung'], ban=p['table'].name if p['table'] else None,
+                       ban_chac=p.get('ban_chac', True)) for p in persons]   # khop_ban: False = lưỡng lự giữa bàn sát nhau
+
+            def chup(p):
+                x1, y1, x2, y2 = p['box']
+                return crop(che_luon(), x1, y1, x2, y2, 0.10 * (y2 - y1)).copy()
+
+            def lay_anh(b, tt):
+                if not ev_buf:
+                    return None
+                f = min(ev_buf, key=lambda c: abs(c[0] - tt))[1]
+                return crop(f, b[0], b[1], b[2], b[3], 0.10 * (b[3] - b[1]))
+
+            ev_an = an.cap_nhat(t, pp, cfg_an, mc.areas(), chup=chup)
+            if cfg_an['item_taken'] and tables and toi_luot(i, i_truoc, args.an_ninh_moi):
+                t0 = time.perf_counter()
+                for tb in tables:
+                    if an.can_quet(tb.name, (tb.state or tb.hien_thi) == 'co_khach'):
+                        dets = quet_do_ban(det, frame, tb, tables, args, an_sz, fp16)
+                        if dets is not None:
+                            ev_an += an.quet_do(t, tb.name, dets, lay_anh=lay_anh)
+                ms_an.append((time.perf_counter() - t0) * 1000)
+                if time.perf_counter() - last_in_an >= 30:
+                    last_in_an = time.perf_counter()
+                    print(f'  [an ninh] quét đồ các bàn {np.mean(ms_an[-30:]):.0f} ms/lần (mỗi {args.an_ninh_moi} khung), '
+                          f'{proc_fps or 0:.1f} khung/giây', flush=True)
+            for e in ev_an:
+                ev_seq += 1
+                eid = f'{name}:{ev_seq}'
+                anh = an.anh_bang_chung(list(ev_buf), e, W, H)
+                x1, y1, x2, y2 = e['box']
+                crop_an = anh[0] if anh else crop(che_luon(), x1, y1, x2, y2, 0.15 * (y2 - y1))
+                images = []
+                if e.get('ref') is not None:
+                    images.append(('person', e['ref']))
+                if anh:
+                    images += [('strip', anh[1]), ('overview', anh[2])]
+                events.append(dict(t=round(t, 2), loai=e['loai'], ban=e['ban'], area=e['area'], nguoi=e['nguoi'],
+                                   chi_tiet=e['chi_tiet'], box=[round(float(v)) for v in e['box']], diem=None,
+                                   eid=eid, _crop=crop_an.copy()))
+                print(f"  [an ninh] {EVENT_VI[e['loai']]}: {e['chi_tiet']} (#{e['nguoi']})", flush=True)
+                mc.event(dict(events[-1], images=images), crop_an)
+
         # --- tỉ lệ hành động từng người: model ảnh-chữ mỗi N khung, gộp với khung xương, làm mượt
-        if hd is not None and persons and i % args.hanh_dong_every == 0:
+        if hd is not None and persons and toi_luot(i, i_truoc, args.hanh_dong_every):
             ok_k = [k for k, c in enumerate(pcrops) if c is not None and c.size]
             for k, pr in zip(ok_k, hd.clip_probs([pcrops[k] for k in ok_k])):
                 p = persons[k]
@@ -978,7 +1385,7 @@ def run_clip(path, zones, args, out_root, mc=None):
                 if cv2.pointPolygonTest(best.poly, c, True) > -12:
                     owner[k] = best
         p_dirty = [None] * len(tables)
-        if table_m is not None and tables and i % args.table_every == 0:
+        if table_m is not None and tables and toi_luot(i, i_truoc, args.table_every):
             p_dirty = class_probs(table_m, [table_crop(frame, tb.poly) for tb in tables], 'ban')
         yoloe_left = {}  # bàn -> danh sách đồ YOLOE, chỉ có sau sự kiện khách rời của khung này
         for tb, pd in zip(tables, p_dirty):
@@ -1010,6 +1417,17 @@ def run_clip(path, zones, args, out_root, mc=None):
             for kind, detail in tb.update(t, n, obs, win):
                 # YOLOE chỉ chạy khi bàn vừa được xác định là khách đã rời. Với config demo
                 # (classifier bàn + --yoloe), bàn bẩn cần cả hai tín hiệu độc lập.
+                if kind == 'khach_roi' and args.giu_do > 0 and not tb.het_giu:
+                    dcn = do_ca_nhan(det, yoloe_m, frame, tb, tables, args, det_sz, fp16)
+                    if dcn:
+                        tb.giu_cho(t)
+                        x, y, w_, h_ = cv2.boundingRect(tb.poly.astype(np.int32))
+                        print(f"  {tb.name} @{t:.1f}s: khách vắng nhưng còn {', '.join(dcn)} -> giữ chỗ, chưa báo dọn")
+                        # chỉ ghi lại tại máy camera (không gửi máy chủ): máy chủ vẫn thấy bàn "có khách"
+                        events.append(dict(t=round(t, 2), loai='giu_cho', ban=tb.name, nguoi=None,
+                                           chi_tiet='còn ' + ', '.join(dcn), box=[x, y, x + w_, y + h_], eid=None,
+                                           _crop=crop(frame, x, y, x + w_, y + h_, 80)))
+                        break   # bỏ cả "khách rời" lẫn "cần dọn" của khung này
                 yoloe_items = yoloe_left.get(tb.name)
                 if kind == 'khach_roi' and yoloe_m is not None:
                     yoloe_items = yoloe_table_items(yoloe_m, frame, tb, args)
@@ -1022,6 +1440,8 @@ def run_clip(path, zones, args, out_root, mc=None):
                         continue
                 x, y, w_, h_ = cv2.boundingRect(tb.poly.astype(np.int32))
                 hoan_thanh = kind == 'da_don'    # bàn đã dọn: chụp clean_ref mới cho lần sau
+                if hoan_thanh and an is not None:
+                    an.xoa_ban(tb.name)          # hết lượt khách: quên người của bàn, đồ của bàn
                 ev_seq += 1
                 eid = f'{name}:{ev_seq}' if kind in ('goi_phuc_vu', 'can_don') else None
                 items_ev = (_hien_yoloe(yoloe_items) if yoloe_items is not None else _hien_items(items)) \
@@ -1045,8 +1465,9 @@ def run_clip(path, zones, args, out_root, mc=None):
             timeline.append([round(t, 3), ''.join(CODE.get(tb.state, '?') for tb in tables)])
         if args.dump:
             dump.append(dict(
-                t=round(t, 3),
+                t=round(t, 3), hoi_ban=hoi_khung,
                 nguoi=[dict(id=p['id'], box=[round(float(v)) for v in p['box']], luat=round(float(hand_up(p['kp'], p['kc'], p['box'])), 3),
+                            ngang=None if (dn := do_ngang(p['kp'], p['kc'])) is None else round(dn, 2),
                             nang=None if (hl := hand_lift(p['kp'], p['kc'], p['box'])) is None else round(hl, 3),
                             ph=None if ph is None else round(ph, 3), pst=None if ps is None else round(ps, 3),
                             di=bool(p['walking']), nv=bool(p['staff']), goi=bool(p['calling']), dung=bool(p['dung']),
@@ -1061,17 +1482,35 @@ def run_clip(path, zones, args, out_root, mc=None):
                      for tb, pd in zip(tables, p_dirty)}))
 
         send_live = False
+        # hình trực tiếp, ảnh gốc gửi lên web, video kết quả: che mặt theo cài đặt "che mặt" trên máy chủ
+        hien_che = mo_mat and (mc is None or mc.an_ninh()['blur_faces'])
         if mc is not None:
             now_w = time.perf_counter()
             if (nz := mc.new_zones()) is not None:  # vừa vẽ/sửa vùng bàn trên web: áp dụng từ khung sau
-                tables = [Table(k, v, toc=toc) for k, v in nz.items()]
+                tables = [Table(k, v, toc=toc) for k, v in loc_ban(nz, W, H).items()]
+                gan_ban = khop_ban.GanBan(tables, toc)
                 timeline = []  # thứ tự bàn đã đổi
                 last_tables = -1e9
+            for job in mc.take_jobs():  # trang Cài đặt nhờ tìm bàn hoặc chụp nhân viên trên khung này
+                if job.get('kind') == 'clip':   # web xin clip một khoảng thời gian: cắt và gửi ở luồng riêng
+                    ghi_video.viec_clip(gv, mc, job)
+                    continue
+                mc.job_done(job['id'], thiet_lap.do_job(job, frame, boxes, det,
+                                                        dict(imgsz=det_sz, device=args.device, **fp16)))
+            if nv_anh is not None and (refs := mc.new_staff_refs()) is not None:
+                nv_anh.load(refs)
             if tables and now_w - last_tables >= 1.0:
                 mc.tables(tables)
                 last_tables = now_w
+            if args.chup_ban > 0 and now_w - last_snap >= args.chup_ban:   # ảnh từng bàn có khách, đã làm mờ mặt
+                last_snap = now_w
+                for tb in tables:
+                    if (tb.state or tb.hien_thi) == 'co_khach':
+                        bx1, by1, bx2, by2 = cv2.boundingRect(np.asarray(tb.poly, dtype=np.int32))
+                        bx2, by2 = bx1 + bx2, by1 + by2
+                        mc.table_snap(tb.name, crop(an_danh(), bx1, by1, bx2, by2, 0.35 * max(bx2 - bx1, by2 - by1)))
             if now_w - last_raw >= 30:  # ảnh gốc không vẽ gì, để vẽ vùng bàn trên web
-                mc.frame_raw(an_danh(), source=src_name)
+                mc.frame_raw(an_danh() if hien_che else frame, source=src_name)
                 last_raw = now_w
             send_live = now_w - last_live >= 0.25
             # gói bằng chứng tới hạn (chờ đủ t+... để có khung t+0.5)
@@ -1086,10 +1525,11 @@ def run_clip(path, zones, args, out_root, mc=None):
                         keep.append(p)
                 pending_ev = keep
         if vw is None and not send_live:  # chỉ chấm điểm: bỏ phần vẽ và ghi video
+            i_truoc = i
             i += 1
             continue
         # --- vẽ
-        vis = an_danh().copy()
+        vis = (an_danh() if hien_che else frame).copy()
         for tb in tables:
             col = BGR.get(tb.state or 'trong')
             cv2.polylines(vis, [tb.poly.astype(np.int32)], True, col, 3)
@@ -1100,7 +1540,7 @@ def run_clip(path, zones, args, out_root, mc=None):
             x1, y1, x2, y2 = map(int, p['box'])
             col = (BGR['goi'] if p['calling'] else BGR['nv'] if p['staff'] else BGR['di'] if p['walking']
                    else BGR['co_khach'])
-            cv2.rectangle(vis, (x1, y1), (x2, y2), col, 4 if p['calling'] else 2)
+            cv2.rectangle(vis, (x1, y1), (x2, y2), col, 4 if p['calling'] else 3 if p['staff'] else 2)
             if p['calling']:
                 for a, b_ in ((LSH, LEL), (LEL, LWR), (RSH, REL), (REL, RWR)):
                     if p['kc'][a] > 0.4 and p['kc'][b_] > 0.4:
@@ -1117,8 +1557,10 @@ def run_clip(path, zones, args, out_root, mc=None):
                     stroke_width=3, stroke_fill=(0, 0, 0))
         for p in persons:
             x1, y1 = p['box'][:2]
-            tag = f"#{p['id']}" + (' GỌI' if p['calling'] else ' NV' if p['staff'] else ' đi' if p['walking'] else '')
-            dr.text((x1 + 3, y1 + 2), tag, font=small, fill=(255, 255, 255), stroke_width=2, stroke_fill=(0, 0, 0))
+            tag = f"#{p['id']}" + (' GỌI' if p['calling'] else ' NHÂN VIÊN' if p['staff'] else ' đi' if p['walking']
+                                    else ' NHÌN QUANH' if nq is not None and nq.diem.get(p['id'], 0) >= nq.th else '')
+            dr.text((x1 + 3, y1 + 2), tag, font=small, fill=BGR['nv'][::-1] if p['staff'] and not p['calling'] else (255, 255, 255),
+                    stroke_width=2, stroke_fill=(0, 0, 0))
             if hd is not None:
                 for k, (c, v) in enumerate(hd_top(hd.hien(p['id']), 2)):
                     dr.text((x1 + 3, y1 + 24 + 20 * k), f'{HD_LABELS[c]} {v:.0%}', font=small,
@@ -1137,6 +1579,7 @@ def run_clip(path, zones, args, out_root, mc=None):
         if send_live:
             mc.frame_live(bgr, fps=proc_fps, source=src_name)
             last_live = time.perf_counter()
+        i_truoc = i
         i += 1
 
     t_wall_end = time.perf_counter()
@@ -1151,6 +1594,8 @@ def run_clip(path, zones, args, out_root, mc=None):
     if stop:
         print('  đã dừng (Ctrl+C)')
     cap.release()
+    if gv is not None:
+        gv.dong()
     if vw is not None:
         vw.release()
         final = out / 'video_ket_qua.mp4'
@@ -1176,6 +1621,7 @@ def run_clip(path, zones, args, out_root, mc=None):
         khung_xuong_them=args.pose_refine and f'{args.pose_refine} ({args.refine_mode})',
         ms_nguoi=round(mp, 1), ms_do_vat=round(md, 1),
         ms_model_nho=round(float(np.mean(ms_cls)), 1) if ms_cls else None,
+        ms_an_ninh=round(float(np.mean(ms_an)), 1) if ms_an else None,
         khung_moi_giay=round(1000 / (mp + md / args.det_every), 1) if mp else None,
         fps_thuc=round((i - i_wall5) / (t_wall_end - t_wall5), 1) if t_wall5 is not None and i - i_wall5 > 5 else None,
         vram_torch_mb=round(torch.cuda.max_memory_reserved() / 2**20) if gpu and torch.cuda.is_available() else None,
@@ -1213,6 +1659,9 @@ def main():
     ap.add_argument('--confirm', type=float, default=1.0, help='giây xác nhận đổi trạng thái bàn')
     ap.add_argument('--hand-s', type=float, default=0.6, help='giây giơ tay liên tục mới báo')
     ap.add_argument('--call-cooldown', type=float, default=5.0)
+    ap.add_argument('--nv-gan', type=float, default=1.25,
+                    help='không báo gọi phục vụ khi có nhân viên đứng cách khách không quá bấy nhiêu lần chiều cao '
+                         'khung người của khách (0 = tắt)')
     ap.add_argument('--pose-models', nargs='+', default=['yolo26n-pose.pt', 'yolo11n-pose.pt'])
     ap.add_argument('--det-models', nargs='+', default=['yolo26s.pt', 'yolo11s.pt'])
     ap.add_argument('--hand-model', default=None, help='model nhỏ "có giơ tay không" trong models/, ví dụ gio_tay_v1.pt')
@@ -1229,12 +1678,19 @@ def main():
                     help='engine YOLOE trong models/ đã xuất cho GPU này')
     ap.add_argument('--yoloe-imgsz', type=int, default=1280, help='cỡ ảnh YOLOE (chỉ chạy sau khách rời)')
     ap.add_argument('--yoloe-conf', type=float, default=0.25, help='ngưỡng nhận đồ YOLOE')
+    ap.add_argument('--giu-do', type=float, default=600.0,
+                    help='khách vắng nhưng còn đồ cá nhân (laptop, điện thoại, túi, ba lô) ở bàn: giữ bàn "có khách" tối đa '
+                         'bấy nhiêu giây rồi mới báo khách rời / cần dọn như thường (0 = tắt)')
     ap.add_argument('--dump', action='store_true', help='ghi chi_tiet.json (từng người, từng bàn, từng khung)')
     ap.add_argument('--luu-khung-xuong', action='store_true',
                     help='ghi khung_xuong.npz: 17 điểm của từng người từng khung, để train lớp theo thời gian')
     ap.add_argument('--table-every', type=int, default=4, help='chạy model bàn mỗi N khung')
     ap.add_argument('--staff-model', default=None,
                     help='model "nhân viên hay khách": file YOLO-cls hoặc nhanvien_clip_*.pt (CLIP + lớp nhỏ)')
+    ap.add_argument('--nv-theo-anh', action='store_true',
+                    help='nhận nhân viên thêm bằng ảnh cả người chụp ở trang Cài đặt (cần --may-chu, --staff-model CLIP)')
+    ap.add_argument('--nv-anh-lo', type=float, default=0.70, help='mức giống ảnh nhân viên tính là 0 điểm (chưa đo)')
+    ap.add_argument('--nv-anh-hi', type=float, default=0.90, help='mức giống ảnh nhân viên tính là 1 điểm (chưa đo)')
     ap.add_argument('--staff-win', type=float, default=10.0, help='nhớ kết quả nhân viên/khách trong bao nhiêu giây')
     ap.add_argument('--staff-on', type=float, default=0.40, help='điểm nhân viên trung bình để bật nhãn nhân viên')
     ap.add_argument('--staff-off', type=float, default=0.32, help='điểm trung bình dưới mức này thì tắt nhãn nhân viên')
@@ -1249,6 +1705,8 @@ def main():
                          'gan_vai: thêm người có cổ tay đã lên gần vai; '
                          'luot: tối đa --refine-k người mỗi khung theo lượt, người khác dùng lại khung xương lần trước')
     ap.add_argument('--refine-k', type=int, default=4, help='luot: số người chạy RTMPose mỗi khung')
+    ap.add_argument('--nhin-quanh', action='store_true',
+                    help='báo (mềm) khi khách ngồi quay đầu qua lại hoặc nhìn về phía nhân viên vài giây')
     ap.add_argument('--hanh-dong', action='store_true',
                     help='hiện tỉ lệ hành động từng người (ngồi ăn, uống, điện thoại, gọi, vươn vai, đi, đứng...)')
     ap.add_argument('--hanh-dong-every', type=int, default=10, help='tính tỉ lệ hành động mỗi N khung')
@@ -1263,12 +1721,38 @@ def main():
     ap.add_argument('--may-chu', default=None,
                     help='địa chỉ máy chủ Easy FnB, ví dụ http://localhost:8080: gửi sự kiện, hình, trạng thái bàn lên web')
     ap.add_argument('--camera', default='cam1', help='mã camera trên máy chủ')
+    ap.add_argument('--chup-ban', type=float, default=20.0,
+                    help='cách nhau bấy nhiêu giây gửi máy chủ một ảnh (đã làm mờ mặt) của từng bàn đang có khách, '
+                         'để biết bữa ăn tới đâu; 0 = tắt')
     ap.add_argument('--khong-mo-mat', action='store_true',
                     help='không làm mờ mặt khách trên ảnh gửi máy chủ / video kết quả (chỉ để soát lỗi)')
+    ap.add_argument('--khop-cu', action='store_true',
+                    help='gán người vào bàn bằng luật cũ (bàn gần nhất trong 0,45 lần chiều cao người), để so sánh')
+    ap.add_argument('--hoi-ban', default=None,
+                    help='địa chỉ máy chủ để hỏi Gemini Decision khi không chắc người ngồi bàn nào (mặc định: --may-chu)')
+    ap.add_argument('--khong-hoi-ban', action='store_true', help='không hỏi Gemini Decision về bàn')
     ap.add_argument('--khoa', default=os.environ.get('EDGE_KEY'), help='X-Edge-Key nếu máy chủ có đặt EDGE_KEY')
+    ap.add_argument('--ghi-hinh', action='store_true',
+                    help='ghi hình liên tục (đã làm mờ mặt) và gửi clip của từng sự kiện lên máy chủ; cần ffmpeg, '
+                         'không có thì tự tắt (xem ghi_video.py)')
+    ap.add_argument('--ghi-hinh-dir', default=None, help='thư mục ghi hình, mặc định vision-test/ghi_hinh/<mã camera>')
+    ap.add_argument('--ghi-hinh-gio', type=float, default=24.0, help='giữ video trong bao nhiêu giờ')
+    ap.add_argument('--ghi-hinh-gb', type=float, default=5.0, help='tổng dung lượng video tối đa (GB), đầy thì xoá đoạn cũ nhất')
+    ap.add_argument('--ghi-hinh-fps', type=float, default=10.0, help='số khung mỗi giây của video ghi lại')
     ap.add_argument('--thoi-gian-thuc', action='store_true',
                     help='chạy file video đúng tốc độ thật (như camera đang quay), dùng khi demo với máy chủ')
     ap.add_argument('--lap', action='store_true', help='hết video thì chạy lại từ đầu (demo liên tục), Ctrl+C để dừng')
+    ap.add_argument('--cho-camera', type=float, default=300.0,
+                    help='camera thật mất hình: thử nối lại tối đa bấy nhiêu giây rồi mới dừng')
+    ap.add_argument('--buoc', type=int, default=1,
+                    help='chỉ để đo (do_chinh_xac.py): xử lý 1 trong N khung của file video, giả camera ít khung/giây')
+    ap.add_argument('--an-ninh', action='store_true',
+                    help='an ninh, chống trộm (cần --may-chu): có người ngoài giờ, khách vào quầy/kho, người lạ lấy đồ ở '
+                         'bàn. Bật/tắt từng tính năng ở Cài đặt trên web; không có cờ này thì không chạy gì thêm')
+    ap.add_argument('--an-ninh-moi', type=int, default=10,
+                    help='--an-ninh: quét đồ có giá trị ở bàn có khách mỗi N khung (model đồ vật trên vùng cắt quanh bàn)')
+    ap.add_argument('--an-ninh-giong', type=float, default=0.88,
+                    help='--an-ninh: vector PE-Core giống người của bàn từ mức này thì không báo lấy đồ (CHƯA ĐO)')
     ap.add_argument('--clip-backbone', default='b32_laion',
                     help='bộ mã hoá cho bàn không train (--table-model clip); lớp nhỏ .pt tự nhớ bộ mã hoá của nó')
     args = ap.parse_args()
@@ -1296,7 +1780,12 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
     results = []
     for c in clips:
-        s = run_clip(c, zones, args, args.out, mc)
+        try:
+            s = run_clip(c, zones, args, args.out, mc)
+        except RuntimeError as e:   # torch.OutOfMemoryError cũng là RuntimeError
+            if la_het_bo_nho(e):
+                raise SystemExit(HET_BO_NHO) from e
+            raise
         n = len(s['su_kien'])
         print(f"{s['clip']}: {s['so_khung']} khung, người {s['ms_nguoi']} ms + đồ vật {s['ms_do_vat']} ms, "
               f"~{s['khung_moi_giay']} khung/giây (thật {s['fps_thuc']}), {n} sự kiện", flush=True)

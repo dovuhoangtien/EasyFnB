@@ -27,6 +27,8 @@ from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Reques
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 
+from .clips import Clips, router as clips_router
+from .chat import Phong, router as chat_router
 from .gemini import Gemini, GeminiError
 from .hub import Hub, clock, now_ms
 from .llm import Llm
@@ -50,10 +52,18 @@ gemini = Llm() if os.environ.get('KIE_API_KEY', '').strip() else Gemini()
 if isinstance(gemini, Llm):
     hub = Hub(DATA, gemini, verify_timeout_s=100.0,
               defaults=dict(verify_kinds=[], hold_until_verified=[]))
+elif gemini.decision:
+    # Khách gọi phục vụ thì báo nhân viên ngay, không hỏi lại Gemini: hỏi mất khoảng 1 giây mà chỉ xác nhận được
+    # một nửa số lần gọi thật. Chỉ "cần dọn" mới chờ kiểm tra. Muốn bật lại thì tích trong trang Cài đặt.
+    hub = Hub(DATA, gemini, defaults=dict(verify_kinds=['needs_clearing'], hold_until_verified=['needs_clearing']))
 else:
     hub = Hub(DATA, gemini)
 tts = Tts(DATA / 'tts')
 tro_ly = TroLy(hub, gemini)
+clips = Clips(hub, DATA)             # clip video của từng việc và clip xin theo giờ (server/clips.py)
+tro_ly.clips = clips                 # để trợ lý trả lời kèm video (server/xem_lai.py)
+phong = Phong(hub, gemini, tro_ly)   # phòng chat của quán + ảnh thanh toán (server/chat.py)
+tro_ly.phong = phong                 # để trợ lý trả lời về tiền thu (server/doanh_thu_tro_ly.py)
 
 
 @asynccontextmanager
@@ -63,15 +73,21 @@ async def lifespan(_app):
     if tro_ly.adk_wanted:            # nạp google-adk sẵn (vài giây) để câu hỏi đầu tiên không phải chờ
         asyncio.create_task(asyncio.to_thread(tro_ly.load_adk))
     khoa = 'KIE_API_KEY' if isinstance(gemini, Llm) else 'GEMINI_API_KEY'
-    hub.add_log('system', 'Máy chủ khởi động' + (f', {gemini.ten} bật ({gemini.model})' if gemini.enabled
+    kiem = f', kiểm tra ảnh bằng {gemini.verify_model}' if getattr(gemini, 'decision', False) else ''
+    hub.add_log('system', 'Máy chủ khởi động' + (f', {gemini.ten} bật ({gemini.model}{kiem})' if gemini.enabled
                                                   else f', {gemini.ten} tắt (chưa có {khoa})'))
     yield
     task.cancel()
     tts.close()
+    hub.close()                      # ghi nốt dòng thời gian
 
 
 app = FastAPI(title='Easy FnB', lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'])
+
+
+STAFF_PHOTO_MAX = 3 * 1024 * 1024
+STAFF_PHOTOS_MAX = 8
 
 
 def edge_auth(x_edge_key: str | None = Header(default=None)):
@@ -256,7 +272,7 @@ async def staff_manifest(sid: str):
              dict(src='/icon-512.png', sizes='512x512', type='image/png'),
              dict(src='/icon-maskable-512.png', sizes='512x512', type='image/png', purpose='maskable')]
     return JSONResponse(dict(id=start, name=f"Easy FnB, {s['name']}", short_name=s['name'], lang='vi',
-                             start_url=start, scope='/nv/', display='standalone', orientation='portrait',
+                             start_url=start, scope='/nv', display='standalone', orientation='portrait',
                              background_color='#0a0a0a', theme_color='#0a0a0a', icons=icons),
                         media_type='application/manifest+json', headers={'Cache-Control': 'no-cache'})
 
@@ -270,9 +286,42 @@ async def get_zones(camera: str = Query('cam1')):
 @app.put('/api/zones')
 async def put_zones(body: dict = Body(...)):
     try:
-        return hub.set_zones(body)
+        z = hub.set_zones(body)
     except (KeyError, TypeError, ValueError) as e:
         raise HTTPException(400, f'vùng bàn sai dạng: {e}')
+    # bàn mới vẽ: đọc sẵn tên bàn, lần báo đầu không phải chờ máy tổng hợp giọng vài giây
+    asyncio.create_task(tts.warm([f"Bàn {t['id']}" for t in z['tables']]))
+    return z
+
+
+async def camera_job(cam, kind, wait_s=12.0, **args):
+    """Nhờ máy camera làm một việc trên khung hình nó đang có (tìm bàn, chụp nhân viên) rồi chờ kết quả."""
+    if not hub.camera_live(cam):
+        raise HTTPException(409, 'camera chưa chạy')
+    jid, fut = hub.new_job(cam, kind, **args)
+    try:
+        res = await asyncio.wait_for(fut, wait_s)
+    except asyncio.TimeoutError:
+        hub.jobs.pop(jid, None)
+        raise HTTPException(504, 'máy camera chưa trả lời')
+    if not isinstance(res, dict) or res.get('error'):
+        raise HTTPException(502, str((res or {}).get('error') if isinstance(res, dict) else 'kết quả sai dạng'))
+    return res
+
+
+@app.post('/api/zones/suggest')
+async def suggest_zones(body: dict = Body(...)):
+    """Camera tự tìm bàn. Có `box` [x1, y1, x2, y2] (theo frame_w x frame_h) thì chỉ tìm trong vùng đó."""
+    box = body.get('box')
+    try:
+        if box is not None:
+            box = [float(v) for v in box]
+            if len(box) != 4:
+                raise ValueError
+        fw, fh = float(body.get('frame_w') or 0), float(body.get('frame_h') or 0)
+    except (TypeError, ValueError):
+        raise HTTPException(400, 'box phải là [x1, y1, x2, y2]')
+    return await camera_job(str(body.get('camera') or 'cam1'), 'find_tables', box=box, frame_w=fw, frame_h=fh)
 
 
 @app.get('/api/staff')
@@ -283,20 +332,96 @@ async def get_staff():
 @app.put('/api/staff')
 async def put_staff(body: dict = Body(...)):
     items = body.get('staff') or []
-    if any(s.get('role') not in ('serve', 'clean', 'cashier') or not s.get('id') or not s.get('name')
+    if any(s.get('role') not in ('serve', 'clean', 'cashier', 'owner') or not s.get('id') or not s.get('name')
            for s in items):
-        raise HTTPException(400, 'mỗi nhân viên cần id, name, role (serve, clean, cashier)')
+        raise HTTPException(400, 'mỗi nhân viên cần id, name, role (serve, clean, cashier, owner)')
     return hub.set_staff(items)
 
 
+def staff_of(sid):
+    s = next((x for x in hub.staff if x['id'] == sid), None)
+    if s is None:
+        raise HTTPException(404, f'không có nhân viên {sid!r}')
+    return s
+
+
+async def save_staff_photo(sid, kind, source, jpeg):
+    if kind not in ('face', 'body'):
+        raise HTTPException(400, 'kind phải là face hoặc body')
+    if jpeg[:2] != bytes([0xFF, 0xD8]) or len(jpeg) > STAFF_PHOTO_MAX:
+        raise HTTPException(400, 'cần ảnh JPEG dưới 3 MB')
+    if len(staff_of(sid).get('photos', [])) >= STAFF_PHOTOS_MAX:
+        raise HTTPException(400, f'mỗi người tối đa {STAFF_PHOTOS_MAX} ảnh')
+    pid = hub.add_staff_photo(sid, kind, source)
+    await asyncio.to_thread(hub.staff_photo_file(sid, pid).write_bytes, jpeg)
+    return hub.staff_photos_changed()
+
+
+@app.post('/api/staff/{sid}/photos')
+async def add_staff_photo(sid: str, request: Request, kind: str = Query('body')):
+    """Ảnh nhận dạng tải lên (JPEG, web đã thu nhỏ). kind: face (mặt) | body (cả người, thấy đồng phục)."""
+    staff_of(sid)
+    return await save_staff_photo(sid, kind, 'upload', await request.body())
+
+
+@app.post('/api/staff/{sid}/photos/camera')
+async def shoot_staff_photo(sid: str, body: dict = Body(...)):
+    """Chụp bằng camera quán: máy camera cắt người đứng gần giữa khung hình nhất."""
+    staff_of(sid)
+    res = await camera_job(str(body.get('camera') or 'cam1'), 'staff_photo')
+    try:
+        jpeg = base64.b64decode(res['jpeg_b64'])
+    except (KeyError, ValueError, TypeError):
+        raise HTTPException(502, 'máy camera không gửi ảnh')
+    return await save_staff_photo(sid, 'body', 'camera', jpeg)
+
+
+@app.get('/api/staff/{sid}/photos/{name}')
+async def staff_photo(sid: str, name: str):
+    f = hub.staff_photo_file(sid, name.removesuffix('.jpg'))
+    if not f.exists():
+        raise HTTPException(404)
+    return FileResponse(f, media_type='image/jpeg', headers={'Cache-Control': 'max-age=3600'})
+
+
+@app.delete('/api/staff/{sid}/photos/{pid}')
+async def del_staff_photo(sid: str, pid: str):
+    staff_of(sid)
+    return hub.del_staff_photo(sid, pid)
+
+
 @app.put('/api/settings')
-async def put_settings(body: dict = Body(...)):
-    return hub.update_settings(body)
+async def put_settings(body: dict = Body(...), x_owner_pin: str | None = Header(default=None)):
+    try:
+        return hub.update_settings(body, pin=x_owner_pin)
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.put('/api/owner/pin')
+async def put_owner_pin(body: dict = Body(...)):
+    """Đặt hoặc đổi mã PIN chủ quán (4-8 chữ số). Đã có PIN thì phải gửi đúng old_pin."""
+    try:
+        hub.set_pin(body.get('pin'), body.get('old_pin'))
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return dict(ok=True)
+
+
+@app.post('/api/owner/pin/check')
+async def check_owner_pin(body: dict = Body(...)):
+    await asyncio.sleep(0.3)        # chậm một chút cho khó đoán thử
+    return dict(ok=hub.pin_ok(body.get('pin')))
 
 
 @app.post('/api/reset')
 async def reset():
     hub.reset()
+    clips.reset()    # clip trên máy chủ đi theo việc; video gốc ở máy camera còn nguyên
     return {}
 
 
@@ -343,7 +468,7 @@ async def assistant(body: dict = Body(...)):
     q = q.strip() if isinstance(q, str) else ''
     if not q:
         raise HTTPException(400, 'thiếu câu hỏi')
-    return await tro_ly.hoi(q[:500], body.get('session'))
+    return await tro_ly.hoi(q[:500], body.get('session'), body.get('ghi_chu'))
 
 
 # ------------------------------------------------------------------ điện thoại làm camera
@@ -424,6 +549,30 @@ async def tts_wav(text: str = Query(..., max_length=200)):
     return FileResponse(f, media_type='audio/wav', headers={'Cache-Control': 'public, max-age=86400'})
 
 
+@app.get('/api/timeline')
+async def timeline(since: float | None = None, until: float | None = None, table: str | None = None,
+                   kind: str | None = None, alert_id: str | None = None, limit: int = 500, newest: bool = False):
+    """Dòng thời gian lâu dài (SQLite, giữ qua các ca). since/until: giây epoch; kind: một hoặc nhiều loại cách
+    nhau bằng dấu phẩy, 'alert_*' khớp theo đầu tên. Xem server/timeline.py."""
+    kinds = [k.strip() for k in kind.split(',') if k.strip()] if kind else None
+    rows = await asyncio.to_thread(hub.timeline.query, since, until, table, kinds, alert_id, limit, newest)
+    return dict(rows=rows)
+
+
+@app.get('/api/timeline/days')
+async def timeline_days():
+    return dict(days=await asyncio.to_thread(hub.timeline.days))
+
+
+@app.get('/api/tables/{table}/snap.jpg')
+async def table_snap_jpg(table: str, camera: str | None = None):
+    """Ảnh bàn gần nhất camera gửi (đã làm mờ mặt). Nhiều camera cùng thấy bàn thì lấy ảnh mới nhất."""
+    f = hub.stages.snap_file(table, camera)
+    if f is None:
+        raise HTTPException(404, 'chưa có ảnh bàn này')
+    return FileResponse(f, media_type='image/jpeg', headers={'Cache-Control': 'no-store'})
+
+
 @app.get('/api/report')
 async def report():
     return hub.report()
@@ -460,7 +609,7 @@ async def edge_evidence(body: dict = Body(...)):
     try:
         if not body.get('eid'):
             raise ValueError('thiếu eid')
-        for role in ('strip', 'overview', 'ref'):
+        for role in ('strip', 'overview', 'ref', 'person'):
             b64 = body.get(f'{role}_jpeg_b64')
             body[f'{role}_jpeg'] = base64.b64decode(b64) if b64 else None
         return dict(alert_id=hub.edge_evidence(body))
@@ -489,6 +638,52 @@ async def edge_tables(body: dict = Body(...)):
     except (TypeError, ValueError) as e:
         raise HTTPException(400, f'trạng thái bàn sai dạng: {e}')
     return dict(ok=True)
+
+
+@app.post('/api/edge/table-snap', dependencies=[Depends(edge_auth)])
+async def edge_table_snap(body: dict = Body(...)):
+    """Ảnh một bàn đang có khách, camera gửi định kỳ: {camera, table, ts, jpeg_b64}. Máy chủ giữ ảnh mới nhất
+    và (khi tới lượt) nhờ Gemini Decision xem bữa ăn đang ở giai đoạn nào. Bàn lạ: {ok: false}."""
+    try:
+        cam, table = body['camera'], body['table']
+        if not isinstance(cam, str) or not isinstance(table, str) or not cam or not table:
+            raise ValueError('cần camera và table (chuỗi)')
+        return hub.stages.snap(cam, table, base64.b64decode(body['jpeg_b64']), body.get('ts'))
+    except (KeyError, ValueError, TypeError) as e:
+        raise HTTPException(400, str(e))
+
+
+@app.post('/api/edge/table-ask', dependencies=[Depends(edge_auth)])
+async def edge_table_ask(body: dict = Body(...)):
+    """Camera không chắc một khách đang ngồi ở bàn nào: {camera, jpeg_b64, tables: [{table, color}]}.
+    Máy chủ hỏi Gemini Decision, trả {ok, probs: {bàn: xác suất}} hoặc {ok: false, reason} (server/hoi_ban.py)."""
+    try:
+        return await hub.hoi_ban.ask(body.get('camera'), base64.b64decode(body.get('jpeg_b64') or ''),
+                                     body.get('tables'))
+    except (ValueError, TypeError) as e:     # base64 hỏng cũng là ValueError
+        raise HTTPException(400, str(e))
+
+
+@app.get('/api/edge/jobs', dependencies=[Depends(edge_auth)])
+async def edge_jobs(camera: str = Query(...)):
+    """Việc web đang nhờ máy camera làm (máy camera hỏi mỗi giây)."""
+    return dict(jobs=hub.take_jobs(camera))
+
+
+@app.post('/api/edge/jobs/{jid}', dependencies=[Depends(edge_auth)])
+async def edge_job_result(jid: str, body: dict = Body(...)):
+    return dict(ok=hub.job_result(jid, body))
+
+
+@app.get('/api/edge/staff-refs', dependencies=[Depends(edge_auth)])
+async def edge_staff_refs():
+    return hub.staff_refs()
+
+
+# clip video: POST /api/edge/clip, GET /api/alerts/{id}/clip.mp4, POST /api/clips, GET /api/clips/{id}[.mp4]
+app.include_router(clips_router(clips, edge_auth))
+# phòng chat và thanh toán: /api/chat*, /api/payments/*, /api/revenue, /api/visits/*
+app.include_router(chat_router(phong))
 
 
 # ------------------------------------------------------------------ web app đã build (một dịch vụ Cloud Run)

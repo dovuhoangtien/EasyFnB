@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link as RouterLink, useParams } from 'react-router';
-import { BellRing, Check, ChevronRight, Footprints, ScanEye, SquarePlus, TriangleAlert } from 'lucide-react';
+import { BellRing, Check, ChevronRight, Footprints, ScanEye, SquarePlus, TriangleAlert, X } from 'lucide-react';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -8,14 +8,16 @@ import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { ackAlert, apiUrl, doneAlert } from '../live/api';
+import { ackAlert, apiUrl, cancelAlert, doneAlert } from '../live/api';
 import { useRun, useTitle } from '../live/hooks';
 import { createNotifier } from '../live/notifier';
 import { live, useLive, useLiveConnection, useServerNow } from '../live/store';
-import { byUrgency, ROLE_LABEL, staffName, tableText, waitWord } from '../live/text';
-import type { Alert, AlertKind } from '../live/types';
+import { byUrgency, ROLE_LABEL, securityOpen, securitySpeech, staffName, tableText, waitWord } from '../live/text';
+import type { Alert, AlertKind, SecurityAlert } from '../live/types';
 import { beep, hasVietnameseVoice, speak, speechSupported, unlockAudio, vibrate } from '../live/voice';
 import { AnimatedList } from './motion';
+import { SecurityCard } from './security';
+import { StaffTeam } from './Team';
 import { alertMedia, Conn, KindBadge, Shot } from './ui';
 
 /** Việc nói bằng lời cho nhân viên */
@@ -28,6 +30,8 @@ const KIND_TODO: Record<AlertKind, string> = {
 const todoText = (a: Alert) => (a.detail === 'Quản lý tạo' && a.kind === 'call' ? 'Quản lý nhờ ra bàn phục vụ' : KIND_TODO[a.kind]);
 const NOTICE_MS = 7000;
 const mineActive = (a: Alert, me: string) => a.assigned_to === me && (a.status === 'open' || a.status === 'acked');
+/** Cảnh báo an ninh gửi cho người này và còn mở */
+const secForMe = (a: SecurityAlert, me: string) => !!a.notify?.includes(me) && securityOpen(a);
 
 function PhoneFrame({ children }: { children: ReactNode }) {
   const status = useLive((s) => s.status);
@@ -107,6 +111,14 @@ function InstallHint() {
     return (
       <Text type="supporting" color="secondary" as="p">
         Để lần sau chạm một cái là vào: bấm nút Chia sẻ của Safari, chọn “Thêm vào MH chính”.
+      </Text>
+    );
+  }
+  // Android qua http ở quán: trình duyệt không cho nút cài (chỉ https hợp lệ mới có), nhưng menu vẫn tạo được lối tắt
+  if (/android/i.test(navigator.userAgent)) {
+    return (
+      <Text type="supporting" color="secondary" as="p">
+        Để lần sau chạm một cái là vào: mở menu ⋮ của trình duyệt, chọn “Thêm vào màn hình chính”.
       </Text>
     );
   }
@@ -199,6 +211,14 @@ function TaskCard({ a, big, now, me }: { a: Alert; big: boolean; now: number; me
           onClick={() => void run('done', () => doneAlert(a.id, me).then((x) => live.upsertAlert(x)))}
         />
       </div>
+      <Button
+        label="Báo nhầm, không có việc này"
+        variant="ghost"
+        size="md"
+        icon={<X size={16} />}
+        isLoading={busy === 'cancel'}
+        onClick={() => void run('cancel', () => cancelAlert(a.id, me, 'nhân viên báo nhầm').then((x) => live.upsertAlert(x)))}
+      />
     </article>
   );
 }
@@ -218,8 +238,12 @@ function StaffShift({ id }: { id: string }) {
   const loaded = useLive((s) => s.loaded);
   const staff = useLive((s) => s.staff);
   const alerts = useLive((s) => s.alerts);
+  const security = useLive((s) => s.security);
+  const settings = useLive((s) => s.settings);
   const now = useServerNow();
   const me = staff.find((s) => s.id === id);
+  // chủ quán chỉ nhận cảnh báo an ninh, không nhận việc phục vụ
+  const owner = me?.role === 'owner';
   const [notice, setNotice] = useState<Notice | null>(null);
   const [noVoice, setNoVoice] = useState(false);
   const wake = useRef<WakeLockSentinel | null>(null);
@@ -232,7 +256,28 @@ function StaffShift({ id }: { id: string }) {
     alertsRef.current = alerts;
   }, [staff, alerts]);
 
-  const mine = useMemo(() => alerts.filter((a) => mineActive(a, id)).sort(byUrgency), [alerts, id]);
+  const mine = useMemo(() => (owner ? [] : alerts.filter((a) => mineActive(a, id)).sort(byUrgency)), [alerts, id, owner]);
+  const secMine = useMemo(() => security.filter((a) => secForMe(a, id)).sort((x, y) => y.created_at - x.created_at), [security, id]);
+
+  // Cảnh báo an ninh mới: có người ngoài giờ thì chuông và đọc to; lấy đồ, vào khu cấm chỉ rung và chuông nhẹ (không đọc trước mặt khách)
+  useEffect(() => {
+    if (!started) return;
+    const seen = new Set<string>();
+    const off = live.onSecurityChange((next, prev) => {
+      if (!secForMe(next, id) || (prev && secForMe(prev, id)) || seen.has(next.id)) return;
+      seen.add(next.id);
+      if (next.kind === 'after_hours') {
+        // chuông riêng, rung dài, hết chuông mới đọc
+        beep('alarm');
+        vibrate([300, 120, 300, 120, 300]);
+        window.setTimeout(() => speak(securitySpeech(next)), 1100);
+      } else {
+        beep('soft');
+        vibrate([200, 100, 200, 100, 200]);
+      }
+    });
+    return off;
+  }, [started, id]);
 
   // Có việc mới thì kêu, rung, đọc; việc bị huỷ hay chuyển người thì báo ngắn
   useEffect(() => {
@@ -302,10 +347,12 @@ function StaffShift({ id }: { id: string }) {
     unlockAudio();
     setStarted(true);
     const n = mine.length;
+    const s = secMine.length;
     window.setTimeout(() => {
       setNoVoice(!speechSupported() || !hasVietnameseVoice());
       beep('normal');
       if (n) speak(`Bạn có ${n} việc đang chờ`);
+      else if (s) vibrate([200, 100, 200]);
     }, 150);
   };
 
@@ -365,10 +412,12 @@ function StaffShift({ id }: { id: string }) {
           <Text type="supporting" color="secondary" as="p">
             {me ? ROLE_LABEL[me.role] : ''}
             {mine.length ? `, ${mine.length} việc đang chờ` : ''}
+            {secMine.length ? `, ${secMine.length} cảnh báo` : ''}
           </Text>
         </div>
       </div>
 
+      <StaffTeam me={id}>
       {noVoice && (
         <Text type="supporting" color="secondary" as="p">
           Máy chưa có giọng đọc tiếng Việt, chỉ có tiếng chuông và rung.
@@ -379,11 +428,19 @@ function StaffShift({ id }: { id: string }) {
 
       {status === 'offline' && <Banner status="warning" title="Mất kết nối tới máy chủ, đang thử lại" description="Việc mới có thể chưa hiện." collapsible={false} />}
 
+      {secMine.length > 0 && (
+        <section className="flex flex-col gap-2" aria-label="Cảnh báo an ninh">
+          {secMine.map((a) => (
+            <SecurityCard key={a.id} a={a} actor={id} provider={settings?.provider ?? 'Gemini'} phone fresh={now - a.created_at < 4000} />
+          ))}
+        </section>
+      )}
+
       <AnimatedList items={mine} getKey={(a) => a.id} className="fx-list" label="Việc của bạn">
         {(a) => <TaskCard a={a} big={a.id === topId} now={now} me={id} />}
       </AnimatedList>
 
-      {mine.length === 0 && (
+      {mine.length === 0 && secMine.length === 0 && (
         <div className="fx-item flex flex-1 flex-col items-center justify-center gap-4 py-10 text-center">
           <div className="fx-radar" aria-hidden="true">
             <i />
@@ -394,10 +451,11 @@ function StaffShift({ id }: { id: string }) {
             </span>
           </div>
           <Text type="large" weight="semibold" as="p">
-            Đang trực, chưa có việc
+            {owner ? 'Đang trông quán, chưa có cảnh báo' : 'Đang trực, chưa có việc'}
           </Text>
         </div>
       )}
+      </StaffTeam>
     </PhoneFrame>
   );
 }

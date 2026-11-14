@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { apiUrl, getState } from './api';
-import type { Alert, Camera, CameraZones, LogEntry, Settings, Staff, State, TableState } from './types';
+import { isSecurity, type Alert, type AnyAlert, type Camera, type CameraZones, type LogEntry, type SecurityAlert, type Settings, type Staff, type State, type TableState } from './types';
 
 /**
  * Kho dữ liệu trực tiếp: một kết nối SSE tới /api/stream dùng chung cho mọi trang.
@@ -23,8 +23,10 @@ export interface LiveSnapshot {
   cameras: Camera[];
   zones: CameraZones[];
   tables: TableState[];
-  /** mới nhất ở đầu */
+  /** việc phục vụ, mới nhất ở đầu (không có cảnh báo an ninh) */
   alerts: Alert[];
+  /** cảnh báo an ninh, mới nhất ở đầu; tách riêng để không lẫn vào hàng việc và số liệu ca */
+  security: SecurityAlert[];
   staff: Staff[];
   /** mới nhất ở đầu */
   log: LogEntry[];
@@ -32,6 +34,7 @@ export interface LiveSnapshot {
 
 /** Gọi mỗi khi một việc được tạo hoặc đổi trạng thái (không chờ nhịp vẽ) */
 export type AlertListener = (next: Alert, prev: Alert | undefined) => void;
+export type SecurityListener = (next: SecurityAlert, prev: SecurityAlert | undefined) => void;
 
 const NOTIFY_MS = 120;
 const MAX_ALERTS = 300;
@@ -50,6 +53,7 @@ const EMPTY: LiveSnapshot = {
   zones: [],
   tables: [],
   alerts: [],
+  security: [],
   staff: [],
   log: [],
 };
@@ -71,7 +75,7 @@ function upsertTable(list: TableState[], item: TableState): TableState[] {
   return next;
 }
 
-function alertChanged(a: Alert, b: Alert) {
+function alertChanged(a: AnyAlert, b: AnyAlert) {
   return a.status !== b.status || a.assigned_to !== b.assigned_to || a.verify.state !== b.verify.state || a.repeats !== b.repeats || a.escalated !== b.escalated;
 }
 
@@ -80,6 +84,7 @@ class LiveStore {
   private work: LiveSnapshot = EMPTY;
   private listeners = new Set<() => void>();
   private alertListeners = new Set<AlertListener>();
+  private securityListeners = new Set<SecurityListener>();
   private holders: { staff: string | null }[] = [];
   private es: EventSource | null = null;
   private url: string | null = null;
@@ -115,6 +120,14 @@ class LiveStore {
     this.alertListeners.add(fn);
     return () => {
       this.alertListeners.delete(fn);
+    };
+  }
+
+  /** Gọi mỗi khi một cảnh báo an ninh được tạo hoặc đổi trạng thái */
+  onSecurityChange(fn: SecurityListener) {
+    this.securityListeners.add(fn);
+    return () => {
+      this.securityListeners.delete(fn);
     };
   }
 
@@ -214,7 +227,7 @@ class LiveStore {
       this.retry = 0;
       this.applyState(s, true);
     });
-    on<Alert>('alert', (a) => this.upsertAlert(a));
+    on<AnyAlert>('alert', (a) => this.upsertAlert(a));
     on<TableState>('table', (t) => this.set({ tables: upsertTable(this.work.tables, t) }));
     on<Camera>('camera', (c) => this.set({ cameras: upsertById(this.work.cameras, c) }));
     on<CameraZones>('zones', (z) => {
@@ -251,7 +264,10 @@ class LiveStore {
 
   // ---------- áp sự kiện ----------
   private applyState(s: State, announce: boolean) {
-    const before = announce && this.work.loaded ? new Map(this.work.alerts.map((a) => [a.id, a])) : null;
+    const before = announce && this.work.loaded ? new Map<string, AnyAlert>([...this.work.alerts, ...this.work.security].map((a) => [a.id, a])) : null;
+    const all = s.alerts ?? [];
+    const service = all.filter((a): a is Alert => !isSecurity(a));
+    const security = all.filter(isSecurity);
     const serverTime = typeof s.server_time === 'number' ? s.server_time : Date.now();
     this.set({
       status: 'live',
@@ -262,26 +278,28 @@ class LiveStore {
       cameras: s.cameras ?? [],
       zones: s.zones ?? [],
       tables: s.tables ?? [],
-      alerts: (s.alerts ?? []).slice(0, MAX_ALERTS),
+      alerts: service.slice(0, MAX_ALERTS),
+      security: security.slice(0, MAX_ALERTS),
       staff: s.staff ?? [],
       log: (s.log ?? []).slice(0, MAX_LOG),
     });
     this.schedule(true);
     // Sau khi nối lại: báo những việc đã đổi trong lúc mất kết nối
     if (before) {
-      for (const a of s.alerts ?? []) {
+      for (const a of all) {
         const prev = before.get(a.id);
-        if (!prev || alertChanged(prev, a)) this.emitAlert(a, prev);
+        if (!prev || alertChanged(prev, a)) this.emitAny(a, prev);
       }
     }
   }
 
-  /** Thêm hoặc cập nhật một việc (từ SSE, hoặc từ phản hồi của một thao tác) */
-  upsertAlert(a: Alert) {
-    const list = this.work.alerts;
+  /** Thêm hoặc cập nhật một việc hay cảnh báo an ninh (từ SSE, hoặc từ phản hồi của một thao tác) */
+  upsertAlert(a: AnyAlert) {
+    const key = isSecurity(a) ? 'security' : 'alerts';
+    const list: AnyAlert[] = this.work[key];
     const i = list.findIndex((x) => x.id === a.id);
     const prev = i >= 0 ? list[i] : undefined;
-    let next: Alert[];
+    let next: AnyAlert[];
     if (i >= 0) {
       next = list.slice();
       next[i] = a;
@@ -289,8 +307,8 @@ class LiveStore {
       next = [a, ...list];
       if (next.length > MAX_ALERTS) next.length = MAX_ALERTS;
     }
-    this.set({ alerts: next });
-    if (!prev || alertChanged(prev, a)) this.emitAlert(a, prev);
+    this.set({ [key]: next } as Partial<LiveSnapshot>);
+    if (!prev || alertChanged(prev, a)) this.emitAny(a, prev);
   }
 
   /** Cập nhật vùng bàn ngay sau khi lưu, không chờ SSE */
@@ -314,7 +332,7 @@ class LiveStore {
   }
 
   private async onReset(gen: number) {
-    this.set({ alerts: [], log: [], tables: [] });
+    this.set({ alerts: [], security: [], log: [], tables: [] });
     this.schedule(true);
     try {
       const s = await getState();
@@ -322,6 +340,21 @@ class LiveStore {
     } catch {
       // bỏ qua: snapshot lần nối lại sau sẽ đồng bộ
     }
+  }
+
+  private emitAny(next: AnyAlert, prev: AnyAlert | undefined) {
+    if (isSecurity(next)) this.emitSecurity(next, prev && isSecurity(prev) ? prev : undefined);
+    else this.emitAlert(next, prev && !isSecurity(prev) ? prev : undefined);
+  }
+
+  private emitSecurity(next: SecurityAlert, prev: SecurityAlert | undefined) {
+    this.securityListeners.forEach((fn) => {
+      try {
+        fn(next, prev);
+      } catch (err) {
+        console.error(err);
+      }
+    });
   }
 
   private emitAlert(next: Alert, prev: Alert | undefined) {
