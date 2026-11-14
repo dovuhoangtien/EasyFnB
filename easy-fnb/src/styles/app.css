@@ -714,6 +714,30 @@
   min-height: 0;
 }
 
+/* câu trả lời hiện dần từ trên xuống: chữ trước, rồi từng khối */
+.fx-answer > *,
+.fx-answer .fx-blocks > * {
+  animation: fx-answer-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.fx-answer > :nth-child(2) { animation-delay: 120ms; }
+.fx-answer > :nth-child(3) { animation-delay: 240ms; }
+.fx-answer .fx-blocks > :nth-child(1) { animation-delay: 160ms; }
+.fx-answer .fx-blocks > :nth-child(2) { animation-delay: 280ms; }
+.fx-answer .fx-blocks > :nth-child(3) { animation-delay: 400ms; }
+.fx-answer .fx-blocks > :nth-child(n + 4) { animation-delay: 520ms; }
+@keyframes fx-answer-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-answer > *,
+  .fx-answer .fx-blocks > * {
+    animation: none;
+  }
+}
+
 /* ---------- điện thoại nhân viên ---------- */
 .fx-phone-app {
   min-height: 100dvh;

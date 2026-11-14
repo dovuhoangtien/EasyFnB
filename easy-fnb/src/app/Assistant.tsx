@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@astryxdesign/core/Button';
 import { ChatComposer, ChatDictationButton, ChatLayout, ChatMessage, ChatMessageBubble, ChatMessageList, useSpeechRecognition } from '@astryxdesign/core/Chat';
@@ -75,11 +75,48 @@ export default function Assistant() {
   };
 
   const last = msgs.at(-1);
+  const page = useRef<HTMLDivElement>(null);
+  // Có câu trả lời: dừng ở đầu câu trả lời (câu hỏi nằm sát mép trên) để đọc từ trên xuống,
+  // không để khung chat tự trôi xuống cuối.
+  useEffect(() => {
+    if (last?.role !== 'assistant') return;
+    const q = [...(page.current?.querySelectorAll<HTMLElement>('[data-fx-q]') ?? [])].at(-1);
+    let el: HTMLElement | null = q?.parentElement ?? null;
+    while (el && !/(auto|scroll)/.test(getComputedStyle(el).overflowY)) el = el.parentElement;
+    if (!q || !el) return;
+    const box = el;
+    const dich = () => box.scrollTop + q.getBoundingClientRect().top - box.getBoundingClientRect().top - 20;
+    const t0 = performance.now();
+    let raf = 0;
+    let thoi = false;
+    const dung = () => {
+      thoi = true;
+    };
+    const buoc = () => {
+      if (thoi || performance.now() - t0 > 20000) return;
+      const d = dich();
+      if (box.scrollTop > d + 1) box.scrollTop = d; // giữ ở đầu câu trả lời tới khi người dùng tự cuộn
+      raf = requestAnimationFrame(buoc);
+    };
+    raf = requestAnimationFrame(buoc);
+    box.addEventListener('wheel', dung, { passive: true, once: true });
+    box.addEventListener('touchstart', dung, { passive: true, once: true });
+    window.addEventListener('keydown', dung, { once: true });
+    window.addEventListener('pointerdown', dung, { once: true });
+    return () => {
+      thoi = true;
+      cancelAnimationFrame(raf);
+      box.removeEventListener('wheel', dung);
+      box.removeEventListener('touchstart', dung);
+      window.removeEventListener('keydown', dung);
+      window.removeEventListener('pointerdown', dung);
+    };
+  }, [last?.id, last?.role]);
   // hỏi bằng lời: nói xong một câu thì gửi luôn
   const dictation = useSpeechRecognition({ lang: 'vi-VN', onResult: (text) => void ask(text) });
 
   return (
-    <div className="fx-chat-page">
+    <div className="fx-chat-page" ref={page}>
       <SetupContext.Provider value={{ ask: (q) => void ask(q), saved: (n) => void notes.current.push(n) }}>
       <ChatLayout
         composer={<ChatComposer value={draft} onChange={setDraft} onSubmit={(v) => void ask(v)} placeholder="Hỏi về ca hôm nay hoặc bất cứ chuyện gì của quán" isDisabled={busy} sendActions={<ChatDictationButton dictation={dictation} label="Hỏi bằng lời" isHiddenWhenUnsupported />} />}
@@ -103,12 +140,14 @@ export default function Assistant() {
             {msgs.map((m) =>
               m.role === 'user' ? (
                 <ChatMessage key={m.id} sender="user">
-                  <ChatMessageBubble>{m.text}</ChatMessageBubble>
+                  <ChatMessageBubble>
+                    <span data-fx-q>{m.text}</span>
+                  </ChatMessageBubble>
                 </ChatMessage>
               ) : (
                 <ChatMessage key={m.id} sender="assistant" name="Trợ lý">
                   <ChatMessageBubble variant="ghost" width="100%">
-                    <div className="flex flex-col gap-3 min-w-0">
+                    <div className="fx-answer flex flex-col gap-3 min-w-0">
                       {m.failed ? (
                         <Text type="body" color="secondary" as="p">
                           Chưa trả lời được: {m.text}

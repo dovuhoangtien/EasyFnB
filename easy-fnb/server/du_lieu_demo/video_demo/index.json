@@ -1,47 +1,5 @@
 [
  {
-  "file": "v013.mp4",
-  "camera": "cam1",
-  "t_from": 1794613088899,
-  "t_to": 1794613104899
- },
- {
-  "file": "v040.mp4",
-  "camera": "cam1",
-  "t_from": 1794613610519,
-  "t_to": 1794613626419
- },
- {
-  "file": "v029.mp4",
-  "camera": "cam1",
-  "t_from": 1794613789714,
-  "t_to": 1794613805714
- },
- {
-  "file": "v019.mp4",
-  "camera": "cam1",
-  "t_from": 1794614355558,
-  "t_to": 1794614371458
- },
- {
-  "file": "v017.mp4",
-  "camera": "cam1",
-  "t_from": 1794614398496,
-  "t_to": 1794614414496
- },
- {
-  "file": "v038.mp4",
-  "camera": "cam1",
-  "t_from": 1794614415942,
-  "t_to": 1794614431942
- },
- {
-  "file": "v034.mp4",
-  "camera": "cam1",
-  "t_from": 1794614521139,
-  "t_to": 1794614537139
- },
- {
   "file": "x05_khach_moi_goi.mp4",
   "camera": "cam1",
   "t_from": 1794615480000,
@@ -49,84 +7,6 @@
   "noi_dung": "Khách mới vào ngồi rồi giơ tay gọi phục vụ",
   "ban": "B4",
   "nguon": "khach_moi_goi"
- },
- {
-  "file": "v015.mp4",
-  "camera": "cam1",
-  "t_from": 1794615782583,
-  "t_to": 1794615798583
- },
- {
-  "file": "v021.mp4",
-  "camera": "cam1",
-  "t_from": 1794615979632,
-  "t_to": 1794615995632
- },
- {
-  "file": "v037.mp4",
-  "camera": "cam1",
-  "t_from": 1794616204560,
-  "t_to": 1794616220460
- },
- {
-  "file": "v022.mp4",
-  "camera": "cam1",
-  "t_from": 1794616244116,
-  "t_to": 1794616260116
- },
- {
-  "file": "v045.mp4",
-  "camera": "cam1",
-  "t_from": 1794616394502,
-  "t_to": 1794616410402
- },
- {
-  "file": "v012.mp4",
-  "camera": "cam1",
-  "t_from": 1794616956161,
-  "t_to": 1794616972061
- },
- {
-  "file": "v036.mp4",
-  "camera": "cam1",
-  "t_from": 1794617307389,
-  "t_to": 1794617323389
- },
- {
-  "file": "v046.mp4",
-  "camera": "cam1",
-  "t_from": 1794617595991,
-  "t_to": 1794617611991
- },
- {
-  "file": "v020.mp4",
-  "camera": "cam1",
-  "t_from": 1794617924862,
-  "t_to": 1794617940862
- },
- {
-  "file": "v035.mp4",
-  "camera": "cam1",
-  "t_from": 1794617943800,
-  "t_to": 1794617959700
- },
- {
-  "file": "v018.mp4",
-  "camera": "cam1",
-  "t_from": 1794618638441,
-  "t_to": 1794618654441
- },
- {
-  "file": "v026.mp4",
-  "camera": "cam1",
-  "t_from": 1794619058166,
-  "t_to": 1794619074166
- },
- {
-  "file": "v033.mp4",
-  "camera": "cam1",
-  "t_from": 1794619076358,
-  "t_to": 1794619092258
  },
  {
   "file": "x06_nhin_quanh.mp4",
@@ -138,30 +18,6 @@
   "nguon": "nhin_quanh"
  },
  {
-  "file": "v039.mp4",
-  "camera": "cam1",
-  "t_from": 1794619703258,
-  "t_to": 1794619719258
- },
- {
-  "file": "v025.mp4",
-  "camera": "cam1",
-  "t_from": 1794620159532,
-  "t_to": 1794620175432
- },
- {
-  "file": "v041.mp4",
-  "camera": "cam1",
-  "t_from": 1794620246447,
-  "t_to": 1794620262447
- },
- {
-  "file": "v044.mp4",
-  "camera": "cam1",
-  "t_from": 1794620558343,
-  "t_to": 1794620574243
- },
- {
   "file": "x02_khach_moi.mp4",
   "camera": "cam1",
   "t_from": 1794620832000,
@@ -171,24 +27,6 @@
   "nguon": "khach_moi"
  },
  {
-  "file": "v014.mp4",
-  "camera": "cam1",
-  "t_from": 1794621188255,
-  "t_to": 1794621204155
- },
- {
-  "file": "v042.mp4",
-  "camera": "cam1",
-  "t_from": 1794621228137,
-  "t_to": 1794621244037
- },
- {
-  "file": "v028.mp4",
-  "camera": "cam1",
-  "t_from": 1794621228978,
-  "t_to": 1794621244978
- },
- {
   "file": "x03_goi_nhanh.mp4",
   "camera": "cam1",
   "t_from": 1794621480000,
@@ -196,12 +34,6 @@
   "noi_dung": "Khách giơ tay gọi, Hoa tới nhanh",
   "ban": "B6",
   "nguon": "goi_nhanh"
- },
- {
-  "file": "v043.mp4",
-  "camera": "cam1",
-  "t_from": 1794622083444,
-  "t_to": 1794622099344
  },
  {
   "file": "x04_goi_toi.mp4",
@@ -231,24 +63,6 @@
   "nguon": "tam_roi"
  },
  {
-  "file": "v030.mp4",
-  "camera": "cam1",
-  "t_from": 1794623751104,
-  "t_to": 1794623767104
- },
- {
-  "file": "v016.mp4",
-  "camera": "cam1",
-  "t_from": 1794623884032,
-  "t_to": 1794623900032
- },
- {
-  "file": "v032.mp4",
-  "camera": "cam1",
-  "t_from": 1794624465151,
-  "t_to": 1794624481151
- },
- {
   "file": "x01_goi_khong_toi.mp4",
   "camera": "cam1",
   "t_from": 1794624900000,
@@ -256,29 +70,5 @@
   "noi_dung": "Khách giơ tay gọi, Minh bấm nhận trên điện thoại nhưng không tới bàn",
   "ban": "B3",
   "nguon": "goi_khong_toi"
- },
- {
-  "file": "v024.mp4",
-  "camera": "cam1",
-  "t_from": 1794625544089,
-  "t_to": 1794625559989
- },
- {
-  "file": "v023.mp4",
-  "camera": "cam1",
-  "t_from": 1794625632394,
-  "t_to": 1794625648294
- },
- {
-  "file": "v031.mp4",
-  "camera": "cam1",
-  "t_from": 1794625775306,
-  "t_to": 1794625791306
- },
- {
-  "file": "v027.mp4",
-  "camera": "cam1",
-  "t_from": 1794626227868,
-  "t_to": 1794626243868
  }
 ]
