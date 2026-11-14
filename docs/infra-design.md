@@ -49,10 +49,10 @@ flowchart LR
 
 | Thành phần | Tài nguyên Terraform | Cấu hình chính | Vì sao |
 |---|---|---|---|
-| Ứng dụng | `google_cloud_run_v2_service.app` | gen2, 1 vCPU, 1 GiB, `min=1 max=1`, CPU luôn cấp, timeout 3600 s, concurrency 200 | ADR-0001, ADR-0003 |
+| Ứng dụng | `google_cloud_run_v2_service.app` | gen2, 1 vCPU, 2 GiB, `min=1 max=1`, CPU luôn cấp, timeout 3600 s, concurrency 200. Biến môi trường: `EDGE_KEY`, khoá LLM (Secret Manager), `CLIPS_MAX_MB` (mặc định 200), tùy chọn `GEMINI_MODEL`, `GEMINI_VERIFY_MODEL` | ADR-0001, ADR-0003 |
 | Danh tính chạy app | `google_service_account.run` | Chỉ đọc 1–3 secret, ghi bucket dữ liệu | Quyền tối thiểu |
 | Khoá | `google_secret_manager_secret.*` | `EDGE_KEY` (sinh ngẫu nhiên), `GEMINI_API_KEY`, `KIE_API_KEY` (hai khoá sau tùy chọn) | ADR-0005 |
-| Dữ liệu | `google_storage_bucket.data` | Gắn `/data` = `DATA_DIR`; xoá sau 30 ngày; chặn truy cập công khai | ADR-0003 |
+| Dữ liệu | `google_storage_bucket.data` | **Chỉ khi `persist_data = true` (mặc định tắt).** Gắn `/data` = `DATA_DIR`; xoá sau 30 ngày; chặn truy cập công khai. Tắt thì `DATA_DIR=/tmp` (RAM), mất khi instance khởi động lại, kể cả `timeline.db` và `quan.db` | ADR-0003 |
 | Image | `google_artifact_registry_repository.app` | Giữ 10 bản mới, xoá bản quá 30 ngày | ADR-0006 |
 | Build/deploy | `infra/cloudbuild.yaml` + `google_service_account.build` | Build → push → `gcloud run services update --image` | ADR-0006 |
 | Giám sát | `monitoring.tf` | Uptime check `/api/health` mỗi 5 phút, cảnh báo email, budget 50/90/100% | ADR-0009 |
@@ -104,7 +104,7 @@ Giới hạn: chỉ một instance nên không có dự phòng và không scale 
 | Cloud Run | Có | Có | |
 | Gemini API | Có (REST, API key) | Qua Secret Manager | Báo cáo khuyên Vertex để dùng credit (ADR-0004) |
 | Google ADK | Có (`tro_ly.py`, phiên trong RAM) | — | Chạy trong cùng container |
-| Cloud Storage | Chỉ qua `DATA_DIR` | Có (bucket gắn volume) | Chưa lưu clip sự kiện 10–20 s như báo cáo |
+| Cloud Storage | Chỉ qua `DATA_DIR` | Tùy chọn (`persist_data`, mặc định tắt) | Clip xem lại do máy chủ nhận nằm trong `DATA_DIR/clips`, trần `CLIPS_MAX_MB` |
 | Firestore (trạng thái, vector, `onSnapshot`) | Không | Không | ADR-0003 |
 | FCM | Không | Không | Đang dùng SSE; chưa có app native |
 | Cloud TTS Chirp 3 HD | Không | Không | ADR-0008 |

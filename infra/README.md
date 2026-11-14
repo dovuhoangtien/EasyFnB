@@ -72,8 +72,10 @@ terraform destroy                        # xoá tất cả, kể cả dữ liệ
 | `project_id` | bắt buộc | |
 | `region` | `asia-southeast1` | |
 | `min_instances` | `1` | Chỉ nhận 0 hoặc 1; luôn `max = 1` |
-| `memory` / `cpu` | `1Gi` / `1` | |
-| `persist_data` | `true` | Gắn bucket làm `DATA_DIR` |
+| `memory` / `cpu` | `2Gi` / `1` | `DATA_DIR` là `/tmp` (RAM) khi không `persist_data`; chưa đo với code mới |
+| `persist_data` | `false` | Gắn bucket (gcsfuse) làm `DATA_DIR`. Mặc định tắt: `timeline.db` và `quan.db` dùng SQLite WAL, chưa kiểm trên gcsfuse. Tắt thì dữ liệu mất khi instance khởi động lại |
+| `clips_max_mb` | `200` | Trần thư mục clip (`CLIPS_MAX_MB`); mặc định của máy chủ là 2000, quá lớn khi `DATA_DIR` là RAM |
+| `gemini_model`, `gemini_verify_model` | rỗng | `gemini_verify_model = "gemini-decision-1"` bật Gemini Decision để kiểm tra ảnh |
 | `gemini_api_key`, `kie_api_key` | rỗng | Truyền bằng `TF_VAR_*`, không ghi vào file |
 | `allow_unauthenticated` | `true` | Xem ADR-0007 |
 | `enable_vertex_ai` | `false` | Chuẩn bị Vertex, mã chưa dùng (ADR-0004) |
