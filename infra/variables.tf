@@ -55,6 +55,12 @@ variable "clips_max_mb" {
   }
 }
 
+variable "backup_data" {
+  description = "Sao lưu DATA_DIR lên bucket Cloud Storage: Litestream cho timeline.db và quan.db, script đồng bộ cho config.json và ảnh nhân viên, ảnh chat. Khởi động lại thì khôi phục. Bỏ qua khi persist_data = true. ADR-0003."
+  type        = bool
+  default     = true
+}
+
 variable "tts_voice" {
   description = "Giọng Google Cloud Text-to-Speech cho điện thoại nhân viên (GOOGLE_TTS_VOICE). Ví dụ vi-VN-Chirp3-HD-Aoede (nữ), vi-VN-Chirp3-HD-Charon (nam), vi-VN-Neural2-A (rẻ hơn)."
   type        = string

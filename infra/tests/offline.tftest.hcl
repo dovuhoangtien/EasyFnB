@@ -25,6 +25,11 @@ run "mac_dinh_khong_co_khoa_llm" {
   }
 
   assert {
+    condition     = length(google_storage_bucket.backup) == 1 && contains([for e in google_cloud_run_v2_service.app.template[0].containers[0].env : e.name], "BACKUP_BUCKET")
+    error_message = "Mặc định phải có bucket sao lưu Litestream và biến BACKUP_BUCKET."
+  }
+
+  assert {
     condition     = google_cloud_run_v2_service.app.template[0].containers[0].resources[0].limits["memory"] == "2Gi"
     error_message = "Mặc định 2Gi vì DATA_DIR là /tmp (RAM)."
   }
@@ -66,6 +71,11 @@ run "co_khoa_gemini_va_cac_tuy_chon" {
   assert {
     condition     = length(google_storage_bucket.data) == 1
     error_message = "persist_data = true thì phải có bucket dữ liệu."
+  }
+
+  assert {
+    condition     = length(google_storage_bucket.backup) == 0
+    error_message = "persist_data = true thì không sao lưu Litestream (DATA_DIR đã nằm trên bucket)."
   }
 
   assert {

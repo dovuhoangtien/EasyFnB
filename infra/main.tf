@@ -23,6 +23,7 @@ locals {
   # nonsensitive: chỉ lấy "có khoá hay không", không lộ giá trị khoá.
   use_gemini = nonsensitive(var.gemini_api_key != "")
   use_kie    = nonsensitive(var.kie_api_key != "")
+  backup     = var.backup_data && !var.persist_data
 
   image_repo = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}/${var.service_name}"
   data_mount = "/data"
@@ -247,6 +248,28 @@ resource "google_storage_bucket_iam_member" "run_writes_data" {
   member = google_service_account.run.member
 }
 
+# ---------------------------------------------------------------- bucket sao lưu (Litestream)
+# DATA_DIR vẫn ở /tmp; easy-fnb/deploy/start.sh khôi phục từ bucket khi khởi động và sao lưu liên tục.
+resource "google_storage_bucket" "backup" {
+  count = local.backup ? 1 : 0
+
+  name                        = "${var.project_id}-${var.service_name}-backup"
+  location                    = var.region
+  uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
+  force_destroy               = true
+
+  depends_on = [google_project_service.api]
+}
+
+resource "google_storage_bucket_iam_member" "run_writes_backup" {
+  count = local.backup ? 1 : 0
+
+  bucket = google_storage_bucket.backup[0].name
+  role   = "roles/storage.objectAdmin" # Litestream cần xoá bản snapshot cũ
+  member = google_service_account.run.member
+}
+
 # ---------------------------------------------------------------- Cloud Run
 resource "google_cloud_run_v2_service" "app" {
   name                = var.service_name
@@ -330,6 +353,14 @@ resource "google_cloud_run_v2_service" "app" {
         content {
           name  = "DATA_DIR"
           value = local.data_mount
+        }
+      }
+
+      dynamic "env" {
+        for_each = local.backup ? [1] : []
+        content {
+          name  = "BACKUP_BUCKET"
+          value = google_storage_bucket.backup[0].name
         }
       }
 

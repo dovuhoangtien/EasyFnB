@@ -1,0 +1,11 @@
+# Litestream sao lưu liên tục hai file SQLite (chế độ WAL) lên Cloud Storage và khôi phục khi khởi động.
+# Biến môi trường do Cloud Run đặt: DATA_DIR (Dockerfile), BACKUP_BUCKET (Terraform, ADR-0003).
+dbs:
+  - path: ${DATA_DIR}/timeline.db
+    replicas:
+      - url: gcs://${BACKUP_BUCKET}/litestream/timeline.db
+        sync-interval: 5s
+  - path: ${DATA_DIR}/quan.db
+    replicas:
+      - url: gcs://${BACKUP_BUCKET}/litestream/quan.db
+        sync-interval: 5s
