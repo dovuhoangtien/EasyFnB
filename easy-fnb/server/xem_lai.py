@@ -734,6 +734,12 @@ def xem_su_kien(hub, q, ban=None, xin=None, ids=None, t=None):
             recs.sort(key=lambda r: -r['t'])
     if ram:
         recs = [_rec(a) for a in ram]
+    if lau_ and co_kho and getattr(xin.clips, 'demo', None):     # quán demo: ưu tiên lần có video thật, không ai tới xếp trước
+        cv = [r for r in recs if xin.clips._tim_demo(r['camera'] or camera_cua_ban(hub, r['ban']),
+                                                     r['t'] - TRUOC_MS, r['t'] + SAU_MS)]
+        if cv:
+            recs = sorted(cv, key=lambda r: (r['ket'] != 'bo_lo', -(r['wait_s'] or 0)))
+            ram = [a for a in ram if any(a['id'] == r['aid'] for r in recs)]
     if nhat:
         recs = recs[:3]
     if not recs:
