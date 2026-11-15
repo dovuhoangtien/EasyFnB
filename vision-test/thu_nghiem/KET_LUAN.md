@@ -1,6 +1,6 @@
 # Lấy gì từ các báo cáo nghiên cứu: đã thử thật trên máy (5/11/2026)
 
-Gom từ 5 báo cáo được khoảng 75 kỹ thuật (`research_notes/Bài toán tương tự ngành khác/tong_hop_ung_vien.md`). Những cái đáng nhất được thử thật trên laptop RTX 3050 4 GB, với 11 clip test và nhãn sẵn có. Nhãn còn mỏng (7 lần giơ tay, 137 mốc bàn, phần lớn ở clip time-lapse), nên "đạt" ở đây nghĩa là chạy được, không làm hỏng gì, đủ nhanh. Chưa chứng minh được là ít báo nhầm hơn ở quán thật.
+Gom từ 5 báo cáo được khoảng 75 kỹ thuật ([docs/research](../../docs/research/)). Những cái đáng nhất được thử thật trên laptop RTX 3050 4 GB, với 11 clip test và nhãn sẵn có. Nhãn còn mỏng (7 lần giơ tay, 137 mốc bàn, phần lớn ở clip time-lapse), nên "đạt" ở đây nghĩa là chạy được, không làm hỏng gì, đủ nhanh. Chưa chứng minh được là ít báo nhầm hơn ở quán thật.
 
 ## Nên đưa vào bản demo
 

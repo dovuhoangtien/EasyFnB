@@ -6,8 +6,6 @@
 - Ảnh thanh toán: POST /api/chat/scan (Gemini đọc, chờ tối đa 20 giây) -> điện thoại hiện kết quả, người chụp sửa
   nếu cần và BẤM XÁC NHẬN -> POST /api/chat/scan/{id}/send đăng vào phòng (ảnh + thẻ) và lưu thanh toán.
   Chỗ nào người chụp sửa so với Gemini đọc thì ghi vào payment_edits.
-
-Spec: docs/superpowers/specs/2026-11-13-chatroom-hoa-don-design.md
 """
 import asyncio
 import base64

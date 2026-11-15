@@ -1,5 +1,5 @@
 """Khớp bàn khi camera không chắc: camera gửi ảnh một người đang ngồi giữa 2-3 bàn sát nhau, máy chủ hỏi Gemini
-Decision người đó ngồi ở bàn nào (POST /api/edge/table-ask). Xem docs/superpowers/specs/2026-11-13-khop-ban-design.md.
+Decision người đó ngồi ở bàn nào (POST /api/edge/table-ask).
 
 Máy chủ chỉ trả xác suất; camera tự quyết (chỉ chốt khi một bàn từ 0,7 trở lên và bàn khác từ 0,3 trở xuống).
 Decision tắt, lỗi, quá giờ, hỏi quá dày: trả {ok: false, reason}; camera giữ kết quả hình học.

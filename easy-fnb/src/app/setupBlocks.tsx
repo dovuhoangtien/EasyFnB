@@ -20,7 +20,7 @@ import { QrCode } from './QrCode';
 import { usePhoneBase } from './ui';
 
 /**
- * Khối cài đặt trong trợ lý (spec docs/superpowers/specs/2026-11-13-tro-ly-setup-design.md).
+ * Khối cài đặt trong trợ lý.
  * Máy chủ chỉ dựng khối; dữ liệu chỉ đổi khi chủ quán bấm Lưu ở đây, bằng đúng các API trang Cài đặt dùng.
  */
 

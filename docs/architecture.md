@@ -15,7 +15,7 @@ Thiết kế demo đặt toàn bộ suy luận ở một laptop GPU tại quán 
 | **Tải tính toán** | Cấu hình demo (`vision-test/chay_camera.bat`) chạy khoảng **6 model nặng**: YOLO26n-pose, YOLO26s, YOLOE-26s-seg, RTMPose-m, PE-Core S/16, PE-Core B/16; thêm 3 đầu phân loại nhỏ (giơ tay, nhân viên, hành động) và một bộ bám ByteTrack. Chi phí mỗi khung **nhân theo số người trong cảnh** (RTMPose và PE-Core chạy trên từng người) nhân với số camera. |
 | **Số đo hiện có** | Trên một RTX 3050 4 GB, clip stock, `KET_QUA.md`: bản nhanh ~57 khung/giây (35 ở clip đông nhất), bản nhạy ~24 (11 ở clip đông nhất). Quy ra khoảng **11 camera** ở bản nhanh, **~5 camera** ở bản nhạy, và chỉ **2** khi quán rất đông, mỗi camera 5 khung/giây. Đây là trần của một máy, không có dự phòng. |
 | **Vận hành** | Mỗi quán một máy GPU: engine TensorRT gắn với đúng GPU đã build ra nó (`HUONG_DAN.md`), cập nhật model phải đến từng quán, máy hỏng là quán mất dịch vụ. |
-| **Thực tế quán** | Quán thường không có máy GPU và không muốn mua thêm; báo cáo `Easy FnB không mua phần cứng.md` cũng đặt điều kiện "không mua phần cứng". |
+| **Thực tế quán** | Quán thường không có máy GPU và không muốn mua thêm; báo cáo [`research/khong-mua-phan-cung.md`](research/khong-mua-phan-cung.md) cũng đặt điều kiện "không mua phần cứng". |
 
 Kết luận: **quán chỉ nên phát luồng và nhận kết quả**. Suy luận, điều phối và AI chạy trên cloud. Chế độ edge vẫn giữ như một lựa chọn (mục 6).
 

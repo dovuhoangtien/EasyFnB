@@ -1,4 +1,4 @@
-"""Gán người vào bàn (khớp bàn). Xem docs/superpowers/specs/2026-11-13-khop-ban-design.md.
+"""Gán người vào bàn (khớp bàn).
 
 Bước 1, hình học (không gọi AI):
 - Điểm neo vẫn ở 60% khung người (neo theo hông đã thử, kém hơn: xem diem_neo).

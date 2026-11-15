@@ -7,7 +7,7 @@
 
 Ở demo, pipeline làm mờ mặt khách (`blur_faces` trong `fnb_common.py`, dựa trên khung xương: mũi, mắt, tai) **trước khi** bất kỳ ảnh nào rời máy (`easyfnb_test.py` ghi: "làm mờ mặt trên mọi ảnh rời máy"). Khi suy luận lên cloud (ADR-0010), video thô có mặt người **rời quán** vì chính cloud mới có khung xương để làm mờ.
 
-Báo cáo (`Công nghệ AI cho Easy FnB`, `Bài toán tương tự ngành khác`) nhắc Luật 91/2025 xếp khuôn mặt vào dữ liệu nhạy cảm và đề xuất làm mờ mặt trước khi gửi lên cloud và Gemini. Nhóm **chưa có đánh giá pháp lý**.
+Báo cáo ([`cong-nghe-ai.md`](../research/cong-nghe-ai.md), [`bai-toan-tuong-tu-nganh-khac.md`](../research/bai-toan-tuong-tu-nganh-khac.md)) nhắc Luật 91/2025 xếp khuôn mặt vào dữ liệu nhạy cảm và đề xuất làm mờ mặt trước khi gửi lên cloud và Gemini. Nhóm **chưa có đánh giá pháp lý**.
 
 ## Quyết định
 

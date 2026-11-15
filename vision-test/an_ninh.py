@@ -1,4 +1,4 @@
-"""An ninh, chống trộm tại camera (spec docs/superpowers/specs/2026-11-13-an-ninh-design.md, mục 4-5).
+"""An ninh, chống trộm tại camera.
 
 Logic thuần trên kết quả pipeline đã có (khung người, khung xương, mã bám, nhân viên/khách, bàn), không chạy
 model nào, nên test được không cần GPU (test_an_ninh.py). easyfnb_test.py gọi khi chạy với --an-ninh.

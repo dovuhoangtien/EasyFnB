@@ -1,4 +1,4 @@
-"""Trợ lý cài đặt quán ngay trong khung chat (spec: docs/superpowers/specs/2026-11-13-tro-ly-setup-design.md).
+"""Trợ lý cài đặt quán ngay trong khung chat.
 
 Các hàm ở đây chỉ DỰNG KHỐI, không ghi gì vào hub. Dữ liệu chỉ đổi khi chủ quán bấm Lưu trong khối:
 giao diện gọi thẳng các API cài đặt có sẵn (PUT /api/staff, PUT /api/zones, PUT /api/settings,

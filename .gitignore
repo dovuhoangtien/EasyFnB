@@ -34,6 +34,7 @@ easy-fnb/server/voices/so_sanh/
 !easy-fnb/public/**
 !easy-fnb/src/**
 !docs/architecture/*.png
+!docs/images/*.png
 
 # Video camera tự ghi (ghi_video.py)
 vision-test/ghi_hinh/

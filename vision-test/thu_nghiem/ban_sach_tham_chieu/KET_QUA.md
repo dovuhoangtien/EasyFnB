@@ -153,12 +153,12 @@ Thứ có thể dùng ngay mà không rủi ro: hiện ảnh "bàn lúc sạch" 
 
 ## Ảnh lỗi
 
-- [anh_loi/sach_bi_cham_la.jpg](anh_loi/sach_bi_cham_la.jpg): 5 ảnh sạch bị cách so ô PE chấm "lạ" nhất. Mỗi dòng gồm ảnh test, ảnh sạch gần nhất và bản đồ độ lạ từng ô (đỏ là khác).
+- `anh_loi/sach_bi_cham_la.jpg` (không nằm trong repo): 5 ảnh sạch bị cách so ô PE chấm "lạ" nhất. Mỗi dòng gồm ảnh test, ảnh sạch gần nhất và bản đồ độ lạ từng ô (đỏ là khác).
   - Hai trường hợp người đi ngang che bàn (B1 6,25 s và 7,75 s) cũng là hai ảnh sạch duy nhất mà bộ phân loại hiện tại sai.
   - B4 1,25 s là mặt bàn vừa lau còn vệt ướt.
   - B4 2,25 s gần như y hệt ảnh tham chiếu mà vẫn điểm cao. Trên mặt bàn tối, trơn, ít vân và ảnh video nén, các ô ảnh bị "nhiễu", nên tạo nhiều báo nhầm.
-- [anh_loi/nguoi_che.jpg](anh_loi/nguoi_che.jpg): bàn sạch có người hoặc tay che. Cách so ô thấy "lạ" đúng chỗ người.
-- [anh_loi/ban_vi_du.jpg](anh_loi/ban_vi_du.jpg): ví dụ bàn bẩn (B1 có giấy, B2 còn chén, B4 có giấy lót và thực đơn).
+- `anh_loi/nguoi_che.jpg` (không nằm trong repo): bàn sạch có người hoặc tay che. Cách so ô thấy "lạ" đúng chỗ người.
+- `anh_loi/ban_vi_du.jpg` (không nằm trong repo): ví dụ bàn bẩn (B1 có giấy, B2 còn chén, B4 có giấy lót và thực đơn).
 
 ## Hạn chế của thử nghiệm
 

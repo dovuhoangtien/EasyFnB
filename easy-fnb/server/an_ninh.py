@@ -1,6 +1,6 @@
 """An ninh và chống trộm: luật của ba loại cảnh báo, giờ mở cửa, vùng không phải bàn, mã PIN chủ quán.
 
-Ba loại cảnh báo (spec docs/superpowers/specs/2026-11-13-an-ninh-design.md):
+Ba loại cảnh báo:
   - item_taken  (camera gửi `lay_do`): người không thuộc bàn cầm đồ của khách đi.
   - after_hours (`co_nguoi_ngoai_gio`): có người trong quán khi quán đóng.
   - restricted  (`vao_khu_cam`): người không phải nhân viên vào quầy, kho.

@@ -21,5 +21,5 @@ Trên Cloud Run **không có TTS phía máy chủ**. Điện thoại đọc bằ
 ## Phương án đã cân nhắc
 
 - **Đóng gói VieNeu vào container (CPU):** 1,2 GB RAM + 580 MB tải model, khởi động 7–12 giây, tăng chi phí instance và cần viết lại đường dẫn Windows. Không kịp.
-- **Cloud Text-to-Speech (Chirp 3 HD):** đúng với đề tài đăng ký; cần thêm API, quyền, code gọi và cache wav. Là bước kế tiếp hợp lý, nên làm cùng lúc với chuyển Vertex (ADR-0004).
+- **Cloud Text-to-Speech (Chirp 3 HD):** đúng với đề xuất ban đầu; cần thêm API, quyền, code gọi và cache wav. Là bước kế tiếp hợp lý, nên làm cùng lúc với chuyển Vertex (ADR-0004).
 - **Giữ giọng ở laptop, Cloud Run chỉ làm dashboard:** làm mất lý do dùng Cloud Run cho nhân viên.

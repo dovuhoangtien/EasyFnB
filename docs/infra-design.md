@@ -1,6 +1,6 @@
 # Thiết kế hạ tầng Google Cloud cho Easy FnB
 
-Phạm vi: **demo hackathon** (một project, một môi trường). Mã nằm ở `infra/`, các quyết định ở `docs/adr/`. Tài liệu này mô tả hệ thống như **mã hiện tại** chạy được, không phải như báo cáo nghiên cứu đề xuất; chỗ hai bên khác nhau nằm ở mục [Khác biệt so với báo cáo](#khác-biệt-so-với-báo-cáo-và-đề-tài-đăng-ký).
+Phạm vi: **demo hackathon** (một project, một môi trường). Mã nằm ở `infra/`, các quyết định ở `docs/adr/`. Tài liệu này mô tả hệ thống như **mã hiện tại** chạy được, không phải như báo cáo nghiên cứu đề xuất; chỗ hai bên khác nhau nằm ở mục [Khác biệt so với báo cáo](#7-khác-biệt-so-với-báo-cáo-và-đề-xuất-ban-đầu).
 
 Trạng thái: bản nháp để duyệt. Chưa `terraform apply` lên project thật; mới chạy `terraform validate` và `terraform test` (provider giả).
 
@@ -99,9 +99,9 @@ Giới hạn: chỉ một instance nên không có dự phòng và không scale 
 
 Điểm đáng chú ý nhất là `min_instances = 1` + CPU luôn cấp: theo `easy-fnb/HUONG_DAN.md` khoảng **2–3 USD/ngày**, và là khoản gần như duy nhất đáng kể. Sau demo đặt `min_instances = 0` hoặc `terraform destroy`. Các khoản khác (Secret Manager, Artifact Registry, Cloud Storage vài MB, Cloud Build trong hạn mức miễn phí, Monitoring) nhỏ. Gemini tính theo lượt gọi; báo cáo ước tính cỡ $0.0003/lần cho ảnh cắt, **chưa đo trên hệ thống thật**. Các con số chưa được đối chiếu với Pricing Calculator.
 
-## 7. Khác biệt so với báo cáo và đề tài đăng ký
+## 7. Khác biệt so với báo cáo và đề xuất ban đầu
 
-`reports/Easy FnB không mua phần cứng.md` và `DE_TAI_DANG_KY.md` nêu nhiều dịch vụ mà **mã hiện tại không dùng**. Hạ tầng này chỉ cấp phát những gì mã cần.
+Báo cáo [`research/khong-mua-phan-cung.md`](research/khong-mua-phan-cung.md) và bản đề xuất ban đầu nêu nhiều dịch vụ mà **mã hiện tại không dùng**. Hạ tầng này chỉ cấp phát những gì mã cần.
 
 | Dịch vụ được nêu | Có trong mã? | Có trong IaC? | Ghi chú |
 |---|---|---|---|
@@ -114,7 +114,7 @@ Giới hạn: chỉ một instance nên không có dự phòng và không scale 
 | Cloud TTS Chirp 3 HD | Có (`server/tts.py`, engine google) | Có (`texttospeech.googleapis.com`, biến `tts_voice`) | Gọi REST với token từ metadata server; mặc định `vi-VN-Chirp3-HD-Aoede` |
 | Gemini Embedding / tìm lại video | Không | Không | |
 
-Nếu bài đăng ký cần nói đúng những gì đã làm, nên rà lại mục dịch vụ trong `DE_TAI_DANG_KY.md` với bảng này.
+Bảng này là nguồn đúng về những dịch vụ đã thực sự dùng.
 
 ## 8. Chưa làm
 

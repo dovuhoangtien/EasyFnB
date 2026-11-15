@@ -2,7 +2,7 @@
 
 Bản v4 thử các công nghệ tốt nhất tìm được trong báo cáo nghiên cứu, rồi chấm lại trên đúng 11 clip test và các tập ảnh kiểm tra cũ. Mọi thứ đo trên laptop RTX 3050 4 GB.
 
-Video demo 45 giây: [demo_v4.mp4](demo_v4.mp4) (bản cũ: [demo_v3.mp4](demo_v3.mp4)). Video từng clip: `out_v4/<clip>/video_ket_qua.mp4`. Điểm chi tiết: [danh_gia/diem_v4.json](danh_gia/diem_v4.json).
+Điểm chi tiết: [danh_gia/diem_v4.json](danh_gia/diem_v4.json). Video kết quả (`demo_v4.mp4`, `out_v4/<clip>/video_ket_qua.mp4`) không nằm trong repo vì có hình người trong clip gốc.
 
 ## Tóm tắt
 
