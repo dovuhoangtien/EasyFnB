@@ -91,7 +91,7 @@ docs/            Kiến trúc, mô tả hệ thống hiện tại, 15 ADR, báo 
 Các script viết cho Windows. Cần Python 3.12 và Node.js 20 trở lên.
 
 ```
-git clone https://github.com/dovuhoangtien-dev/EasyFnB.git
+git clone https://github.com/dovuhoangtien/EasyFnB.git
 cd EasyFnB\easy-fnb
 chay_may_chu.bat
 ```

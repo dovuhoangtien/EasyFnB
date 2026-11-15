@@ -91,7 +91,7 @@ docs/            Architecture, current-system description, 15 ADRs, research rep
 The scripts target Windows. You need Python 3.12 and Node.js 20 or newer.
 
 ```
-git clone https://github.com/dovuhoangtien-dev/EasyFnB.git
+git clone https://github.com/dovuhoangtien/EasyFnB.git
 cd EasyFnB\easy-fnb
 chay_may_chu.bat
 ```
